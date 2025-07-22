@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiA - Final 5 Dark: Premium Document + Advanced Effects</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .dark-premium-document-bg {
+            background: linear-gradient(135deg, #0c0a09 0%, #1c1917 25%, #121212 50%, #1c1917 75%, #0c0a09 100%);
+        }
+        
+        .dark-premium-document-flow {
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='100' height='80' viewBox='0 0 100 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.025'%3E%3Cpath d='M10 10h16v20c0 2.2-1.8 4-4 4h-8c-2.2 0-4-1.8-4-4V10zm20 6h14v16c0 2.2-1.8 4-4 4h-6c-2.2 0-4-1.8-4-4V16zm20-3h16v18c0 2.2-1.8 4-4 4h-8c-2.2 0-4-1.8-4-4V13zm20-6h14v22c0 2.2-1.8 4-4 4h-6c-2.2 0-4-1.8-4-4V7z'/%3E%3Cpath d='M10 45h14v16c0 2.2-1.8 4-4 4h-6c-2.2 0-4-1.8-4-4V45zm18 4h16v18c0 2.2-1.8 4-4 4h-8c-2.2 0-4-1.8-4-4V49zm20-2h12v14c0 2.2-1.8 4-4 4h-4c-2.2 0-4-1.8-4-4V47zm18 3h14v16c0 2.2-1.8 4-4 4h-6c-2.2 0-4-1.8-4-4V50z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background-size: 200px 160px;
+            animation: darkPremiumDocumentMove 35s linear infinite;
+        }
+        
+        @keyframes darkPremiumDocumentMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 200px 0; }
+        }
+        
+        /* Dark Premium Logo Animation with Advanced Effects */
+        .dark-logo-premium-platinum {
+            animation: darkLogoPremiumPlatinum 10s ease-in-out infinite;
+        }
+        
+        @keyframes darkLogoPremiumPlatinum {
+            0%, 100% { 
+                transform: scale(1) perspective(1400px) rotateY(0deg) rotateX(0deg) rotateZ(0deg); 
+                filter: brightness(1) contrast(1) saturate(1) hue-rotate(0deg) blur(0px);
+                box-shadow: 
+                    0 0 0 rgba(71, 85, 105, 0.4),
+                    0 12px 32px rgba(0, 0, 0, 0.6),
+                    0 6px 16px rgba(0, 0, 0, 0.5),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.1);
+            }
+            16% { 
+                transform: scale(1.02) perspective(1400px) rotateY(1deg) rotateX(0.3deg) rotateZ(0.2deg); 
+                filter: brightness(1.12) contrast(1.06) saturate(1.08) hue-rotate(3deg) blur(0px);
+                box-shadow: 
+                    0 0 12px rgba(71, 85, 105, 0.5),
+                    0 14px 36px rgba(0, 0, 0, 0.7),
+                    0 7px 18px rgba(0, 0, 0, 0.6),
+                    inset 0 1px 3px rgba(255, 255, 255, 0.15);
+            }
+            33% { 
+                transform: scale(1.05) perspective(1400px) rotateY(2.5deg) rotateX(0.8deg) rotateZ(0.5deg); 
+                filter: brightness(1.22) contrast(1.12) saturate(1.16) hue-rotate(6deg) blur(0px);
+                box-shadow: 
+                    0 0 20px rgba(71, 85, 105, 0.6),
+                    0 16px 40px rgba(0, 0, 0, 0.8),
+                    0 8px 20px rgba(0, 0, 0, 0.7),
+                    inset 0 1px 4px rgba(255, 255, 255, 0.2);
+            }
+            50% { 
+                transform: scale(1.08) perspective(1400px) rotateY(4deg) rotateX(1.2deg) rotateZ(0.8deg); 
+                filter: brightness(1.32) contrast(1.18) saturate(1.24) hue-rotate(9deg) blur(0px);
+                box-shadow: 
+                    0 0 28px rgba(71, 85, 105, 0.7),
+                    0 18px 44px rgba(0, 0, 0, 0.9),
+                    0 9px 22px rgba(0, 0, 0, 0.8),
+                    inset 0 1px 5px rgba(255, 255, 255, 0.25);
+            }
+            66% { 
+                transform: scale(1.11) perspective(1400px) rotateY(2deg) rotateX(0.6deg) rotateZ(0.3deg); 
+                filter: brightness(1.42) contrast(1.24) saturate(1.32) hue-rotate(12deg) blur(0px);
+                box-shadow: 
+                    0 0 36px rgba(71, 85, 105, 0.8),
+                    0 20px 48px rgba(0, 0, 0, 1),
+                    0 10px 24px rgba(0, 0, 0, 0.9),
+                    inset 0 1px 6px rgba(255, 255, 255, 0.3);
+            }
+            83% { 
+                transform: scale(1.06) perspective(1400px) rotateY(-1.5deg) rotateX(-0.4deg) rotateZ(-0.2deg); 
+                filter: brightness(1.26) contrast(1.15) saturate(1.2) hue-rotate(6deg) blur(0px);
+                box-shadow: 
+                    0 0 24px rgba(71, 85, 105, 0.65),
+                    0 17px 42px rgba(0, 0, 0, 0.85),
+                    0 8.5px 21px rgba(0, 0, 0, 0.75),
+                    inset 0 1px 4.5px rgba(255, 255, 255, 0.22);
+            }
+        }
+        
+        .dark-premium-paper-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(32px);
+            border: 1px solid rgba(71, 85, 105, 0.2);
+            box-shadow: 
+                0 16px 64px rgba(0, 0, 0, 0.6),
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                0 4px 16px rgba(71, 85, 105, 0.1),
+                0 2px 8px rgba(71, 85, 105, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dark-premium-paper-card:hover {
+            transform: translateY(-8px) scale(1.03) rotateX(2deg);
+            box-shadow: 
+                0 40px 120px rgba(0, 0, 0, 0.8),
+                0 20px 60px rgba(0, 0, 0, 0.7),
+                0 10px 30px rgba(71, 85, 105, 0.15),
+                0 5px 15px rgba(71, 85, 105, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(71, 85, 105, 0.3);
+        }
+        
+        /* Dark Premium Executive Button with Advanced Animation */
+        .dark-premium-executive-button {
+            background: linear-gradient(135deg, #475569 0%, #334155 33%, #1e293b 66%, #0f172a 100%);
+            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 12px 48px rgba(71, 85, 105, 0.4),
+                0 6px 24px rgba(71, 85, 105, 0.3),
+                0 3px 12px rgba(71, 85, 105, 0.25),
+                0 2px 8px rgba(71, 85, 105, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dark-premium-executive-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.06), 
+                rgba(255, 255, 255, 0.12), 
+                rgba(255, 255, 255, 0.18), 
+                rgba(255, 255, 255, 0.12), 
+                rgba(255, 255, 255, 0.06), 
+                transparent);
+            animation: darkPremiumButtonShine 5s ease-in-out infinite;
+        }
+        
+        @keyframes darkPremiumButtonShine {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+        
+        .dark-premium-executive-button:hover {
+            background: linear-gradient(135deg, #334155 0%, #1e293b 33%, #0f172a 66%, #020617 100%);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 
+                0 16px 64px rgba(71, 85, 105, 0.5),
+                0 8px 32px rgba(71, 85, 105, 0.4),
+                0 4px 16px rgba(71, 85, 105, 0.3),
+                0 3px 12px rgba(71, 85, 105, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark-premium-parchment-input {
+            border: 1px solid rgba(71, 85, 105, 0.25);
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            color: #ffffff;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                inset 0 3px 6px rgba(0, 0, 0, 0.4),
+                inset 0 1px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .dark-premium-parchment-input:focus {
+            border-color: #475569;
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 
+                0 0 0 3px rgba(71, 85, 105, 0.15),
+                inset 0 3px 6px rgba(0, 0, 0, 0.3),
+                0 8px 32px rgba(71, 85, 105, 0.12);
+        }
+        
+        .dark-premium-parchment-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .dark-premium-icon {
+            background: rgba(71, 85, 105, 0.12);
+            transition: all 0.6s ease;
+            border: 1px solid rgba(71, 85, 105, 0.25);
+            box-shadow: 
+                0 6px 20px rgba(0, 0, 0, 0.4),
+                0 3px 10px rgba(0, 0, 0, 0.3),
+                0 0 15px rgba(71, 85, 105, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .dark-premium-icon:hover {
+            background: rgba(71, 85, 105, 0.2);
+            transform: scale(1.12) rotate(3deg);
+            border-color: rgba(71, 85, 105, 0.4);
+            box-shadow: 
+                0 12px 40px rgba(0, 0, 0, 0.5),
+                0 6px 20px rgba(0, 0, 0, 0.4),
+                0 3px 10px rgba(71, 85, 105, 0.15),
+                0 0 25px rgba(71, 85, 105, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Dark Premium Multi-Layer Shimmer */
+        .dark-premium-shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dark-premium-shimmer::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -100%;
+            width: 100%;
+            height: calc(100% + 8px);
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(71, 85, 105, 0.2), 
+                rgba(255, 255, 255, 0.1), 
+                rgba(71, 85, 105, 0.25), 
+                rgba(255, 255, 255, 0.15), 
+                rgba(71, 85, 105, 0.2), 
+                transparent);
+            animation: darkPremiumShimmerEffect 7s ease-in-out infinite;
+        }
+        
+        .dark-premium-shimmer::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -100%;
+            width: 100%;
+            height: calc(100% + 8px);
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.08), 
+                rgba(255, 255, 255, 0.12), 
+                rgba(255, 255, 255, 0.08), 
+                transparent);
+            animation: darkPremiumShimmerEffect 7s ease-in-out infinite;
+            animation-delay: 1.2s;
+        }
+        
+        @keyframes darkPremiumShimmerEffect {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+        
+        .dark-premium-texture-overlay {
+            background-image: 
+                radial-gradient(circle at 20% 10%, rgba(71, 85, 105, 0.06) 45%, transparent 45%),
+                radial-gradient(circle at 80% 90%, rgba(51, 65, 85, 0.05) 40%, transparent 40%),
+                radial-gradient(circle at 10% 80%, rgba(71, 85, 105, 0.04) 35%, transparent 35%),
+                radial-gradient(circle at 90% 20%, rgba(51, 65, 85, 0.03) 30%, transparent 30%),
+                radial-gradient(circle at 50% 50%, rgba(71, 85, 105, 0.02) 25%, transparent 25%);
+            background-size: 140px 140px, 120px 120px, 100px 100px, 80px 80px, 60px 60px;
+        }
+        
+        .dark-premium-shadow {
+            box-shadow: 
+                0 32px 128px rgba(0, 0, 0, 0.9),
+                0 16px 64px rgba(0, 0, 0, 0.8),
+                0 8px 32px rgba(0, 0, 0, 0.7),
+                0 4px 16px rgba(71, 85, 105, 0.1),
+                0 2px 8px rgba(71, 85, 105, 0.08),
+                0 1px 4px rgba(71, 85, 105, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+        
+        .dark-premium-floating-document {
+            position: absolute;
+            opacity: 0.25;
+            animation: darkPremiumFloatDocument 24s ease-in-out infinite;
+            filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6));
+        }
+        
+        @keyframes darkPremiumFloatDocument {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg) scale(1) skewX(0deg); 
+                opacity: 0.25; 
+                filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6));
+            }
+            20% { 
+                transform: translateY(-12px) rotate(1.5deg) scale(1.03) skewX(0.5deg); 
+                opacity: 0.4; 
+                filter: drop-shadow(0 6px 20px rgba(71, 85, 105, 0.2));
+            }
+            40% { 
+                transform: translateY(-22px) rotate(3deg) scale(1.06) skewX(1deg); 
+                opacity: 0.2; 
+                filter: drop-shadow(0 8px 24px rgba(71, 85, 105, 0.25));
+            }
+            60% { 
+                transform: translateY(-16px) rotate(-2deg) scale(1.04) skewX(-0.8deg); 
+                opacity: 0.35; 
+                filter: drop-shadow(0 7px 22px rgba(71, 85, 105, 0.22));
+            }
+            80% { 
+                transform: translateY(-28px) rotate(2.5deg) scale(1.08) skewX(1.2deg); 
+                opacity: 0.3; 
+                filter: drop-shadow(0 9px 28px rgba(71, 85, 105, 0.28));
+            }
+        }
+        
+        /* Dark Premium Legal Document Grid */
+        .dark-premium-legal-grid {
+            background-image: 
+                linear-gradient(rgba(71, 85, 105, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(71, 85, 105, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(51, 65, 85, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(51, 65, 85, 0.025) 1px, transparent 1px);
+            background-size: 30px 30px, 30px 30px, 6px 6px, 6px 6px;
+            animation: darkPremiumGridPulse 18s ease-in-out infinite;
+        }
+        
+        @keyframes darkPremiumGridPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Dark Premium Typography */
+        .dark-premium-typography {
+            letter-spacing: 0.03em;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            font-variant-ligatures: common-ligatures;
+        }
+        
+        /* Dark Premium Watermark Effect */
+        .dark-premium-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 8rem;
+            font-weight: 100;
+            color: rgba(71, 85, 105, 0.03);
+            pointer-events: none;
+            user-select: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen dark-premium-document-bg dark-premium-document-flow">
+    <div class="flex min-h-screen relative">
+        <div class="dark-premium-texture-overlay absolute inset-0"></div>
+        <div class="dark-premium-legal-grid absolute inset-0"></div>
+        <div class="dark-premium-watermark dark-premium-typography">LexiA</div>
+        
+        <!-- Dark premium floating document icons with advanced effects -->
+        <div class="dark-premium-floating-document top-1/8 left-1/6 w-7 h-7">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-full h-full text-slate-400">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+        </div>
+        <div class="dark-premium-floating-document top-1/3 right-1/5 w-6 h-6" style="animation-delay: -8s;">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-full h-full text-slate-500">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+        </div>
+        <div class="dark-premium-floating-document bottom-1/6 left-1/4 w-5 h-5" style="animation-delay: -16s;">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-full h-full text-slate-300">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+        </div>
+        <div class="dark-premium-floating-document top-3/5 right-1/3 w-4 h-4" style="animation-delay: -12s;">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-full h-full text-slate-400">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+        </div>
+        
+        <!-- Theme Toggle -->
+        <div class="fixed top-6 right-6 z-50">
+            <button class="dark-premium-icon p-3 rounded-full dark-premium-shimmer">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Left Side - Dark Premium Document-Inspired Branding -->
+        <div class="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-16 relative z-10">
+            <div class="max-w-sm mx-auto text-center">
+                <!-- Dark Premium Platinum Logo with Advanced Effects -->
+                <div class="mb-16 inline-flex p-8 rounded-3xl dark-premium-icon dark-logo-premium-platinum dark-premium-shimmer">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTI0IDQ4QzM3LjI1NDggNDggNDggMzcuMjU0OCA0OCAyNEM0OCAxMC43NDUyIDM3LjI1NDggMCAyNCAwQzEwLjc0NTIgMCAwIDEwLjc0NTIgMCAyNEMwIDM3LjI1NDggMTAuNzQ1MiA0OCAyNCA0OFoiIGZpbGw9IiM0NzU1NjkiLz4KPHBhdGggZD0iTTI0IDM2QzMwLjYyNzQgMzYgMzYgMzAuNjI3NCAzNiAyNEMzNiAxNy4zNzI2IDMwLjYyNzQgMTIgMjQgMTJDMTcuMzcyNiAxMiAxMiAxNy4zNzI2IDEyIDI0QzEyIDMwLjYyNzQgMTcuMzcyNiAzNiAyNCAzNloiIGZpbGw9IiNGRkZGRkYiLz4KPC9zdmc+" alt="LexiA Logo" class="h-20 w-20 object-contain" />
+                </div>
+                
+                <h1 class="text-6xl font-extralight tracking-tight mb-8 text-white dark-premium-typography">LexiA</h1>
+                <p class="text-lg font-light text-gray-200 mb-16 leading-relaxed dark-premium-typography">
+                    Intelligence juridique avancée
+                </p>
+                
+                <!-- Dark Premium Document Features with Advanced Effects -->
+                <div class="space-y-8 text-left">
+                    <div class="dark-premium-paper-card p-8 rounded-2xl dark-premium-shimmer">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-2xl dark-premium-icon flex items-center justify-center">
+                                <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-white mb-1 dark-premium-typography">Analyse experte</h3>
+                                <p class="text-sm text-gray-200 dark-premium-typography">Solutions juridiques précises</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dark-premium-paper-card p-8 rounded-2xl dark-premium-shimmer" style="animation-delay: -2.5s;">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-2xl dark-premium-icon flex items-center justify-center">
+                                <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 18l-3.75-3.75 3.75-3.75m-6.75 10.5L3.75 15 7.5 11.25m13.5 0L17.25 15l3.75 3.75M9 12h6m-6 3h6m-6 3h6" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-white mb-1 dark-premium-typography">Documents intelligents</h3>
+                                <p class="text-sm text-gray-200 dark-premium-typography">Rédaction automatisée</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dark-premium-paper-card p-8 rounded-2xl dark-premium-shimmer" style="animation-delay: -5s;">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-2xl dark-premium-icon flex items-center justify-center">
+                                <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-white mb-1 dark-premium-typography">Sécurité totale</h3>
+                                <p class="text-sm text-gray-200 dark-premium-typography">Confidentialité garantie</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Side - Dark Premium Executive Form -->
+        <div class="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-gray-900 relative z-10">
+            <div class="w-full max-w-md dark-premium-shadow bg-gray-800 rounded-3xl p-12 dark-premium-shimmer">
+                <!-- Mobile Logo -->
+                <div class="flex flex-col items-center mb-8 lg:hidden">
+                    <div class="mb-4 inline-flex p-4 dark-premium-icon rounded-2xl dark-logo-premium-platinum">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTI0IDQ4QzM3LjI1NDggNDggNDggMzcuMjU0OCA0OCAyNEM0OCAxMC43NDUyIDM3LjI1NDggMCAyNCAwQzEwLjc0NTIgMCAwIDEwLjc0NTIgMCAyNEMwIDM3LjI1NDggMTAuNzQ1MiA0OCAyNCA0OFoiIGZpbGw9IiM0NzU1NjkiLz4KPHBhdGggZD0iTTI0IDM2QzMwLjYyNzQgMzYgMzYgMzAuNjI3NCAzNiAyNEMzNiAxNy4zNzI2IDMwLjYyNzQgMTIgMjQgMTJDMTcuMzcyNiAxMiAxMiAxNy4zNzI2IDEyIDI0QzEyIDMwLjYyNzQgMTcuMzcyNiAzNiAyNCAzNloiIGZpbGw9IiNGRkZGRkYiLz4KPC9zdmc+" alt="LexiA Logo" class="h-8 w-8 object-contain" />
+                    </div>
+                    <h1 class="text-2xl font-light text-white dark-premium-typography">LexiA</h1>
+                </div>
+                
+                <div class="space-y-8">
+                    <div class="text-center">
+                        <h2 class="text-3xl font-light text-white mb-3 dark-premium-typography">Connexion</h2>
+                        <p class="text-gray-200 font-light dark-premium-typography">Accès professionnel</p>
+                    </div>
+                    
+                    <form class="space-y-6">
+                        <div class="space-y-4">
+                            <input
+                                type="email"
+                                placeholder="Adresse e-mail"
+                                required
+                                class="dark-premium-parchment-input w-full px-6 py-4 rounded-2xl focus:outline-none font-light dark-premium-typography"
+                            />
+                            
+                            <input
+                                type="password"
+                                placeholder="Mot de passe"
+                                required
+                                class="dark-premium-parchment-input w-full px-6 py-4 rounded-2xl focus:outline-none font-light dark-premium-typography"
+                            />
+                            
+                            <div class="text-right">
+                                <a href="#" class="text-sm text-gray-200 hover:text-white transition-colors font-light dark-premium-typography">
+                                    Récupération d'accès
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="dark-premium-executive-button w-full text-white py-4 rounded-2xl font-medium dark-premium-typography">
+                            Initialiser la connexion
+                        </button>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p class="text-sm text-gray-200 font-light dark-premium-typography">
+                            Nouvel utilisateur ?
+                            <a href="#" class="text-white hover:text-gray-200 font-medium ml-1 transition-colors">
+                                Créer un compte
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

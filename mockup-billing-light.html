@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiA - Facturation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sophisticated-bg {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 30%, #e8eaed 70%, #f8f9fa 100%);
+        }
+        
+        .executive-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 50%, rgba(241, 243, 244, 0.95) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(80, 86, 98, 0.08);
+            box-shadow: 
+                0 4px 20px rgba(80, 86, 98, 0.06),
+                0 2px 8px rgba(80, 86, 98, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 100%);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(80, 86, 98, 0.08);
+        }
+        
+        .primary-button {
+            background: linear-gradient(135deg, #5c6370 0%, #505662 50%, #434854 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 20px rgba(80, 86, 98, 0.25),
+                0 2px 12px rgba(80, 86, 98, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        .primary-button:hover {
+            background: linear-gradient(135deg, #434854 0%, #3a3f4a 50%, #313641 100%);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 6px 24px rgba(80, 86, 98, 0.3),
+                0 3px 12px rgba(80, 86, 98, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+        
+        .sidebar-item:hover, .sidebar-item.active {
+            background: rgba(80, 86, 98, 0.08);
+            transform: translateX(2px);
+        }
+        
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(80, 86, 98, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(80, 86, 98, 0.1);
+            border-color: rgba(80, 86, 98, 0.15);
+        }
+        
+        .pricing-card.featured {
+            border-color: #5c6370;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.95) 100%);
+            box-shadow: 0 8px 32px rgba(80, 86, 98, 0.12);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #5c6370 0%, #434854 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen sophisticated-bg">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar fixed h-full z-40">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-semibold text-sm">L</span>
+                    </div>
+                    <span class="text-xl font-light text-slate-800">LexiA</span>
+                </div>
+                
+                <nav class="space-y-2">
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                        </svg>
+                        <span class="font-medium">Tableau de bord</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <span class="font-medium">Nouveau dossier</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <span class="font-medium">Dossiers</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="font-medium">Documents</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item active flex items-center space-x-3 px-4 py-3 text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                        <span class="font-medium">Facturation</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">Jean Dupont</div>
+                            <div class="text-xs text-gray-500">Premium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64">
+            <!-- Header -->
+            <header class="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-light text-slate-800">Facturation & Abonnements</h1>
+                        <p class="text-gray-600">Gérez votre abonnement et consultez votre usage</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Billing Content -->
+            <main class="p-6 bg-gray-50">
+                <!-- Current Plan -->
+                <div class="executive-card rounded-2xl p-6 mb-8">
+                    <h2 class="text-xl font-semibold text-slate-800 mb-4">Abonnement actuel</h2>
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-lg font-medium text-slate-800">Plan Premium</h3>
+                                    <p class="text-gray-600">Accès illimité à toutes les fonctionnalités</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-light text-slate-800">199,99€</div>
+                                    <div class="text-sm text-gray-600">par mois</div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-gray-600">Crédits utilisés ce mois</span>
+                                    <span class="font-medium text-slate-800">47 / Illimité</span>
+                                </div>
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-gray-600">Prochaine facturation</span>
+                                    <span class="font-medium text-slate-800">15 août 2024</span>
+                                </div>
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-gray-600">Statut</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">Actif</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="lg:w-80">
+                            <h4 class="text-sm font-medium text-gray-700 mb-3">Utilisation mensuelle</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-gray-600">Consultations IA</span>
+                                        <span class="font-medium">47</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="progress-bar h-2 rounded-full" style="width: 24%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-gray-600">Documents générés</span>
+                                        <span class="font-medium">12</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="progress-bar h-2 rounded-full" style="width: 12%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-gray-600">Stockage utilisé</span>
+                                        <span class="font-medium">2.3 GB / 10 GB</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="progress-bar h-2 rounded-full" style="width: 23%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
+                            Gérer l'abonnement
+                        </button>
+                        <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
+                            Télécharger la facture
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pricing Plans -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold text-slate-800 mb-6">Plans disponibles</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Free Plan -->
+                        <div class="pricing-card rounded-2xl p-6">
+                            <div class="text-center mb-6">
+                                <h3 class="text-lg font-semibold text-slate-800 mb-2">Gratuit</h3>
+                                <div class="text-3xl font-light text-slate-800 mb-1">0€</div>
+                                <div class="text-gray-600">par mois</div>
+                            </div>
+                            
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">10 crédits par mois</span>
+                                </li>
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">Support par email</span>
+                                </li>
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">Stockage 100 MB</span>
+                                </li>
+                            </ul>
+                            
+                            <button class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+                                Plan actuel
+                            </button>
+                        </div>
+
+                        <!-- Basic Plan -->
+                        <div class="pricing-card rounded-2xl p-6">
+                            <div class="text-center mb-6">
+                                <h3 class="text-lg font-semibold text-slate-800 mb-2">Basic</h3>
+                                <div class="text-3xl font-light text-slate-800 mb-1">49,99€</div>
+                                <div class="text-gray-600">par mois</div>
+                            </div>
+                            
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">25 crédits par mois</span>
+                                </li>
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">Support prioritaire</span>
+                                </li>
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">Stockage 1 GB</span>
+                                </li>
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">Export PDF</span>
+                                </li>
+                            </ul>
+                            
+                            <button class="w-full primary-button text-white py-3 rounded-xl">
+                                Passer au Basic
+                            </button>
+                        </div>
+
+                        <!-- Premium Plan -->
+                        <div class="pricing-card featured rounded-2xl p-6 relative">
+                            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                                <span class="bg-gray-700 text-white px-4 py-1 rounded-full text-xs font-medium">Recommandé</span>
+                            </div>
+                            
+                            <div class="text-center mb-6">
+                                <h3 class="text-lg font-semibold text-slate-800 mb-2">Premium</h3>
+                                <div class="text-3xl font-light text-slate-800 mb-1">199,99€</div>
+                                <div class="text-gray-600">par mois</div>
+                            </div>
+                            
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">Crédits illimités</span>
+                                </li>
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">Support téléphonique</span>
+                                </li>
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">Stockage 10 GB</span>
+                                </li>
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">API Access</span>
+                                </li>
+                                <li class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                    </svg>
+                                    <span class="text-gray-700">Collaboration équipe</span>
+                                </li>
+                            </ul>
+                            
+                            <button class="w-full bg-gray-100 text-gray-500 py-3 rounded-xl cursor-not-allowed">
+                                Plan actuel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing History -->
+                <div class="executive-card rounded-2xl p-6">
+                    <h2 class="text-xl font-semibold text-slate-800 mb-4">Historique de facturation</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-3 text-sm font-medium text-gray-600">Date</th>
+                                    <th class="text-left py-3 text-sm font-medium text-gray-600">Description</th>
+                                    <th class="text-left py-3 text-sm font-medium text-gray-600">Montant</th>
+                                    <th class="text-left py-3 text-sm font-medium text-gray-600">Statut</th>
+                                    <th class="text-left py-3 text-sm font-medium text-gray-600">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="py-4 text-sm text-gray-900">15 juillet 2024</td>
+                                    <td class="py-4 text-sm text-gray-900">Abonnement Premium - Juillet</td>
+                                    <td class="py-4 text-sm text-gray-900">199,99€</td>
+                                    <td class="py-4">
+                                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Payé</span>
+                                    </td>
+                                    <td class="py-4">
+                                        <button class="text-gray-600 hover:text-gray-800 text-sm underline">Télécharger</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="py-4 text-sm text-gray-900">15 juin 2024</td>
+                                    <td class="py-4 text-sm text-gray-900">Abonnement Premium - Juin</td>
+                                    <td class="py-4 text-sm text-gray-900">199,99€</td>
+                                    <td class="py-4">
+                                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Payé</span>
+                                    </td>
+                                    <td class="py-4">
+                                        <button class="text-gray-600 hover:text-gray-800 text-sm underline">Télécharger</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="py-4 text-sm text-gray-900">15 mai 2024</td>
+                                    <td class="py-4 text-sm text-gray-900">Abonnement Premium - Mai</td>
+                                    <td class="py-4 text-sm text-gray-900">199,99€</td>
+                                    <td class="py-4">
+                                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Payé</span>
+                                    </td>
+                                    <td class="py-4">
+                                        <button class="text-gray-600 hover:text-gray-800 text-sm underline">Télécharger</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

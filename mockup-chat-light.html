@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiA - Consultation IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sophisticated-bg {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 30%, #e8eaed 70%, #f8f9fa 100%);
+        }
+        
+        .executive-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 50%, rgba(241, 243, 244, 0.95) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(80, 86, 98, 0.08);
+            box-shadow: 
+                0 4px 20px rgba(80, 86, 98, 0.06),
+                0 2px 8px rgba(80, 86, 98, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 100%);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(80, 86, 98, 0.08);
+        }
+        
+        .primary-button {
+            background: linear-gradient(135deg, #5c6370 0%, #505662 50%, #434854 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 20px rgba(80, 86, 98, 0.25),
+                0 2px 12px rgba(80, 86, 98, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        .primary-button:hover {
+            background: linear-gradient(135deg, #434854 0%, #3a3f4a 50%, #313641 100%);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 6px 24px rgba(80, 86, 98, 0.3),
+                0 3px 12px rgba(80, 86, 98, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+        
+        .sidebar-item:hover, .sidebar-item.active {
+            background: rgba(80, 86, 98, 0.08);
+            transform: translateX(2px);
+        }
+        
+        .chat-message-user {
+            background: linear-gradient(135deg, #5c6370 0%, #434854 100%);
+            color: white;
+        }
+        
+        .chat-message-ai {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(80, 86, 98, 0.1);
+            color: #334155;
+        }
+        
+        .chat-input {
+            border: 1px solid rgba(80, 86, 98, 0.2);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 1px 3px rgba(80, 86, 98, 0.06);
+        }
+        
+        .chat-input:focus {
+            border-color: #5c6370;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 
+                0 0 0 3px rgba(92, 99, 112, 0.1),
+                inset 0 1px 3px rgba(80, 86, 98, 0.08);
+        }
+        
+        .typing-indicator {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+        
+        .chat-container {
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: rgba(80, 86, 98, 0.1);
+            border-radius: 3px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(80, 86, 98, 0.3);
+            border-radius: 3px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(80, 86, 98, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen sophisticated-bg">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar fixed h-full z-40">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-semibold text-sm">L</span>
+                    </div>
+                    <span class="text-xl font-light text-slate-800">LexiA</span>
+                </div>
+                
+                <nav class="space-y-2">
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                        </svg>
+                        <span class="font-medium">Tableau de bord</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <span class="font-medium">Nouveau dossier</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <span class="font-medium">Dossiers</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="font-medium">Documents</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item active flex items-center space-x-3 px-4 py-3 text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        <span class="font-medium">Consultation IA</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                        <span class="font-medium">Facturation</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">Jean Dupont</div>
+                            <div class="text-xs text-gray-500">Premium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64">
+            <!-- Header -->
+            <header class="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-light text-slate-800">Consultation juridique IA</h1>
+                        <p class="text-gray-600">Posez vos questions juridiques et obtenez des réponses instantanées</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-sm text-gray-600">
+                            <span class="font-medium">Crédits restants:</span> Illimité
+                        </div>
+                        <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Nouvelle conversation
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Chat Interface -->
+            <main class="flex-1 flex flex-col h-full">
+                <!-- Chat Messages -->
+                <div class="chat-container flex-1 p-6 space-y-4">
+                    <!-- Welcome Message -->
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <div class="chat-message-ai max-w-3xl p-4 rounded-2xl rounded-tl-md">
+                            <p class="text-gray-800 mb-2"><strong>Bonjour Jean!</strong></p>
+                            <p class="text-gray-700">Je suis votre assistant juridique IA spécialisé en droit belge. Je peux vous aider avec:</p>
+                            <ul class="list-disc list-inside mt-3 text-gray-700 space-y-1">
+                                <li>Questions de droit des contrats</li>
+                                <li>Droit immobilier et transactions</li>
+                                <li>Droit du travail et procédures</li>
+                                <li>Succession et planification patrimoniale</li>
+                                <li>Création d'entreprise et statuts</li>
+                            </ul>
+                            <p class="text-gray-700 mt-3">Comment puis-je vous assister aujourd'hui?</p>
+                        </div>
+                    </div>
+
+                    <!-- User Message -->
+                    <div class="flex items-start space-x-3 justify-end">
+                        <div class="chat-message-user max-w-2xl p-4 rounded-2xl rounded-tr-md">
+                            <p>Je dois rédiger un contrat de bail commercial pour un local de 150m² en centre-ville de Bruxelles. Quelles sont les clauses essentielles à inclure selon la législation belge?</p>
+                        </div>
+                        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-gray-600 font-semibold text-sm">JD</span>
+                        </div>
+                    </div>
+
+                    <!-- AI Response -->
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <div class="chat-message-ai max-w-3xl p-4 rounded-2xl rounded-tl-md">
+                            <p class="text-gray-800 mb-3"><strong>Excellent question!</strong> Pour un contrat de bail commercial en Belgique, voici les clauses essentielles à inclure:</p>
+                            
+                            <div class="space-y-4 text-gray-700">
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">1. Identification des parties</h4>
+                                    <p>- Bailleur et preneur (nom, adresse, numéro d'entreprise)</p>
+                                    <p>- Destination commerciale précise du local</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">2. Description du bien</h4>
+                                    <p>- Adresse exacte et superficie (150m²)</p>
+                                    <p>- État des lieux détaillé en annexe</p>
+                                    <p>- Parties communes éventuelles</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">3. Durée et renouvellement</h4>
+                                    <p>- Durée minimale de 9 ans (loi sur les baux commerciaux)</p>
+                                    <p>- Droit de résiliation triennale du preneur</p>
+                                    <p>- Conditions de renouvellement</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">4. Loyer et charges</h4>
+                                    <p>- Montant du loyer mensuel</p>
+                                    <p>- Modalités de révision (indexation)</p>
+                                    <p>- Répartition des charges et taxes</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <p class="text-sm text-blue-800"><strong>💡 Conseil:</strong> Je recommande d'inclure une clause de destination précise pour éviter les conflits futurs et de prévoir les modalités d'aménagement du local.</p>
+                            </div>
+                            
+                            <div class="mt-4 flex space-x-2">
+                                <button class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                                    Générer un modèle
+                                </button>
+                                <button class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                                    Plus de détails
+                                </button>
+                                <button class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                                    Sauvegarder
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Follow-up -->
+                    <div class="flex items-start space-x-3 justify-end">
+                        <div class="chat-message-user max-w-2xl p-4 rounded-2xl rounded-tr-md">
+                            <p>Parfait! Peux-tu me générer un modèle de contrat avec ces clauses? Le loyer serait de 2 500€/mois pour une activité de restauration.</p>
+                        </div>
+                        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-gray-600 font-semibold text-sm">JD</span>
+                        </div>
+                    </div>
+
+                    <!-- Typing Indicator -->
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <div class="chat-message-ai p-4 rounded-2xl rounded-tl-md">
+                            <div class="flex space-x-1 items-center">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full typing-indicator"></div>
+                                <div class="w-2 h-2 bg-blue-500 rounded-full typing-indicator" style="animation-delay: 0.3s;"></div>
+                                <div class="w-2 h-2 bg-blue-500 rounded-full typing-indicator" style="animation-delay: 0.6s;"></div>
+                                <span class="text-gray-600 text-sm ml-2">LexiA rédige votre contrat...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="border-t border-gray-200/50 p-4 bg-white/50 backdrop-blur-md">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="flex items-end space-x-3">
+                            <div class="flex-1">
+                                <textarea 
+                                    rows="3" 
+                                    class="chat-input w-full px-4 py-3 rounded-2xl focus:outline-none resize-none" 
+                                    placeholder="Posez votre question juridique...">
+                                </textarea>
+                            </div>
+                            <div class="flex flex-col space-y-2">
+                                <button class="primary-button text-white p-3 rounded-xl">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                    </svg>
+                                </button>
+                                <button class="p-3 text-gray-400 hover:text-gray-600 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
+                            <div class="flex items-center space-x-4">
+                                <span>Appuyez sur Entrée pour envoyer</span>
+                                <span>•</span>
+                                <span>Shift + Entrée pour nouvelle ligne</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span>Propulsé par IA juridique</span>
+                                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

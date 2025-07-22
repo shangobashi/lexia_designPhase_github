@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiA - Gestion des dossiers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .dark-bg {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 30%, #16213e 70%, #0f0f23 100%);
+        }
+        
+        .dark-executive-card {
+            background: linear-gradient(135deg, rgba(22, 33, 62, 0.8) 0%, rgba(26, 26, 46, 0.85) 50%, rgba(15, 15, 35, 0.9) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(100, 116, 139, 0.15);
+            box-shadow: 
+                0 4px 20px rgba(15, 15, 35, 0.4),
+                0 2px 8px rgba(22, 33, 62, 0.3),
+                inset 0 1px 0 rgba(100, 116, 139, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dark-sidebar {
+            background: linear-gradient(180deg, rgba(22, 33, 62, 0.8) 0%, rgba(15, 15, 35, 0.9) 100%);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(100, 116, 139, 0.1);
+        }
+        
+        .dark-case-card {
+            background: rgba(22, 33, 62, 0.6);
+            border: 1px solid rgba(100, 116, 139, 0.12);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+        
+        .dark-case-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(15, 15, 35, 0.4);
+            border-color: rgba(100, 116, 139, 0.2);
+            background: rgba(26, 26, 46, 0.7);
+        }
+        
+        .dark-primary-button {
+            background: linear-gradient(135deg, #16213e 0%, #0f0f23 50%, #1a1a2e 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 20px rgba(15, 15, 35, 0.5),
+                0 2px 12px rgba(22, 33, 62, 0.4),
+                inset 0 1px 0 rgba(100, 116, 139, 0.15);
+        }
+        
+        .dark-sidebar-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+        
+        .dark-sidebar-item:hover, .dark-sidebar-item.active {
+            background: rgba(100, 116, 139, 0.15);
+            transform: translateX(2px);
+        }
+        
+        .dark-filter-button {
+            background: rgba(22, 33, 62, 0.6);
+            border: 1px solid rgba(100, 116, 139, 0.15);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+        
+        .dark-filter-button.active {
+            background: rgba(100, 116, 139, 0.2);
+            border-color: rgba(100, 116, 139, 0.3);
+        }
+        
+        .dark-input {
+            border: 1px solid rgba(100, 116, 139, 0.2);
+            background: rgba(22, 33, 62, 0.6);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 1px 3px rgba(15, 15, 35, 0.3);
+            color: #e2e8f0;
+        }
+        
+        .dark-input::placeholder {
+            color: #94a3b8;
+        }
+        
+        .dark-input:focus {
+            border-color: #64748b;
+            background: rgba(26, 26, 46, 0.8);
+            box-shadow: 
+                0 0 0 3px rgba(100, 116, 139, 0.2),
+                inset 0 1px 3px rgba(15, 15, 35, 0.4);
+        }
+        
+        .dark-header {
+            background: rgba(15, 15, 35, 0.8);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(100, 116, 139, 0.1);
+        }
+        
+        .dark-secondary-bg {
+            background: linear-gradient(120deg, rgba(15, 15, 35, 0.9) 0%, rgba(26, 26, 46, 0.85) 50%, rgba(22, 33, 62, 0.9) 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen dark-bg">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 dark-sidebar fixed h-full z-40">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-8 h-8 bg-slate-200 rounded-lg flex items-center justify-center">
+                        <span class="text-gray-800 font-semibold text-sm">L</span>
+                    </div>
+                    <span class="text-xl font-light text-slate-100">LexiA</span>
+                </div>
+                
+                <nav class="space-y-2">
+                    <a href="#" class="dark-sidebar-item flex items-center space-x-3 px-4 py-3 text-slate-300 hover:text-slate-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                        </svg>
+                        <span class="font-medium">Tableau de bord</span>
+                    </a>
+                    
+                    <a href="#" class="dark-sidebar-item flex items-center space-x-3 px-4 py-3 text-slate-300 hover:text-slate-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <span class="font-medium">Nouveau dossier</span>
+                    </a>
+                    
+                    <a href="#" class="dark-sidebar-item active flex items-center space-x-3 px-4 py-3 text-slate-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <span class="font-medium">Dossiers</span>
+                    </a>
+                    
+                    <a href="#" class="dark-sidebar-item flex items-center space-x-3 px-4 py-3 text-slate-300 hover:text-slate-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="font-medium">Documents</span>
+                    </a>
+                    
+                    <a href="#" class="dark-sidebar-item flex items-center space-x-3 px-4 py-3 text-slate-300 hover:text-slate-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                        <span class="font-medium">Facturation</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-slate-700/50 rounded-xl p-4 border border-slate-600/30">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-slate-500 rounded-full"></div>
+                        <div>
+                            <div class="text-sm font-medium text-slate-100">Jean Dupont</div>
+                            <div class="text-xs text-slate-300">Premium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64">
+            <!-- Header -->
+            <header class="dark-header px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-light text-slate-100">Gestion des dossiers</h1>
+                        <p class="text-slate-300">Organisez et suivez vos affaires juridiques</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="dark-primary-button text-white px-4 py-2 rounded-xl font-medium">
+                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Nouveau dossier
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Filters and Search -->
+            <div class="p-6">
+                <div class="dark-executive-card p-4 rounded-xl mb-6">
+                    <div class="flex flex-col lg:flex-row gap-4 items-center">
+                        <div class="flex-1">
+                            <div class="relative">
+                                <input type="text" placeholder="Rechercher par titre, description ou mots-clés..." 
+                                       class="dark-input w-full pl-10 pr-4 py-3 rounded-xl focus:outline-none">
+                                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <button class="dark-filter-button active px-4 py-2 rounded-lg text-sm font-medium text-slate-200">
+                                Tous
+                            </button>
+                            <button class="dark-filter-button px-4 py-2 rounded-lg text-sm font-medium text-slate-300">
+                                En cours
+                            </button>
+                            <button class="dark-filter-button px-4 py-2 rounded-lg text-sm font-medium text-slate-300">
+                                Terminés
+                            </button>
+                            <button class="dark-filter-button px-4 py-2 rounded-lg text-sm font-medium text-slate-300">
+                                Archivés
+                            </button>
+                        </div>
+                        
+                        <select class="dark-input rounded-lg px-3 py-2 text-sm text-slate-200">
+                            <option>Trier par date</option>
+                            <option>Trier par titre</option>
+                            <option>Trier par statut</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Cases Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Case Card 1 -->
+                    <div class="dark-case-card rounded-xl p-6 cursor-pointer">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-slate-100 text-lg mb-2">Contrat de bail commercial</h3>
+                                <p class="text-slate-300 text-sm mb-3">Révision des clauses de résiliation anticipée et négociation des conditions avec le propriétaire.</p>
+                            </div>
+                            <span class="px-3 py-1 bg-blue-900/50 text-blue-300 text-xs rounded-full font-medium ml-2">En cours</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-slate-400 mb-4">
+                            <span>Créé le 10 juillet 2024</span>
+                            <span>5 documents</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                <span class="text-sm text-slate-400">12 messages</span>
+                            </div>
+                            <button class="text-slate-500 hover:text-slate-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 2L3 6l3 4M18 2l3 4-3 4"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Case Card 2 -->
+                    <div class="dark-case-card rounded-xl p-6 cursor-pointer">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-slate-100 text-lg mb-2">Succession familiale</h3>
+                                <p class="text-slate-300 text-sm mb-3">Répartition des biens immobiliers et mobiliers suite au décès. Gestion des droits de succession.</p>
+                            </div>
+                            <span class="px-3 py-1 bg-yellow-900/50 text-yellow-300 text-xs rounded-full font-medium ml-2">Révision</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-slate-400 mb-4">
+                            <span>Créé le 8 juillet 2024</span>
+                            <span>8 documents</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                <span class="text-sm text-slate-400">24 messages</span>
+                            </div>
+                            <button class="text-slate-500 hover:text-slate-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 2L3 6l3 4M18 2l3 4-3 4"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Case Card 3 -->
+                    <div class="dark-case-card rounded-xl p-6 cursor-pointer">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-slate-100 text-lg mb-2">Litige commercial</h3>
+                                <p class="text-slate-300 text-sm mb-3">Rupture de contrat avec fournisseur. Réclamation de dommages et intérêts pour non-respect des délais.</p>
+                            </div>
+                            <span class="px-3 py-1 bg-green-900/50 text-green-300 text-xs rounded-full font-medium ml-2">Terminé</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-slate-400 mb-4">
+                            <span>Créé le 5 juillet 2024</span>
+                            <span>15 documents</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                <span class="text-sm text-slate-400">38 messages</span>
+                            </div>
+                            <button class="text-slate-500 hover:text-slate-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 2L3 6l3 4M18 2l3 4-3 4"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Case Card 4 -->
+                    <div class="dark-case-card rounded-xl p-6 cursor-pointer">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-slate-100 text-lg mb-2">Création d'entreprise</h3>
+                                <p class="text-slate-300 text-sm mb-3">Rédaction des statuts de SPRL et formalités administratives. Choix de la forme juridique optimale.</p>
+                            </div>
+                            <span class="px-3 py-1 bg-blue-900/50 text-blue-300 text-xs rounded-full font-medium ml-2">En cours</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-slate-400 mb-4">
+                            <span>Créé le 3 juillet 2024</span>
+                            <span>6 documents</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                <span class="text-sm text-slate-400">7 messages</span>
+                            </div>
+                            <button class="text-slate-500 hover:text-slate-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 2L3 6l3 4M18 2l3 4-3 4"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Case Card 5 -->
+                    <div class="dark-case-card rounded-xl p-6 cursor-pointer">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-slate-100 text-lg mb-2">Divorce par consentement</h3>
+                                <p class="text-slate-300 text-sm mb-3">Procédure de divorce amiable avec répartition des biens et garde des enfants.</p>
+                            </div>
+                            <span class="px-3 py-1 bg-purple-900/50 text-purple-300 text-xs rounded-full font-medium ml-2">Attente</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-slate-400 mb-4">
+                            <span>Créé le 1er juillet 2024</span>
+                            <span>12 documents</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                <span class="text-sm text-slate-400">18 messages</span>
+                            </div>
+                            <button class="text-slate-500 hover:text-slate-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 2L3 6l3 4M18 2l3 4-3 4"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Case Card 6 -->
+                    <div class="dark-case-card rounded-xl p-6 cursor-pointer">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-slate-100 text-lg mb-2">Achat immobilier</h3>
+                                <p class="text-slate-300 text-sm mb-3">Vérification du compromis de vente et négociation des conditions suspensives.</p>
+                            </div>
+                            <span class="px-3 py-1 bg-green-900/50 text-green-300 text-xs rounded-full font-medium ml-2">Terminé</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-slate-400 mb-4">
+                            <span>Créé le 28 juin 2024</span>
+                            <span>9 documents</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                <span class="text-sm text-slate-400">14 messages</span>
+                            </div>
+                            <button class="text-slate-500 hover:text-slate-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 2L3 6l3 4M18 2l3 4-3 4"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="mt-8 flex justify-center">
+                    <div class="flex space-x-1">
+                        <button class="px-3 py-2 text-slate-400 hover:text-slate-200 hover:bg-slate-700/30 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <button class="px-3 py-2 bg-slate-600 text-white rounded-lg">1</button>
+                        <button class="px-3 py-2 text-slate-300 hover:text-slate-100 hover:bg-slate-700/30 rounded-lg transition-colors">2</button>
+                        <button class="px-3 py-2 text-slate-300 hover:text-slate-100 hover:bg-slate-700/30 rounded-lg transition-colors">3</button>
+                        <button class="px-3 py-2 text-slate-400 hover:text-slate-200 hover:bg-slate-700/30 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

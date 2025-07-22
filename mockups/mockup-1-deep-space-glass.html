@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiA - Mockup 1: Deep Space Black with Glass Morphism</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        
+        .deep-space-bg {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #0a0a0a 100%);
+        }
+        
+        .premium-shadow {
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .text-glow {
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .primary-button {
+            background: linear-gradient(135deg, #007AFF 0%, #0051D5 100%);
+            box-shadow: 
+                0 4px 16px rgba(0, 122, 255, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .primary-button:hover {
+            background: linear-gradient(135deg, #0051D5 0%, #003D99 100%);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 6px 20px rgba(0, 122, 255, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen deep-space-bg">
+    <div class="flex min-h-screen relative">
+        <!-- Theme Toggle -->
+        <div class="fixed top-6 right-6 z-50">
+            <button class="glass-morphism p-3 rounded-full hover:bg-white/10 transition-all duration-300">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Left Side - Premium Branding -->
+        <div class="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 relative">
+            <!-- Subtle background pattern -->
+            <div class="absolute inset-0 opacity-5">
+                <div class="absolute top-1/4 left-1/4 w-64 h-64 border border-white rounded-full"></div>
+                <div class="absolute bottom-1/4 right-1/4 w-32 h-32 border border-white rounded-full"></div>
+            </div>
+            
+            <div class="max-w-md mx-auto text-center relative z-10">
+                <!-- Logo with glass effect -->
+                <div class="mb-12 inline-flex p-6 glass-morphism rounded-3xl premium-shadow">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTI0IDQ4QzM3LjI1NDggNDggNDggMzcuMjU0OCA0OCAyNEM0OCAxMC43NDUyIDM3LjI1NDggMCAyNCAwQzEwLjc0NTIgMCAwIDEwLjc0NTIgMCAyNEMwIDM3LjI1NDggMTAuNzQ1MiA0OCAyNCA0OFoiIGZpbGw9IiNGRkZGRkYiLz4KPHBhdGggZD0iTTI0IDM2QzMwLjYyNzQgMzYgMzYgMzAuNjI3NCAzNiAyNEMzNiAxNy4zNzI2IDMwLjYyNzQgMTIgMjQgMTJDMTcuMzcyNiAxMiAxMiAxNy4zNzI2IDEyIDI0QzEyIDMwLjYyNzQgMTcuMzcyNiAzNiAyNCAzNloiIGZpbGw9IiMwMDdBRkYiLz4KPC9zdmc+" alt="LexiA Logo" class="h-16 w-16 object-contain" />
+                </div>
+                
+                <h1 class="text-5xl font-extralight tracking-tight mb-6 text-white text-glow">LexiA</h1>
+                <p class="text-xl font-light text-white/80 mb-12 leading-relaxed">
+                    L'intelligence juridique redéfinie
+                </p>
+                
+                <!-- Features with glass cards -->
+                <div class="space-y-6 text-left">
+                    <div class="feature-card p-6 rounded-2xl">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white mt-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364-.636l-.707.707M21 12h-1M17.66 20.364l-.707-.707M12 21v-1m-6.364-.636l.707-.707M3 12h1m.636-6.364l.707.707M8 12a4 4 0 108 0 4 4 0 00-8 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-white mb-2">Expertise instantanée</h3>
+                                <p class="text-sm text-white/70 leading-relaxed">Conseils juridiques de niveau expert, disponibles 24h/24</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card p-6 rounded-2xl">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white mt-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-white mb-2">Documents intelligents</h3>
+                                <p class="text-sm text-white/70 leading-relaxed">Génération automatique de documents juridiques précis</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card p-6 rounded-2xl">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white mt-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-white mb-2">Sécurité absolue</h3>
+                                <p class="text-sm text-white/70 leading-relaxed">Protection bancaire pour vos données confidentielles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Side - Clean Form -->
+        <div class="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-white">
+            <div class="w-full max-w-md">
+                <!-- Mobile Logo -->
+                <div class="flex flex-col items-center mb-8 lg:hidden">
+                    <div class="mb-4 inline-flex p-4 bg-gray-100 rounded-2xl">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTI0IDQ4QzM3LjI1NDggNDggNDggMzcuMjU0OCA0OCAyNEM0OCAxMC43NDUyIDM3LjI1NDggMCAyNCAwQzEwLjc0NTIgMCAwIDEwLjc0NTIgMCAyNEMwIDM3LjI1NDggMTAuNzQ1MiA0OCAyNCA0OFoiIGZpbGw9IiNGRkZGRkYiLz4KPHBhdGggZD0iTTI0IDM2QzMwLjYyNzQgMzYgMzYgMzAuNjI3NCAzNiAyNEMzNiAxNy4zNzI2IDMwLjYyNzQgMTIgMjQgMTJDMTcuMzcyNiAxMiAxMiAxNy4zNzI2IDEyIDI0QzEyIDMwLjYyNzQgMTcuMzcyNiAzNiAyNCAzNloiIGZpbGw9IiMwMDdBRkYiLz4KPC9zdmc+" alt="LexiA Logo" class="h-10 w-10 object-contain" />
+                    </div>
+                    <h1 class="text-2xl font-light text-gray-900">LexiA</h1>
+                    <p class="text-gray-600 text-sm">Intelligence juridique</p>
+                </div>
+                
+                <div class="space-y-8">
+                    <div class="text-center">
+                        <h2 class="text-3xl font-light text-gray-900 mb-3">Bienvenue</h2>
+                        <p class="text-gray-600">Connectez-vous à votre espace juridique</p>
+                    </div>
+                    
+                    <form class="space-y-6">
+                        <div class="space-y-4">
+                            <div class="relative">
+                                <input
+                                    type="email"
+                                    placeholder="Adresse e-mail"
+                                    required
+                                    class="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all duration-200"
+                                />
+                            </div>
+                            
+                            <div class="relative">
+                                <input
+                                    type="password"
+                                    placeholder="Mot de passe"
+                                    required
+                                    class="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all duration-200"
+                                />
+                            </div>
+                            
+                            <div class="text-right">
+                                <a href="#" class="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                                    Mot de passe oublié ?
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="w-full primary-button text-white py-4 rounded-xl font-medium transition-all duration-300">
+                            Se connecter
+                        </button>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600">
+                            Nouveau sur LexiA ?
+                            <a href="#" class="text-blue-600 hover:text-blue-800 font-medium ml-1 transition-colors">
+                                Créer un compte
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiA - Final 3 Dark: Document Flow + Electric Hologram</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .dark-electric-document-bg {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #1f1f1f 50%, #2d2d2d 75%, #1a1a1a 100%);
+        }
+        
+        .dark-electric-document-flow {
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='40' viewBox='0 0 60 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.03'%3E%3Crect x='5' y='5' width='8' height='12' rx='1'/%3E%3Crect x='17' y='8' width='6' height='8' rx='1'/%3E%3Crect x='27' y='6' width='8' height='10' rx='1'/%3E%3Crect x='39' y='4' width='6' height='14' rx='1'/%3E%3Crect x='49' y='7' width='8' height='8' rx='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background-size: 120px 80px;
+            animation: darkElectricDocumentMove 20s linear infinite;
+        }
+        
+        @keyframes darkElectricDocumentMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 120px 0; }
+        }
+        
+        /* Dark Electric Hologram Logo Animation */
+        .dark-logo-electric-hologram {
+            animation: darkLogoElectricHologram 8s ease-in-out infinite;
+        }
+        
+        @keyframes darkLogoElectricHologram {
+            0%, 100% { 
+                transform: scale(1) perspective(1000px) rotateY(0deg) rotateX(0deg); 
+                filter: brightness(1) contrast(1) saturate(1) hue-rotate(0deg);
+                box-shadow: 
+                    0 0 25px rgba(59, 130, 246, 0.3),
+                    0 0 50px rgba(16, 185, 129, 0.2),
+                    inset 0 0 25px rgba(139, 92, 246, 0.15);
+            }
+            25% { 
+                transform: scale(1.06) perspective(1000px) rotateY(3deg) rotateX(1deg); 
+                filter: brightness(1.3) contrast(1.15) saturate(1.2) hue-rotate(8deg);
+                box-shadow: 
+                    0 0 35px rgba(59, 130, 246, 0.4),
+                    0 0 70px rgba(16, 185, 129, 0.3),
+                    inset 0 0 35px rgba(139, 92, 246, 0.2);
+            }
+            50% { 
+                transform: scale(1.12) perspective(1000px) rotateY(0deg) rotateX(0deg); 
+                filter: brightness(1.5) contrast(1.3) saturate(1.4) hue-rotate(15deg);
+                box-shadow: 
+                    0 0 45px rgba(59, 130, 246, 0.5),
+                    0 0 90px rgba(16, 185, 129, 0.4),
+                    inset 0 0 45px rgba(139, 92, 246, 0.25);
+            }
+            75% { 
+                transform: scale(1.06) perspective(1000px) rotateY(-3deg) rotateX(-1deg); 
+                filter: brightness(1.3) contrast(1.15) saturate(1.2) hue-rotate(8deg);
+                box-shadow: 
+                    0 0 35px rgba(59, 130, 246, 0.4),
+                    0 0 70px rgba(16, 185, 129, 0.3),
+                    inset 0 0 35px rgba(139, 92, 246, 0.2);
+            }
+        }
+        
+        .dark-electric-paper-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            box-shadow: 
+                0 6px 24px rgba(0, 0, 0, 0.4),
+                0 3px 12px rgba(59, 130, 246, 0.1),
+                0 2px 8px rgba(16, 185, 129, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dark-electric-paper-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 24px 60px rgba(0, 0, 0, 0.5),
+                0 12px 30px rgba(59, 130, 246, 0.15),
+                0 8px 20px rgba(16, 185, 129, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(59, 130, 246, 0.25);
+        }
+        
+        /* Dark Electric Hologram Button */
+        .dark-electric-hologram-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #10b981 50%, #8b5cf6 100%);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 6px 24px rgba(59, 130, 246, 0.4),
+                0 3px 12px rgba(16, 185, 129, 0.3),
+                0 2px 8px rgba(139, 92, 246, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dark-electric-hologram-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            animation: darkElectricPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes darkElectricPulse {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+        
+        .dark-electric-hologram-button:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #059669 50%, #7c3aed 100%);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 8px 30px rgba(59, 130, 246, 0.5),
+                0 4px 18px rgba(16, 185, 129, 0.4),
+                0 3px 12px rgba(139, 92, 246, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        
+        .dark-electric-hologram-input {
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(16px);
+            color: #ffffff;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                inset 0 1px 4px rgba(0, 0, 0, 0.3),
+                inset 0 0 12px rgba(59, 130, 246, 0.05);
+        }
+        
+        .dark-electric-hologram-input:focus {
+            border-color: #3b82f6;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 0 0 3px rgba(59, 130, 246, 0.2),
+                inset 0 1px 4px rgba(0, 0, 0, 0.2),
+                0 0 25px rgba(16, 185, 129, 0.15);
+        }
+        
+        .dark-electric-hologram-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .dark-electric-refined-icon {
+            background: rgba(59, 130, 246, 0.1);
+            transition: all 0.4s ease;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                0 0 12px rgba(59, 130, 246, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .dark-electric-refined-icon:hover {
+            background: rgba(59, 130, 246, 0.15);
+            transform: scale(1.08);
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 
+                0 4px 16px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(16, 185, 129, 0.15),
+                0 0 30px rgba(59, 130, 246, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Dark Electric Hologram Shimmer */
+        .dark-electric-hologram-shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dark-electric-hologram-shimmer::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -100%;
+            width: 100%;
+            height: calc(100% + 4px);
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(59, 130, 246, 0.3), 
+                rgba(16, 185, 129, 0.25), 
+                rgba(139, 92, 246, 0.2), 
+                transparent);
+            animation: darkElectricHologramShimmer 5s ease-in-out infinite;
+        }
+        
+        .dark-electric-hologram-shimmer::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -100%;
+            width: 100%;
+            height: calc(100% + 4px);
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.15), 
+                transparent);
+            animation: darkElectricHologramShimmer 5s ease-in-out infinite;
+            animation-delay: 0.8s;
+        }
+        
+        @keyframes darkElectricHologramShimmer {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+        
+        .dark-electric-texture-overlay {
+            background-image: 
+                radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.05) 35%, transparent 35%),
+                radial-gradient(circle at 70% 80%, rgba(16, 185, 129, 0.04) 30%, transparent 30%),
+                radial-gradient(circle at 20% 70%, rgba(139, 92, 246, 0.03) 25%, transparent 25%);
+            background-size: 100px 100px, 80px 80px, 60px 60px;
+        }
+        
+        .dark-electric-premium-shadow {
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.7),
+                0 10px 30px rgba(0, 0, 0, 0.5),
+                0 5px 15px rgba(59, 130, 246, 0.1),
+                0 3px 10px rgba(16, 185, 129, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .dark-electric-floating-document {
+            position: absolute;
+            opacity: 0.15;
+            animation: darkElectricFloatDocument 16s ease-in-out infinite;
+            filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.3));
+        }
+        
+        @keyframes darkElectricFloatDocument {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg); 
+                opacity: 0.15; 
+                filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.3));
+            }
+            25% { 
+                transform: translateY(-15px) rotate(2deg); 
+                opacity: 0.3; 
+                filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.4));
+            }
+            50% { 
+                transform: translateY(-8px) rotate(-1deg); 
+                opacity: 0.1; 
+                filter: drop-shadow(0 0 16px rgba(139, 92, 246, 0.35));
+            }
+            75% { 
+                transform: translateY(-20px) rotate(1deg); 
+                opacity: 0.25; 
+                filter: drop-shadow(0 0 24px rgba(59, 130, 246, 0.45));
+            }
+        }
+        
+        /* Dark Electric Circuit Pattern */
+        .dark-electric-circuit-pattern {
+            background-image: 
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(16, 185, 129, 0.025) 1px, transparent 1px);
+            background-size: 20px 20px;
+            animation: darkCircuitGlow 12s ease-in-out infinite;
+        }
+        
+        @keyframes darkCircuitGlow {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body class="min-h-screen dark-electric-document-bg dark-electric-document-flow">
+    <div class="flex min-h-screen relative">
+        <div class="dark-electric-texture-overlay absolute inset-0"></div>
+        <div class="dark-electric-circuit-pattern absolute inset-0"></div>
+        
+        <!-- Enhanced floating document icons with dark electric effects -->
+        <div class="dark-electric-floating-document top-1/5 left-1/5 w-5 h-5">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-full h-full text-blue-400">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+        </div>
+        <div class="dark-electric-floating-document top-3/5 right-1/4 w-4 h-4" style="animation-delay: -5s;">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-full h-full text-emerald-400">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+        </div>
+        <div class="dark-electric-floating-document bottom-1/4 left-1/3 w-3 h-3" style="animation-delay: -10s;">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-full h-full text-violet-400">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+        </div>
+        
+        <!-- Theme Toggle -->
+        <div class="fixed top-6 right-6 z-50">
+            <button class="dark-electric-refined-icon p-3 rounded-full dark-electric-hologram-shimmer">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Left Side - Dark Electric Document-Inspired Branding -->
+        <div class="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-16 relative z-10">
+            <div class="max-w-sm mx-auto text-center">
+                <!-- Dark Electric Hologram Logo -->
+                <div class="mb-16 inline-flex p-8 rounded-3xl dark-electric-refined-icon dark-logo-electric-hologram dark-electric-hologram-shimmer">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTI0IDQ4QzM3LjI1NDggNDggNDggMzcuMjU0OCA0OCAyNEM0OCAxMC43NDUyIDM3LjI1NDggMCAyNCAwQzEwLjc0NTIgMCAwIDEwLjc0NTIgMCAyNEMwIDM3LjI1NDggMTAuNzQ1MiA0OCAyNCA0OFoiIGZpbGw9IiMzQjgyRjYiLz4KPHBhdGggZD0iTTI0IDM2QzMwLjYyNzQgMzYgMzYgMzAuNjI3NCAzNiAyNEMzNiAxNy4zNzI2IDMwLjYyNzQgMTIgMjQgMTJDMTcuMzcyNiAxMiAxMiAxNy4zNzI2IDEyIDI0QzEyIDMwLjYyNzQgMTcuMzcyNiAzNiAyNCAzNloiIGZpbGw9IiNGRkZGRkYiLz4KPC9zdmc+" alt="LexiA Logo" class="h-20 w-20 object-contain" />
+                </div>
+                
+                <h1 class="text-6xl font-extralight tracking-tight mb-8 text-white">LexiA</h1>
+                <p class="text-lg font-light text-gray-200 mb-16 leading-relaxed">
+                    Intelligence juridique avancée
+                </p>
+                
+                <!-- Enhanced Dark Electric Document Features -->
+                <div class="space-y-8 text-left">
+                    <div class="dark-electric-paper-card p-8 rounded-2xl dark-electric-hologram-shimmer">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-2xl dark-electric-refined-icon flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-white mb-1">Analyse experte</h3>
+                                <p class="text-sm text-gray-200">Solutions juridiques précises</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dark-electric-paper-card p-8 rounded-2xl dark-electric-hologram-shimmer" style="animation-delay: -1.5s;">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-2xl dark-electric-refined-icon flex items-center justify-center">
+                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 18l-3.75-3.75 3.75-3.75m-6.75 10.5L3.75 15 7.5 11.25m13.5 0L17.25 15l3.75 3.75M9 12h6m-6 3h6m-6 3h6" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-white mb-1">Documents intelligents</h3>
+                                <p class="text-sm text-gray-200">Rédaction automatisée</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dark-electric-paper-card p-8 rounded-2xl dark-electric-hologram-shimmer" style="animation-delay: -3s;">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-2xl dark-electric-refined-icon flex items-center justify-center">
+                                <svg class="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-white mb-1">Sécurité totale</h3>
+                                <p class="text-sm text-gray-200">Confidentialité garantie</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Side - Dark Electric Hologram Form -->
+        <div class="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-gray-900 relative z-10">
+            <div class="w-full max-w-md dark-electric-premium-shadow bg-gray-800 rounded-3xl p-12 dark-electric-hologram-shimmer">
+                <!-- Mobile Logo -->
+                <div class="flex flex-col items-center mb-8 lg:hidden">
+                    <div class="mb-4 inline-flex p-4 dark-electric-refined-icon rounded-2xl dark-logo-electric-hologram">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTI0IDQ4QzM3LjI1NDggNDggNDggMzcuMjU0OCA0OCAyNEM0OCAxMC43NDUyIDM3LjI1NDggMCAyNCAwQzEwLjc0NTIgMCAwIDEwLjc0NTIgMCAyNEMwIDM3LjI1NDggMTAuNzQ1MiA0OCAyNCA0OFoiIGZpbGw9IiMzQjgyRjYiLz4KPHBhdGggZD0iTTI0IDM2QzMwLjYyNzQgMzYgMzYgMzAuNjI3NCAzNiAyNEMzNiAxNy4zNzI2IDMwLjYyNzQgMTIgMjQgMTJDMTcuMzcyNiAxMiAxMiAxNy4zNzI2IDEyIDI0QzEyIDMwLjYyNzQgMTcuMzcyNiAzNiAyNCAzNloiIGZpbGw9IiNGRkZGRkYiLz4KPC9zdmc+" alt="LexiA Logo" class="h-8 w-8 object-contain" />
+                    </div>
+                    <h1 class="text-2xl font-light text-white">LexiA</h1>
+                </div>
+                
+                <div class="space-y-8">
+                    <div class="text-center">
+                        <h2 class="text-3xl font-light text-white mb-3">Connexion</h2>
+                        <p class="text-gray-200 font-light">Accès professionnel</p>
+                    </div>
+                    
+                    <form class="space-y-6">
+                        <div class="space-y-4">
+                            <input
+                                type="email"
+                                placeholder="Adresse e-mail"
+                                required
+                                class="dark-electric-hologram-input w-full px-6 py-4 rounded-2xl focus:outline-none font-light"
+                            />
+                            
+                            <input
+                                type="password"
+                                placeholder="Mot de passe"
+                                required
+                                class="dark-electric-hologram-input w-full px-6 py-4 rounded-2xl focus:outline-none font-light"
+                            />
+                            
+                            <div class="text-right">
+                                <a href="#" class="text-sm text-gray-200 hover:text-white transition-colors font-light">
+                                    Récupération d'accès
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="dark-electric-hologram-button w-full text-white py-4 rounded-2xl font-medium">
+                            Initialiser la connexion
+                        </button>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p class="text-sm text-gray-200 font-light">
+                            Nouvel utilisateur ?
+                            <a href="#" class="text-white hover:text-gray-200 font-medium ml-1 transition-colors">
+                                Créer un compte
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

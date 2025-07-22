@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiA - Tableau de bord</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sophisticated-bg {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 30%, #e8eaed 70%, #f8f9fa 100%);
+        }
+        
+        .executive-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 50%, rgba(241, 243, 244, 0.95) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(80, 86, 98, 0.08);
+            box-shadow: 
+                0 4px 20px rgba(80, 86, 98, 0.06),
+                0 2px 8px rgba(80, 86, 98, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 100%);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(80, 86, 98, 0.08);
+        }
+        
+        .sidebar-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+        
+        .sidebar-item:hover, .sidebar-item.active {
+            background: rgba(80, 86, 98, 0.08);
+            transform: translateX(2px);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 100%);
+            border: 1px solid rgba(80, 86, 98, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(80, 86, 98, 0.08);
+        }
+        
+        .primary-button {
+            background: linear-gradient(135deg, #5c6370 0%, #505662 50%, #434854 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 20px rgba(80, 86, 98, 0.25),
+                0 2px 12px rgba(80, 86, 98, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        .case-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(80, 86, 98, 0.06);
+            transition: all 0.3s ease;
+        }
+        
+        .case-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(80, 86, 98, 0.06);
+            border-color: rgba(80, 86, 98, 0.12);
+        }
+    </style>
+</head>
+<body class="min-h-screen sophisticated-bg">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar fixed h-full z-40">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-semibold text-sm">L</span>
+                    </div>
+                    <span class="text-xl font-light text-slate-800">LexiA</span>
+                </div>
+                
+                <nav class="space-y-2">
+                    <a href="#" class="sidebar-item active flex items-center space-x-3 px-4 py-3 text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                        </svg>
+                        <span class="font-medium">Tableau de bord</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <span class="font-medium">Nouveau dossier</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <span class="font-medium">Dossiers</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="font-medium">Documents</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                        <span class="font-medium">Facturation</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">Jean Dupont</div>
+                            <div class="text-xs text-gray-500">Premium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64">
+            <!-- Header -->
+            <header class="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-light text-slate-800">Tableau de bord</h1>
+                        <p class="text-gray-600">Bonjour Jean, voici un aperçu de votre activité</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <input type="text" placeholder="Rechercher..." 
+                                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white/90">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                        <button class="p-2 text-gray-600 hover:text-gray-800 rounded-lg hover:bg-gray-100">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="p-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Dossiers actifs</p>
+                                <p class="text-3xl font-light text-slate-800 mt-1">12</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm text-green-600">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"/>
+                            </svg>
+                            +2 ce mois
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Consultations</p>
+                                <p class="text-3xl font-light text-slate-800 mt-1">89</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm text-green-600">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"/>
+                            </svg>
+                            +15 cette semaine
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Crédits restants</p>
+                                <p class="text-3xl font-light text-slate-800 mt-1">Illimité</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm text-gray-600">
+                            <span>Plan Premium</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Statut</p>
+                                <p class="text-3xl font-light text-slate-800 mt-1">Actif</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm text-gray-600">
+                            <span>Renouvellement le 15/08</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Cases -->
+                <div class="executive-card rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-slate-800">Dossiers récents</h2>
+                        <button class="primary-button text-white px-4 py-2 rounded-xl font-medium text-sm">
+                            Nouveau dossier
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="case-card rounded-xl p-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-slate-800 text-sm">Contrat de bail commercial</h3>
+                                    <p class="text-xs text-gray-600 mt-1">Révision des clauses de résiliation</p>
+                                </div>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">En cours</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                                <span>Créé le 10 juillet</span>
+                                <span>5 messages</span>
+                            </div>
+                        </div>
+                        
+                        <div class="case-card rounded-xl p-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-slate-800 text-sm">Succession familiale</h3>
+                                    <p class="text-xs text-gray-600 mt-1">Répartition des biens immobiliers</p>
+                                </div>
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-medium">Révision</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                                <span>Créé le 8 juillet</span>
+                                <span>12 messages</span>
+                            </div>
+                        </div>
+                        
+                        <div class="case-card rounded-xl p-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-slate-800 text-sm">Litige commercial</h3>
+                                    <p class="text-xs text-gray-600 mt-1">Rupture de contrat fournisseur</p>
+                                </div>
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">Terminé</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                                <span>Créé le 5 juillet</span>
+                                <span>8 messages</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

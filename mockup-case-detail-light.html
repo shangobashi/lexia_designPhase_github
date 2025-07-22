@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiA - Détail du dossier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sophisticated-bg {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 30%, #e8eaed 70%, #f8f9fa 100%);
+        }
+        
+        .executive-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 50%, rgba(241, 243, 244, 0.95) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(80, 86, 98, 0.08);
+            box-shadow: 
+                0 4px 20px rgba(80, 86, 98, 0.06),
+                0 2px 8px rgba(80, 86, 98, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 100%);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(80, 86, 98, 0.08);
+        }
+        
+        .primary-button {
+            background: linear-gradient(135deg, #5c6370 0%, #505662 50%, #434854 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 20px rgba(80, 86, 98, 0.25),
+                0 2px 12px rgba(80, 86, 98, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        .primary-button:hover {
+            background: linear-gradient(135deg, #434854 0%, #3a3f4a 50%, #313641 100%);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 6px 24px rgba(80, 86, 98, 0.3),
+                0 3px 12px rgba(80, 86, 98, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+        
+        .sidebar-item:hover, .sidebar-item.active {
+            background: rgba(80, 86, 98, 0.08);
+            transform: translateX(2px);
+        }
+        
+        .document-card {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(80, 86, 98, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+        
+        .document-card:hover {
+            border-color: rgba(80, 86, 98, 0.2);
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(80, 86, 98, 0.1);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0.5rem;
+            width: 0.5rem;
+            height: 0.5rem;
+            background: #5c6370;
+            border-radius: 50%;
+        }
+        
+        .timeline-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 0.625rem;
+            top: 1.25rem;
+            width: 0.125rem;
+            height: calc(100% - 0.5rem);
+            background: rgba(80, 86, 98, 0.2);
+        }
+        
+        .tab-button {
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            border-bottom-color: #5c6370;
+            color: #5c6370;
+            font-weight: 500;
+        }
+        
+        .tab-button:hover:not(.active) {
+            color: #5c6370;
+            background: rgba(80, 86, 98, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen sophisticated-bg">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar fixed h-full z-40">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-semibold text-sm">L</span>
+                    </div>
+                    <span class="text-xl font-light text-slate-800">LexiA</span>
+                </div>
+                
+                <nav class="space-y-2">
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                        </svg>
+                        <span class="font-medium">Tableau de bord</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <span class="font-medium">Nouveau dossier</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item active flex items-center space-x-3 px-4 py-3 text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <span class="font-medium">Dossiers</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="font-medium">Documents</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                        <span class="font-medium">Facturation</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">Jean Dupont</div>
+                            <div class="text-xs text-gray-500">Premium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64">
+            <!-- Header -->
+            <header class="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <button class="text-gray-600 hover:text-gray-800">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <div>
+                            <h1 class="text-2xl font-light text-slate-800">Contrat de bail commercial</h1>
+                            <p class="text-gray-600">Dossier #BC-2024-001 • Créé le 10 juillet 2024</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full font-medium">En cours</span>
+                        <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                            </svg>
+                            Actions
+                        </button>
+                        <button class="primary-button text-white px-4 py-2 rounded-lg font-medium">
+                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            Consulter l'IA
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Case Detail Content -->
+            <main class="p-6 bg-gray-50">
+                <!-- Case Overview -->
+                <div class="executive-card rounded-2xl p-6 mb-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <h2 class="text-xl font-semibold text-slate-800 mb-4">Aperçu du dossier</h2>
+                            <p class="text-gray-700 mb-4">
+                                Révision et négociation des clauses de résiliation anticipée pour un bail commercial d'un local de 150m² 
+                                situé rue de la Loi à Bruxelles. Le client souhaite modifier les conditions de sortie et renégocier 
+                                certaines clauses avec le propriétaire.
+                            </p>
+                            
+                            <div class="grid grid-cols-2 gap-4 mt-6">
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-600 mb-1">Client</h3>
+                                    <p class="text-gray-900 font-medium">Restaurant "Le Petit Bruxellois" SPRL</p>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-600 mb-1">Propriétaire</h3>
+                                    <p class="text-gray-900 font-medium">Immobilière du Centre SA</p>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-600 mb-1">Superficie</h3>
+                                    <p class="text-gray-900 font-medium">150 m²</p>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-600 mb-1">Loyer mensuel</h3>
+                                    <p class="text-gray-900 font-medium">2 500,00 €</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-medium text-slate-800 mb-4">Statistiques</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Progression</span>
+                                    <span class="font-medium text-slate-800">65%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 65%"></div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Documents</span>
+                                    <span class="font-medium text-slate-800">5</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Messages IA</span>
+                                    <span class="font-medium text-slate-800">12</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Temps passé</span>
+                                    <span class="font-medium text-slate-800">8h 30m</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8">
+                            <button class="tab-button active">
+                                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Documents
+                            </button>
+                            <button class="tab-button">
+                                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Historique
+                            </button>
+                            <button class="tab-button">
+                                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                Consultations IA
+                            </button>
+                            <button class="tab-button">
+                                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+                                </svg>
+                                Contacts
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- Documents Tab Content -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Documents List -->
+                    <div class="executive-card rounded-2xl p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-slate-800">Documents du dossier</h3>
+                            <button class="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-lg hover:bg-blue-100 transition-colors">
+                                <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Ajouter
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="document-card rounded-lg p-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-medium text-slate-900 truncate">Bail commercial original.pdf</h4>
+                                        <p class="text-xs text-gray-500 mt-1">Uploadé le 10 juillet 2024 • 2.3 MB</p>
+                                        <div class="flex items-center space-x-2 mt-2">
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Original</span>
+                                            <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">Analysé par IA</span>
+                                        </div>
+                                    </div>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="document-card rounded-lg p-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-medium text-slate-900 truncate">Amendement clauses résiliation.docx</h4>
+                                        <p class="text-xs text-gray-500 mt-1">Créé le 12 juillet 2024 • 856 KB</p>
+                                        <div class="flex items-center space-x-2 mt-2">
+                                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">Brouillon</span>
+                                            <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Généré par IA</span>
+                                        </div>
+                                    </div>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="document-card rounded-lg p-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-medium text-slate-900 truncate">État des lieux entrée.xlsx</h4>
+                                        <p class="text-xs text-gray-500 mt-1">Uploadé le 11 juillet 2024 • 1.2 MB</p>
+                                        <div class="flex items-center space-x-2 mt-2">
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Annexe</span>
+                                        </div>
+                                    </div>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="executive-card rounded-2xl p-6">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-6">Historique récent</h3>
+                        
+                        <div class="space-y-6">
+                            <div class="timeline-item">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-medium text-slate-900">Analyse IA terminée</h4>
+                                        <p class="text-xs text-gray-500 mt-1">Aujourd'hui à 14:30</p>
+                                        <p class="text-sm text-gray-700 mt-2">
+                                            L'IA a analysé le bail original et identifié 3 clauses problématiques concernant la résiliation anticipée.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-medium text-slate-900">Document généré</h4>
+                                        <p class="text-xs text-gray-500 mt-1">Aujourd'hui à 11:15</p>
+                                        <p class="text-sm text-gray-700 mt-2">
+                                            Création automatique d'un amendement basé sur les recommandations de l'IA.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-medium text-slate-900">Consultation client</h4>
+                                        <p class="text-xs text-gray-500 mt-1">Hier à 16:45</p>
+                                        <p class="text-sm text-gray-700 mt-2">
+                                            Entretien téléphonique avec le client pour clarifier ses objectifs de négociation.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-medium text-slate-900">Upload de documents</h4>
+                                        <p class="text-xs text-gray-500 mt-1">10 juillet à 09:30</p>
+                                        <p class="text-sm text-gray-700 mt-2">
+                                            Le client a fourni le bail original et l'état des lieux d'entrée.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-medium text-slate-900">Création du dossier</h4>
+                                        <p class="text-xs text-gray-500 mt-1">10 juillet à 09:00</p>
+                                        <p class="text-sm text-gray-700 mt-2">
+                                            Ouverture du dossier "Contrat de bail commercial" pour Restaurant Le Petit Bruxellois.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 text-center">
+                            <button class="text-sm text-gray-600 hover:text-gray-800 underline">
+                                Voir l'historique complet
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>
