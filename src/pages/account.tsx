@@ -1,11 +1,16 @@
-import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
-export default function AccountPage() {
-  const { user } = useAuth();
+export default function BillingPage() {
   const { theme } = useTheme();
+
+  const payments = [
+    { date: '10 juillet 2024', amount: '99€', status: 'Payé' },
+    { date: '10 juin 2024', amount: '99€', status: 'Payé' },
+    { date: '10 mai 2024', amount: '99€', status: 'Payé' },
+  ];
 
   return (
     <div className={`min-h-screen p-6 ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} flex`}>
@@ -24,29 +29,42 @@ export default function AccountPage() {
       </nav>
 
       <main className="flex-1 ml-64 p-8">
-        <header className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Compte</h1>
-          <div className="flex items-center space-x-4">
-            <span>{user?.displayName || 'Jean Dupont'}</span>
-            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Premium</span>
-          </div>
-        </header>
+        <h1 className="text-3xl font-bold mb-8">Facturation</h1>
 
         <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} mb-8 p-6`}>
-          <h2 className="text-2xl font-bold mb-4">Informations personnelles</h2>
-          <p className="mb-2">{user?.displayName || 'Jean Dupont'}</p>
-          <p className="mb-2">Email: {user?.email || 'jean.dupont@example.com'}</p>
-          <p className="mb-2">Téléphone: +32 2 123 45 67</p>
-          <p className="mb-4">Adresse: Rue de la Loi 16, 1000 Bruxelles</p>
-          <Button className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'}`}>Modifier</Button>
+          <h2 className="text-2xl font-bold mb-4">Plan actuel</h2>
+          <p className="mb-2">Plan actuel: Premium</p>
+          <p className="mb-2">Crédits restants: Illimité</p>
+          <p className="mb-4">Renouvellement: 15 août 2024</p>
+          <Button className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'}`}>Changer de plan</Button>
+        </div>
+
+        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} mb-8 p-6`}>
+          <h2 className="text-2xl font-bold mb-4">Historique des paiements</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Montant</TableHead>
+                <TableHead>Statut</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {payments.map((payment, index) => (
+                <TableRow key={index}>
+                  <TableCell>{payment.date}</TableCell>
+                  <TableCell>{payment.amount}</TableCell>
+                  <TableCell>{payment.status}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
 
         <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6`}>
-          <h2 className="text-2xl font-bold mb-4">Abonnement</h2>
-          <p className="mb-2">Plan: Premium</p>
-          <p className="mb-2">Crédits restants: Illimité</p>
-          <p className="mb-4">Date de renouvellement: 15 août 2024</p>
-          <Button className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'}`}>Changer de plan</Button>
+          <h2 className="text-2xl font-bold mb-4">Méthode de paiement</h2>
+          <p className="mb-4">Visa **** 4242</p>
+          <Button className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'}`}>Changer la méthode</Button>
         </div>
       </main>
     </div>
