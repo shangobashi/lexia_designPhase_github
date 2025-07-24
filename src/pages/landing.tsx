@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { HelpCircle, FileText, Briefcase } from 'lucide-react';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/contexts/auth-context'; // Ensure this import exists
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTheme } from '@/contexts/theme-context';
 
 export default function LandingPage() {
-  const { continueAsGuest } from useAuth();
+  const { continueAsGuest } = useAuth(); // Corrected syntax
   const navigate = useNavigate();
   const { theme } = useTheme();
 
