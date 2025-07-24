@@ -1,4 +1,199 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+.sophisticated-bg {
+  background: linear-gradient(to bottom right, #f3f4f6, #e5e7eb);
+  color: #1f2937;
+}
+
+.dark-bg {
+  background: linear-gradient(to bottom right, #1f2937, #111827);
+  color: #f3f4f6;
+}
+
+.executive-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 1.5rem;
+}
+
+.executive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+}
+
+.dark-executive-card {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 1.5rem;
+}
+
+.dark-executive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+}
+
+.primary-button {
+  background: linear-gradient(to right, #3b82f6, #2563eb);
+  color: white;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: background 0.3s ease, transform 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
+  transform: translateY(-1px);
+}
+
+.dark-primary-button {
+  background: linear-gradient(to right, #60a5fa, #3b82f6);
+  color: #1f2937;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: background 0.3s ease, transform 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.dark-primary-button:hover {
+  background: linear-gradient(to right, #3b82f6, #2563eb);
+  transform: translateY(-1px);
+}
+
+.sidebar {
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+  padding: 1.5rem;
+  width: 250px;
+  height: 100vh;
+  position: fixed;
+}
+
+.dark-sidebar {
+  background: #1f2937;
+  border-right: 1px solid #374151;
+  padding: 1.5rem;
+  width: 250px;
+  height: 100vh;
+  position: fixed;
+}
+
+.case-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: box-shadow 0.3s ease;
+}
+
+.case-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dark-case-card {
+  background: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: box-shadow 0.3s ease;
+}
+
+.dark-case-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.chat-message-user {
+  background: #e5e7eb;
+  color: #1f2937;
+  border-radius: 12px 12px 0 12px;
+  padding: 1rem;
+  max-width: 70%;
+  align-self: flex-end;
+}
+
+.dark-chat-message-user {
+  background: #4b5563;
+  color: #f3f4f6;
+  border-radius: 12px 12px 0 12px;
+  padding: 1rem;
+  max-width: 70%;
+  align-self: flex-end;
+}
+
+.chat-message-ai {
+  background: #f3f4f6;
+  color: #1f2937;
+  border-radius: 12px 12px 12px 0;
+  padding: 1rem;
+  max-width: 70%;
+  align-self: flex-start;
+}
+
+.dark-chat-message-ai {
+  background: #1f2937;
+  color: #f3f4f6;
+  border-radius: 12px 12px 12px 0;
+  padding: 1rem;
+  max-width: 70%;
+  align-self: flex-start;
+}
+
+@media (max-width: 768px) {
+  .sidebar, .dark-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .dark-sidebar {
+    border-bottom: 1px solid #374151;
+  }
+
+  .executive-card, .dark-executive-card {
+    padding: 1rem;
+  }
+
+  .case-card, .dark-case-card {
+    padding: 1rem;
+  }
+
+  .chat-message-user, .dark-chat-message-user, .chat-message-ai, .dark-chat-message-ai {
+    max-width: 100%;
+  }
+}@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
