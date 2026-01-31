@@ -1,13 +1,12 @@
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Brain, Sparkles, Zap, Star, HelpCircle, Bot, Cpu } from 'lucide-react';
+import { Brain, Sparkles, Zap, HelpCircle, Bot } from 'lucide-react';
 
-type AIProvider = 'gemini' | 'groq' | 'huggingface' | 'mistral' | 'fallback';
+export type AIProvider = 'gemini' | 'openai' | 'anthropic' | 'local' | 'demo';
 
 interface AIProviderSwitchProps {
   currentProvider: AIProvider;
@@ -18,14 +17,14 @@ const getProviderLabel = (provider: AIProvider): string => {
   switch (provider) {
     case 'gemini':
       return 'Google Gemini';
-    case 'groq':
-      return 'Groq';
-    case 'huggingface':
-      return 'HuggingFace';
-    case 'mistral':
-      return 'Mistral AI';
-    case 'fallback':
-      return 'Mode dÃ©mo';
+    case 'openai':
+      return 'OpenAI';
+    case 'anthropic':
+      return 'Anthropic Claude';
+    case 'local':
+      return 'Modèle local';
+    case 'demo':
+      return 'Mode démo';
     default:
       return 'Fournisseur inconnu';
   }
@@ -35,13 +34,13 @@ const getProviderIcon = (provider: AIProvider) => {
   switch (provider) {
     case 'gemini':
       return <Sparkles className="h-4 w-4" />;
-    case 'groq':
+    case 'openai':
       return <Zap className="h-4 w-4" />;
-    case 'huggingface':
+    case 'anthropic':
       return <Brain className="h-4 w-4" />;
-    case 'mistral':
+    case 'local':
       return <Bot className="h-4 w-4" />;
-    case 'fallback':
+    case 'demo':
       return <HelpCircle className="h-4 w-4" />;
     default:
       return <Brain className="h-4 w-4" />;
@@ -58,61 +57,42 @@ export function AIProviderSwitch({ currentProvider, onProviderChange }: AIProvid
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600/30 rounded-xl shadow-lg backdrop-blur-md p-2">
-        <DropdownMenuItem 
-          onClick={() => onProviderChange('gemini')}
-          className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-600/50 rounded-lg cursor-pointer transition-colors"
-        >
+        <DropdownMenuItem onClick={() => onProviderChange('gemini')} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-600/50 rounded-lg cursor-pointer transition-colors">
           <Sparkles className="h-4 w-4 text-green-600" />
           <div className="flex flex-col">
             <span className="text-slate-800 dark:text-slate-100 font-medium">Google Gemini</span>
-            <span className="text-xs text-green-600">Gratuit â€¢ RecommandÃ©</span>
+            <span className="text-xs text-green-600">Gratuit • Recommandé</span>
           </div>
         </DropdownMenuItem>
-        
-        <DropdownMenuItem 
-          onClick={() => onProviderChange('groq')}
-          className="gap-2"
-        >
+        <DropdownMenuItem onClick={() => onProviderChange('openai')} className="gap-2">
           <Zap className="h-4 w-4" />
           <div className="flex flex-col">
-            <span>Groq</span>
-            <span className="text-xs text-blue-600">Gratuit â€¢ TrÃ¨s Rapide</span>
+            <span>OpenAI</span>
+            <span className="text-xs text-blue-600">GPT récente</span>
           </div>
         </DropdownMenuItem>
-        
-        <DropdownMenuItem 
-          onClick={() => onProviderChange('huggingface')}
-          className="gap-2"
-        >
+        <DropdownMenuItem onClick={() => onProviderChange('anthropic')} className="gap-2">
           <Brain className="h-4 w-4" />
           <div className="flex flex-col">
-            <span>HuggingFace</span>
-            <span className="text-xs text-purple-600">Gratuit â€¢ Open Source</span>
+            <span>Anthropic Claude</span>
+            <span className="text-xs text-purple-600">Long contexte</span>
           </div>
         </DropdownMenuItem>
-        
-        <DropdownMenuItem 
-          onClick={() => onProviderChange('mistral')}
-          className="gap-2"
-        >
+        <DropdownMenuItem onClick={() => onProviderChange('local')} className="gap-2">
           <Bot className="h-4 w-4" />
           <div className="flex flex-col">
-            <span>Mistral AI</span>
-            <span className="text-xs text-orange-600">Gratuit â€¢ EuropÃ©en</span>
+            <span>Modèle local</span>
+            <span className="text-xs text-orange-600">Sans clé</span>
           </div>
         </DropdownMenuItem>
-        
-        <DropdownMenuItem 
-          onClick={() => onProviderChange('fallback')}
-          className="gap-2"
-        >
+        <DropdownMenuItem onClick={() => onProviderChange('demo')} className="gap-2">
           <HelpCircle className="h-4 w-4" />
           <div className="flex flex-col">
-            <span>Mode dÃ©mo</span>
-            <span className="text-xs text-gray-600">RÃ©ponses simulÃ©es</span>
+            <span>Mode démo</span>
+            <span className="text-xs text-gray-600">Réponse instantanée</span>
           </div>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-} 
+}

@@ -1,6 +1,6 @@
-# LexiA - Belgian Legal Assistant
+# Kingsley - Belgian Legal Assistant
 
-LexiA is a sophisticated web-based legal assistant platform specifically designed for Belgian law practitioners. It combines advanced AI capabilities with an intuitive user interface to streamline legal research, case management, and document analysis.
+Kingsley is a sophisticated web-based legal assistant platform specifically designed for Belgian law practitioners. It combines advanced AI capabilities with an intuitive user interface to streamline legal research, case management, and document analysis.
 
 ## 🌟 Features
 
@@ -39,8 +39,8 @@ LexiA is a sophisticated web-based legal assistant platform specifically designe
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/shangobashi/LexiA.git
-cd LexiA
+git clone https://github.com/shangobashi/Kingsley.git
+cd Kingsley
 ```
 
 2. Install dependencies:
@@ -114,8 +114,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, please email support@lexia.com or open an issue in the GitHub repository.
+For support, please email support@kingsley.com or open an issue in the GitHub repository.
 
 ---
 
-Made with ❤️ by the LexiA Team
+Made with ❤️ by the Kingsley Team

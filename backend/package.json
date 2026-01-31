@@ -1,5 +1,5 @@
 {
-  "name": "dominus-backend",
+  "name": "kingsley-backend",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
@@ -8,15 +8,17 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@anthropic-ai/sdk": "^0.23.0",
     "@paypal/paypal-server-sdk": "^1.1.0",
     "@supabase/supabase-js": "^2.52.0",
+    "@xenova/transformers": "^2.15.1",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
     "express-rate-limit": "^8.0.1",
-    "groq-sdk": "^0.27.0",
     "helmet": "^8.1.0",
     "node-fetch": "^3.3.2",
+    "openai": "^4.68.4",
     "stripe": "^18.3.0"
   }
 }

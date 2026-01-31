@@ -1,4 +1,4 @@
-# 🔑 API Keys Setup Guide for LexiA Production
+# 🔑 API Keys Setup Guide for Kingsley Production
 
 ## Required Free API Keys
 

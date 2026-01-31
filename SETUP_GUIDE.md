@@ -1,6 +1,6 @@
-# 🚀 LexiA Setup Guide - Real Production Setup
+# 🚀 Kingsley Setup Guide - Real Production Setup
 
-This guide will help you set up LexiA as a real working application with live databases, authentication, and AI services.
+This guide will help you set up Kingsley as a real working application with live databases, authentication, and AI services.
 
 ## 📋 Prerequisites
 
@@ -18,7 +18,7 @@ You'll need accounts for:
 3. Create a new organization if needed
 4. Click "New project"
 5. Fill in:
-   - **Project name**: `lexia-prod`
+   - **Project name**: `kingsley-prod`
    - **Database password**: Generate a strong password
    - **Region**: Choose closest to your users
 6. Click "Create new project"
@@ -52,7 +52,7 @@ You'll need accounts for:
 ### 2.1 Create Google Cloud Project
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
 2. Click "Select a project" → "New Project"
-3. Name: `lexia-auth`
+3. Name: `kingsley-auth`
 4. Click "Create"
 
 ### 2.2 Configure OAuth
@@ -60,7 +60,7 @@ You'll need accounts for:
 2. Click "Configure OAuth screen"
 3. Choose **External** → Click "Create"
 4. Fill in:
-   - **App name**: `LexiA Legal Assistant`
+   - **App name**: `Kingsley Legal Assistant`
    - **User support email**: Your email
    - **Developer contact**: Your email
 5. Save and continue through all steps
@@ -68,7 +68,7 @@ You'll need accounts for:
 ### 2.3 Create OAuth Credentials
 1. Go to **Credentials** → "Create Credentials" → "OAuth 2.0 Client IDs"
 2. **Application type**: Web application
-3. **Name**: `LexiA Web Client`
+3. **Name**: `Kingsley Web Client`
 4. **Authorized redirect URIs**: 
    - `https://[your-supabase-ref].supabase.co/auth/v1/callback`
    - Replace `[your-supabase-ref]` with your project ref from Supabase URL
@@ -95,7 +95,7 @@ You'll need accounts for:
 1. Go to [Groq Console](https://console.groq.com/keys)
 2. Sign up/login
 3. Click "Create API Key"
-4. Name it `LexiA`
+4. Name it `Kingsley`
 5. Copy the generated key
 6. Store as `VITE_GROQ_API_KEY`
 

@@ -14,7 +14,7 @@ Since you have provided the real Supabase credentials, you need to set up the da
 If you have the Supabase CLI installed:
 
 ```bash
-# First, link your project (run this in the Lexia_claude folder)
+# First, link your project (run this in the Kingsley_claude folder)
 supabase link --project-ref untdlxyoszwbkyfeffna
 
 # Then run the migration

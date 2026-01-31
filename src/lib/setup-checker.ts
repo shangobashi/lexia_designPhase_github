@@ -86,7 +86,7 @@ export function getSetupInstructions(status: SetupStatus): string[] {
   }
 
   if (status.overall) {
-    instructions.push('✅ Setup complete! Your LexiA instance is ready to use.');
+    instructions.push('✅ Setup complete! Your Kingsley instance is ready to use.');
   } else {
     instructions.push('📖 See SETUP_GUIDE.md for detailed instructions.');
   }

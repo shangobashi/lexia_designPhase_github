@@ -85,7 +85,7 @@ export default function CaseCard({ caseData, index, isSelected, onSelect, onDele
           {/* Case Content */}
           <Link to={`/cases/${caseData.id}`} className="block">
             <div>
-              <h3 className="text-lg font-medium truncate mb-2">{caseData.title}</h3>
+              <h3 className="font-clash text-lg font-medium truncate mb-2">{caseData.title}</h3>
               <p className="text-muted-foreground text-sm">
                 {caseData.description && caseData.description.length > 100 
                   ? `${caseData.description.slice(0, 100)}...` 
@@ -111,10 +111,10 @@ export default function CaseCard({ caseData, index, isSelected, onSelect, onDele
             <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
               <div className="text-sm">
                 <span className="text-muted-foreground">ID dossier : </span>
-                <span className="font-medium">{caseData.caseId}</span>
+                <span className="font-clash font-medium">{caseData.caseId}</span>
               </div>
               
-              <div className="text-primary flex items-center text-sm font-medium hover:underline">
+              <div className="font-clash text-primary flex items-center text-sm font-medium hover:underline">
                 Voir le dossier <ArrowRight className="h-4 w-4 ml-1" />
               </div>
             </div>

@@ -23,21 +23,44 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>('dark');
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    
-    const initialTheme = savedTheme || systemPreference;
-    setThemeState(initialTheme);
-  }, []);
+  const [theme, setThemeState] = useState<Theme>(() => {
+    // Initialize theme immediately to prevent flickering
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme') as Theme;
+      const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const initialTheme = savedTheme || systemPreference;
+      
+      // Apply theme class immediately to prevent flash
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(initialTheme);
+      
+      return initialTheme;
+    }
+    return 'light';
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
+    
+    // Only add transitions for subsequent theme changes (not initial load)
+    const isInitialLoad = !localStorage.getItem('theme-initialized');
+    
+    if (!isInitialLoad) {
+      root.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    }
+    
+    // Apply theme classes
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
     localStorage.setItem('theme', theme);
+    localStorage.setItem('theme-initialized', 'true');
+    
+    // Remove transition after theme change
+    if (!isInitialLoad) {
+      setTimeout(() => {
+        root.style.transition = '';
+      }, 300);
+    }
   }, [theme]);
 
   const toggleTheme = () => {

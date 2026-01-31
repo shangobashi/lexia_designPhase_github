@@ -1,14 +1,34 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Plus, FileText, MessageSquare, CreditCard, Calendar, BarChart3, Clock, Users } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
-import CaseCard from '@/components/cases/case-card';
-import { AISetupBanner } from '@/components/ai-setup-banner';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
 import { Case } from '@/types/case';
 import { getUserCases } from '@/lib/supabase';
+
+// Simple date formatter
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('fr-FR');
+};
+
+// Simple AI Setup Banner component
+const AISetupBanner = () => {
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+      <div className="flex items-center space-x-3">
+        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div className="flex-1">
+          <h3 className="text-sm font-clash font-medium text-blue-900">Configuration IA recommandée</h3>
+          <p className="text-xs text-blue-700">Optimisez votre expérience en configurant vos préférences d'assistance juridique.</p>
+        </div>
+        <button className="text-xs text-blue-600 hover:text-blue-800 font-clash font-medium">Configurer</button>
+      </div>
+    </div>
+  );
+};
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -18,12 +38,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchCases = async () => {
-      if (!user) return;
-      
-      setIsLoading(true);
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
       try {
+        setIsLoading(true);
         const cases = await getUserCases();
-        // Convert to Case format and get 3 most recent
         const convertedCases = cases.map(dbCase => ({
           id: dbCase.id,
           caseId: dbCase.case_id,
@@ -40,7 +61,6 @@ export default function DashboardPage() {
         setRecentCases(convertedCases);
       } catch (error) {
         console.error('Error fetching cases', error);
-        // If no cases exist yet, that's fine - show empty state
         setRecentCases([]);
       } finally {
         setIsLoading(false);
@@ -49,189 +69,176 @@ export default function DashboardPage() {
 
     fetchCases();
   }, [user]);
-  
+
   return (
-    <div className="p-6 sophisticated-bg dark:dark-sophisticated-bg min-h-screen">
-      {/* AI Setup Banner */}
-      <AISetupBanner />
-      
-      {/* Welcome Header */}
-      <div className="executive-card dark:dark-executive-card rounded-2xl p-8 mb-8">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-light text-slate-800 dark:text-slate-100 mb-2">
-              Bonjour, {user?.displayName || 'Jean Dupont'}
-            </h1>
-            <p className="text-gray-600 dark:text-slate-300 text-lg font-light">
-              Voici un aperçu de votre activité juridique aujourd'hui
-            </p>
-          </div>
-          <button className="primary-button dark:dark-primary-button text-white px-6 py-3 rounded-xl font-medium flex items-center space-x-2">
-            <Plus className="h-5 w-5" />
-            <span>Nouveau dossier</span>
-          </button>
-        </div>
-      </div>
-      
-      {/* Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div className="stat-card dark:dark-stat-card executive-card dark:dark-executive-card rounded-2xl p-6 text-center">
-          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div className="text-3xl font-light text-slate-800 dark:text-slate-100 mb-1">
-            {recentCases.filter(c => c.status === 'active').length}
-          </div>
-          <div className="text-gray-600 dark:text-slate-300 text-sm font-medium">
-            {user?.isGuest ? 'Mode invité' : 'Dossiers actifs'}
-          </div>
-        </div>
-        
-        <div className="stat-card dark:dark-stat-card executive-card dark:dark-executive-card rounded-2xl p-6 text-center">
-          <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <MessageSquare className="h-6 w-6 text-green-600 dark:text-green-400" />
-          </div>
-          <div className="text-3xl font-light text-slate-800 dark:text-slate-100 mb-1">
-            {recentCases.reduce((total, c) => total + c.messages.length, 0)}
-          </div>
-          <div className="text-gray-600 dark:text-slate-300 text-sm font-medium">
-            {user?.isGuest ? 'Questions posées' : 'Consultations'}
-          </div>
-        </div>
-        
-        <div className="stat-card dark:dark-stat-card executive-card dark:dark-executive-card rounded-2xl p-6 text-center">
-          <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <CreditCard className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-          </div>
-          <div className="text-3xl font-light text-slate-800 dark:text-slate-100 mb-1">
-            {user?.profile?.credits_remaining || 10}
-          </div>
-          <div className="text-gray-600 dark:text-slate-300 text-sm font-medium">
-            {user?.isGuest ? 'Questions restantes' : 'Crédits restants'}
-          </div>
-        </div>
-        
-        <div className="stat-card dark:dark-stat-card executive-card dark:dark-executive-card rounded-2xl p-6 text-center">
-          <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-          </div>
-          <div className="text-3xl font-light text-slate-800 dark:text-slate-100 mb-1">
-            &lt;30s
-          </div>
-          <div className="text-gray-600 dark:text-slate-300 text-sm font-medium">
-            Temps de réponse
-          </div>
-        </div>
-      </div>
-      
-      {/* Recent Cases Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Cases */}
-        <div className="executive-card dark:dark-executive-card rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">Dossiers récents</h3>
-            <Link 
-              to="/cases" 
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium transition-colors"
-            >
-              Voir tout
-            </Link>
-          </div>
-          
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="case-card dark:dark-case-card rounded-xl p-4 h-24 animate-pulse bg-gray-100 dark:bg-slate-700/30" />
-              ))}
-            </div>
-          ) : recentCases.length > 0 ? (
-            <div className="space-y-4">
-              {recentCases.map((caseItem, index) => (
-                <div key={caseItem.id} className="case-card dark:dark-case-card rounded-xl p-4 border border-gray-200/50 dark:border-slate-600/30 hover:border-gray-300 dark:hover:border-slate-500/50 transition-all cursor-pointer">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-slate-800 dark:text-slate-100 mb-1">{caseItem.title}</h4>
-                      <p className="text-sm text-gray-600 dark:text-slate-300 mb-2 line-clamp-2">{caseItem.description}</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-slate-400">
-                        <span>#{caseItem.caseId}</span>
-                        <span>•</span>
-                        <span>{formatDate(caseItem.updatedAt)}</span>
-                      </div>
-                    </div>
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      caseItem.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                      caseItem.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                      'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
-                    }`}>
-                      {caseItem.status === 'active' ? 'Actif' : 
-                       caseItem.status === 'pending' ? 'En attente' : 'Fermé'}
-                    </div>
+          <main className="p-4 sm:p-6">
+            {/* AI Setup Banner */}
+            <AISetupBanner />
+            
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Dossiers actifs</p>
+                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{recentCases.filter(c => c.status === 'active').length || 12}</p>
+                  </div>
+                  <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50'} rounded-xl flex items-center justify-center`}>
+                    <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-gray-100 dark:bg-slate-600/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <FileText className="h-8 w-8 text-gray-400 dark:text-slate-500" />
+                <div className={`mt-4 flex items-center text-sm ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"/>
+                  </svg>
+                  +2 ce mois
+                </div>
               </div>
-              <h4 className="font-medium text-slate-800 dark:text-slate-100 mb-2">Aucun dossier</h4>
-              <p className="text-gray-600 dark:text-slate-300 text-sm mb-4">Créez votre premier dossier pour commencer</p>
-              <button className="primary-button dark:dark-primary-button text-white px-4 py-2 rounded-xl font-medium text-sm">
-                Créer un dossier
-              </button>
+              
+              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Consultations</p>
+                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{recentCases.reduce((total, c) => total + c.messages.length, 0) || 89}</p>
+                  </div>
+                  <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-green-900/30' : 'bg-green-50'} rounded-xl flex items-center justify-center`}>
+                    <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className={`mt-4 flex items-center text-sm ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"/>
+                  </svg>
+                  +15 cette semaine
+                </div>
+              </div>
+              
+              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Crédits restants</p>
+                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{user?.isGuest ? (user?.profile?.credits_remaining || 10) : 'Illimité'}</p>
+                  </div>
+                  <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-purple-900/30' : 'bg-purple-50'} rounded-xl flex items-center justify-center`}>
+                    <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className={`mt-4 flex items-center text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                  <span>{user?.isGuest ? 'Plan Gratuit' : 'Plan Gratuit'}</span>
+                </div>
+              </div>
+              
+              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Statut</p>
+                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>Actif</p>
+                  </div>
+                  <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-green-900/30' : 'bg-green-50'} rounded-xl flex items-center justify-center`}>
+                    <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className={`mt-4 flex items-center text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                  <span>Renouvellement le 15/08</span>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Activity Feed */}
-        <div className="executive-card dark:dark-executive-card rounded-2xl p-6">
-          <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-6">Activité récente</h3>
-          
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-slate-800 dark:text-slate-100 font-medium">Nouveau dossier créé</p>
-                <p className="text-xs text-gray-600 dark:text-slate-300">Il y a 2 heures</p>
+            {/* Recent Cases */}
+            <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6`}>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Dossiers récents</h2>
+                <button className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-4 py-2 rounded-xl font-clash font-medium text-sm`}>
+                  Nouveau dossier
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {isLoading ? (
+                  [...Array(3)].map((_, i) => (
+                    <div key={i} className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-4 h-24 animate-pulse ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'}`} />
+                  ))
+                ) : recentCases.length > 0 ? (
+                  recentCases.slice(0, 3).map((caseItem) => (
+                    <div key={caseItem.id} className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-4`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-sm`}>{caseItem.title}</h3>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mt-1`}>{caseItem.description}</p>
+                        </div>
+                        <span className={`px-2 py-1 text-xs rounded-full font-clash font-medium ${
+                          caseItem.status === 'active' ? 
+                            (theme === 'dark' ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700') :
+                          caseItem.status === 'pending' ? 
+                            (theme === 'dark' ? 'bg-yellow-900/50 text-yellow-300' : 'bg-yellow-100 text-yellow-700') :
+                            (theme === 'dark' ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700')
+                        }`}>
+                          {caseItem.status === 'active' ? 'En cours' : 
+                           caseItem.status === 'pending' ? 'Révision' : 'Terminé'}
+                        </span>
+                      </div>
+                      <div className={`flex items-center justify-between text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <span>Créé le {formatDate(caseItem.createdAt)}</span>
+                        <span>{caseItem.messages.length} messages</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  // Static mockup cases when no real cases exist
+                  <>
+                    <div className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-4`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-sm`}>Contrat de bail commercial</h3>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mt-1`}>Révision des clauses de résiliation</p>
+                        </div>
+                        <span className={`px-2 py-1 text-xs rounded-full font-clash font-medium ${theme === 'dark' ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'}`}>En cours</span>
+                      </div>
+                      <div className={`flex items-center justify-between text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <span>Créé le 10 juillet</span>
+                        <span>5 messages</span>
+                      </div>
+                    </div>
+                    
+                    <div className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-4`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-sm`}>Succession familiale</h3>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mt-1`}>Répartition des biens immobiliers</p>
+                        </div>
+                        <span className={`px-2 py-1 text-xs rounded-full font-clash font-medium ${theme === 'dark' ? 'bg-yellow-900/50 text-yellow-300' : 'bg-yellow-100 text-yellow-700'}`}>Révision</span>
+                      </div>
+                      <div className={`flex items-center justify-between text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <span>Créé le 8 juillet</span>
+                        <span>12 messages</span>
+                      </div>
+                    </div>
+                    
+                    <div className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-4`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-sm`}>Litige commercial</h3>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mt-1`}>Rupture de contrat fournisseur</p>
+                        </div>
+                        <span className={`px-2 py-1 text-xs rounded-full font-clash font-medium ${theme === 'dark' ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700'}`}>Terminé</span>
+                      </div>
+                      <div className={`flex items-center justify-between text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <span>Créé le 5 juillet</span>
+                        <span>8 messages</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-            
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-slate-800 dark:text-slate-100 font-medium">Consultation IA terminée</p>
-                <p className="text-xs text-gray-600 dark:text-slate-300">Il y a 4 heures</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-slate-800 dark:text-slate-100 font-medium">Document généré</p>
-                <p className="text-xs text-gray-600 dark:text-slate-300">Hier à 16:30</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-slate-800 dark:text-slate-100 font-medium">Dossier mis à jour</p>
-                <p className="text-xs text-gray-600 dark:text-slate-300">Hier à 14:15</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 text-center">
-            <Link 
-              to="/cases" 
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium transition-colors"
-            >
-              Voir toute l'activité
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
+          </main>
   );
 }

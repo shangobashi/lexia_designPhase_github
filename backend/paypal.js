@@ -54,7 +54,7 @@ export const createPayPalOrder = async (userId, planType) => {
             currencyCode: 'EUR',
             value: plan.price.toString(),
           },
-          description: `LexiA ${plan.name} Plan - ${plan.credits} credits`,
+          description: `Kingsley ${plan.name} Plan - ${plan.credits} credits`,
           customId: userId, // Store user ID for webhook processing
           invoiceId: `LEXIA-${planType.toUpperCase()}-${Date.now()}`,
         },

@@ -32,59 +32,47 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   return response.json();
 };
 
-import { aiClient } from './ai-client';
-import { useGuestQuery, getGuestQueriesRemaining } from './guest-session';
-
-// AI API calls - now using direct client connections
+// AI API calls - proxied through backend (uses built-in demo keys + local fallback)
 export const aiApi = {
   async chat(messages: any[], caseId?: string, provider?: string, isGuestUser?: boolean) {
-    try {
-      // Check guest query limits
-      if (isGuestUser) {
-        const queryResult = useGuestQuery();
-        if (!queryResult.success) {
-          throw new Error(`Limite de questions gratuites atteinte! Vous avez utilisÃ© vos 10 questions gratuites. Inscrivez-vous pour continuer Ã  utiliser LexiA.`);
-        }
-      }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
-      // Convert message format
-      const chatMessages = messages.map(msg => ({
-        role: msg.role === 'user' ? 'user' as const : 'assistant' as const,
-        content: msg.content
-      }));
-
-      const response = await aiClient.chat(chatMessages, provider as 'gemini' | 'groq' | 'huggingface' | 'mistral' | 'fallback');
-      
-      // Add remaining queries info for guest users
-      if (isGuestUser) {
-        const remaining = getGuestQueriesRemaining();
-        response.guestQueriesRemaining = remaining;
-      }
-      
-      return response;
-    } catch (error) {
-      console.error('AI chat error:', error);
-      throw error;
+    // Try to attach Supabase token when available; otherwise fall back to guest header
+    const token = await getAuthToken().catch(() => null);
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      headers['X-Guest'] = 'true';
     }
+
+    const response = await fetch(`${API_BASE_URL}/api/ai/chat`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ messages, caseId, provider }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || `API call failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      message: data.message,
+      provider: data.provider,
+      tokenCount: data.tokenCount,
+      creditsUsed: data.creditsUsed,
+      guestQueriesRemaining: isGuestUser ? Infinity : undefined,
+    };
   },
 
-  async analyzeDocuments(documents: string[], caseId?: string, provider?: string) {
-    try {
-      const analysisPrompt = `Veuillez analyser les documents suivants dans le contexte juridique franÃ§ais:\n\n${documents.join('\n\n')}`;
-      
-      const response = await aiClient.chat([
-        { role: 'user', content: analysisPrompt }
-      ], provider as 'gemini' | 'groq');
-      
-      return {
-        analysis: response.message,
-        provider: response.provider,
-        tokenCount: response.tokenCount
-      };
-    } catch (error) {
-      console.error('Document analysis error:', error);
-      throw error;
-    }
+  async analyzeDocuments(documents: string[], caseId?: string, provider?: string, isGuestUser?: boolean) {
+    return this.chat(
+      [{ role: 'user', content: `Veuillez analyser les documents suivants et fournir un résumé en cinq points : ${documents.join('\n\n')}` }],
+      caseId,
+      provider,
+      isGuestUser
+    );
   },
 };
 

@@ -41,7 +41,7 @@ export const useAuthState = () => {
         // In a real app, this would check for a valid session/token
         const mockUser: User = {
           id: 'user_123',
-          email: 'demo@lexia.be',
+          email: 'demo@kingsley.be',
           name: 'Demo User',
           subscription: {
             status: 'active',

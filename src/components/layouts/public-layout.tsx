@@ -1,24 +1,29 @@
 import { ReactNode } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/contexts/theme-context';
 
 export default function PublicLayout() {
+  const { theme } = useTheme();
+  
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen sophisticated-bg">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className={`${theme === 'dark' ? 'dark-header' : 'light-header'} sticky top-0 z-50`}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link to="/" className="flex items-center space-x-2">
-              <img src={`${import.meta.env.BASE_URL}owl-logo.png`} alt="LexiA Logo" className="h-8 w-8 object-contain" />
-              <span className="text-2xl font-bold text-foreground">LexiA</span>
+              <div className={`w-10 h-10 flex items-center justify-center`}>
+                <img src={`${import.meta.env.BASE_URL}kingsley-logo.png`} alt="Kingsley Logo" className="w-full h-full object-contain" />
+              </div>
+              <span className={`text-2xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Kingsley</span>
             </Link>
             
             <div className="flex items-center space-x-4">
               <Button variant="ghost" asChild>
-                <Link to="/login">Se connecter</Link>
+                <Link to="/login" className="text-slate-600 hover:text-slate-800">Se connecter</Link>
               </Button>
-              <Button asChild>
+              <Button asChild className="primary-button text-white rounded-xl">
                 <Link to="/register">S'inscrire</Link>
               </Button>
             </div>

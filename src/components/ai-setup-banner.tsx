@@ -42,7 +42,7 @@ export function AISetupBanner() {
         <div className="flex items-start gap-3">
           <Sparkles className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
-            <h3 className="font-medium text-blue-900 mb-1">
+            <h3 className="font-clash font-medium text-blue-900 mb-1">
               🚀 Obtenez une assistance juridique IA gratuite !
             </h3>
             <p className="text-sm text-blue-700 mb-3">
@@ -59,7 +59,7 @@ export function AISetupBanner() {
                   <li>Ajoutez à votre fichier .env :</li>
                 </ol>
                 
-                <div className="mt-2 p-2 bg-blue-100 rounded text-xs font-mono flex items-center justify-between">
+                <div className="font-clash mt-2 p-2 bg-blue-100 rounded text-xs font-mono flex items-center justify-between">
                   <span>VITE_GEMINI_API_KEY=your_api_key_here</span>
                   <Button
                     size="sm"

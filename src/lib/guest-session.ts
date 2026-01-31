@@ -8,7 +8,7 @@ interface GuestSession {
   lastUsed: string;
 }
 
-const GUEST_SESSION_KEY = 'lexia_guest_session';
+const GUEST_SESSION_KEY = 'kingsley_guest_session';
 const MAX_GUEST_QUERIES = 10;
 
 export function getGuestSession(): GuestSession {

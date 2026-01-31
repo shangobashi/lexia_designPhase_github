@@ -2,31 +2,33 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { Home, Plus, Folder, CreditCard, Upload, User, FileText } from 'lucide-react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useTheme } from '@/contexts/theme-context';
 
 interface SidebarProps {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
+  mobileOpen?: boolean;
+  setMobileOpen?: (open: boolean) => void;
 }
 
-export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
+export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: SidebarProps) {
   const { theme } = useTheme();
-  
+
   return (
     <aside className={cn(
-      "w-64 fixed h-full z-40 sidebar dark:dark-sidebar",
-      collapsed && "w-16"
+      "w-64 fixed h-full z-40 sidebar transition-transform duration-300",
+      collapsed && "w-16",
+      mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
     )}>
       <div className="p-6">
         {/* Logo */}
         <div className="flex items-center space-x-3 mb-8">
-          <div className="w-8 h-8 bg-gray-700 dark:bg-slate-200 rounded-lg flex items-center justify-center logo-animation">
-            <img 
-              src={`${import.meta.env.BASE_URL}owl-logo.png`} 
-              alt="LexiA Logo" 
-              className="h-6 w-6 object-contain" 
+          <div className={`w-12 h-12 flex items-center justify-center`}>
+            <img
+              src={`${import.meta.env.BASE_URL}kingsley-logo.png`}
+              alt="Kingsley Logo"
+              className="w-full h-full object-contain"
             />
           </div>
           {!collapsed && (
@@ -35,9 +37,9 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="text-xl font-light text-slate-800 dark:text-slate-100"
+              className={`text-xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}
             >
-              LexiA
+              Kingsley
             </motion.span>
           )}
         </div>
@@ -46,46 +48,100 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         <nav className="space-y-2">
           <NavItem
             to="/dashboard"
-            icon={<Home size={20} />}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+              </svg>
+            }
             label="Tableau de bord"
             collapsed={collapsed}
           />
           <NavItem
             to="/new-case"
-            icon={<Plus size={20} />}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+            }
             label="Nouveau dossier"
             collapsed={collapsed}
           />
           <NavItem
             to="/cases"
-            icon={<Folder size={20} />}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+              </svg>
+            }
             label="Dossiers"
             collapsed={collapsed}
           />
           <NavItem
             to="/uploads"
-            icon={<FileText size={20} />}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            }
             label="Documents"
             collapsed={collapsed}
           />
           <NavItem
             to="/billing"
-            icon={<CreditCard size={20} />}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+              </svg>
+            }
             label="Facturation"
             collapsed={collapsed}
           />
+          <NavItem
+            to="/chat"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h6m-9 8l4-4h10a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12z"/>
+              </svg>
+            }
+            label="Chat IA"
+            collapsed={collapsed}
+          />
+          
+          {/* Landing Page Link */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-4">
+            <NavItem
+              to="/"
+              icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+              }
+              label="Page d'accueil"
+              collapsed={collapsed}
+            />
+          </div>
         </nav>
       </div>
       
       {/* User Profile */}
       <div className="absolute bottom-6 left-6 right-6">
-        <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600/30">
+        <div className={`rounded-xl p-4 ${
+          theme === 'dark' 
+            ? 'bg-slate-700/50 border border-slate-600/30' 
+            : 'bg-gray-50 border border-gray-200'
+        }`}>
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gray-300 dark:bg-slate-500 rounded-full"></div>
+            <div className={`w-8 h-8 rounded-full ${
+              theme === 'dark' ? 'bg-slate-500' : 'bg-gray-300'
+            }`}></div>
             {!collapsed && (
               <div>
-                <div className="text-sm font-medium text-gray-900 dark:text-slate-100">Jean Dupont</div>
-                <div className="text-xs text-gray-500 dark:text-slate-300">Premium</div>
+                <div className={`text-sm font-clash font-medium ${
+                  theme === 'dark' ? 'text-slate-100' : 'text-gray-900'
+                }`}>Invité</div>
+                <div className={`text-xs ${
+                  theme === 'dark' ? 'text-slate-300' : 'text-gray-500'
+                }`}>Gratuit</div>
               </div>
             )}
           </div>
@@ -103,8 +159,12 @@ interface NavItemProps {
 }
 
 function NavItem({ to, icon, label, collapsed }: NavItemProps) {
-  const itemClasses = "sidebar-item dark:dark-sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-gray-700 dark:text-slate-300 dark:hover:text-slate-100 transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1) rounded-xl";
-  const activeClasses = "sidebar-item active dark:dark-sidebar-item text-gray-700 dark:text-slate-100 bg-gray-100/50 dark:bg-slate-600/20";
+  const { theme } = useTheme();
+  
+  const baseClasses = "sidebar-item flex items-center px-4 py-3 transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1) rounded-xl relative";
+  const textClasses = theme === 'dark' 
+    ? "text-slate-300 hover:text-slate-200" 
+    : "text-gray-600 hover:text-gray-800";
   
   if (collapsed) {
     return (
@@ -113,10 +173,9 @@ function NavItem({ to, icon, label, collapsed }: NavItemProps) {
           to={to}
           className={({ isActive }) =>
             cn(
-              "flex items-center justify-center p-3 rounded-xl transition-all duration-300",
-              isActive
-                ? activeClasses
-                : itemClasses
+              "sidebar-item flex items-center justify-center p-3 rounded-xl transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1) relative",
+              textClasses,
+              isActive && "active"
             )
           }
         >
@@ -131,13 +190,15 @@ function NavItem({ to, icon, label, collapsed }: NavItemProps) {
       to={to}
       className={({ isActive }) =>
         cn(
-          itemClasses,
-          isActive && activeClasses
+          baseClasses,
+          "space-x-3",
+          textClasses,
+          isActive && "active"
         )
       }
     >
       {icon}
-      <span className="font-medium">{label}</span>
+      <span className="font-clash font-medium">{label}</span>
     </NavLink>
   );
 }

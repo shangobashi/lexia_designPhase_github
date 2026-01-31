@@ -42,14 +42,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     const guestUser: User = {
       id: 'guest-user',
-      email: 'guest@lexia.com',
-      displayName: 'Guest User',
+      email: 'guest@kingsley.com',
+      displayName: 'Invité',
       photoURL: null,
       isGuest: true,
       profile: {
         id: 'guest-user',
-        email: 'guest@lexia.com',
-        full_name: 'Guest User',
+        email: 'guest@kingsley.com',
+        full_name: 'Invité',
         avatar_url: null,
         subscription_status: 'trialing',
         subscription_plan: 'free',

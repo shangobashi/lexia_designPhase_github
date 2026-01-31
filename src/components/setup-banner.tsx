@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, CheckCircle, Settings } from 'lucide-react';
 import { checkSetup, getSetupInstructions, type SetupStatus } from '@/lib/setup-checker';
+import { useTheme } from '@/contexts/theme-context';
 
 export function SetupBanner() {
   const [setupStatus, setSetupStatus] = useState<SetupStatus | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     const checkConfiguration = async () => {
@@ -35,16 +38,16 @@ export function SetupBanner() {
   const instructions = getSetupInstructions(setupStatus);
 
   return (
-    <div className="bg-amber-50 border-b border-amber-200">
+    <div className={`${theme === 'dark' ? 'bg-amber-900/30 border-amber-700/50' : 'bg-amber-50 border-amber-200'} border-b`}>
       <div className="px-4 py-3">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-3">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <AlertTriangle className={`h-5 w-5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
             <div>
-              <p className="text-sm font-medium text-amber-800">
+              <p className={`font-clash text-sm font-medium ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>
                 Configuration Required
               </p>
-              <p className="text-xs text-amber-700">
+              <p className={`text-xs ${isDark ? 'text-amber-400/80' : 'text-amber-700'}`}>
                 {!setupStatus.supabase.configured && !setupStatus.ai.anyConfigured 
                   ? 'Database and AI services need to be configured'
                   : !setupStatus.supabase.configured 
@@ -60,7 +63,7 @@ export function SetupBanner() {
               variant="outline"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-amber-800 border-amber-300 hover:bg-amber-100"
+              className={`${isDark ? 'text-amber-300 border-amber-600 hover:bg-amber-900/50' : 'text-amber-800 border-amber-300 hover:bg-amber-100'}`}
             >
               <Settings className="h-4 w-4 mr-2" />
               {isExpanded ? 'Hide' : 'Show'} Setup Guide
@@ -70,8 +73,8 @@ export function SetupBanner() {
         
         {isExpanded && (
           <div className="mt-4 max-w-7xl mx-auto">
-            <div className="bg-white rounded-md border border-amber-200 p-4">
-              <h3 className="font-medium text-amber-900 mb-3">Setup Instructions:</h3>
+            <div className={`${isDark ? 'bg-slate-800 border-amber-700/50' : 'bg-white border-amber-200'} rounded-md border p-4`}>
+              <h3 className={`font-clash font-medium ${isDark ? 'text-amber-300' : 'text-amber-900'} mb-3`}>Setup Instructions:</h3>
               
               <div className="grid md:grid-cols-2 gap-4">
                 {/* Supabase Status */}
@@ -82,7 +85,7 @@ export function SetupBanner() {
                     ) : (
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
                     )}
-                    <span className="font-medium text-sm">
+                    <span className="font-clash font-medium text-sm">
                       Database (Supabase)
                     </span>
                   </div>
@@ -104,7 +107,7 @@ export function SetupBanner() {
                     ) : (
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
                     )}
-                    <span className="font-medium text-sm">
+                    <span className="font-clash font-medium text-sm">
                       AI Services
                     </span>
                   </div>
@@ -137,7 +140,7 @@ export function SetupBanner() {
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-amber-200">
+              <div className={`mt-4 pt-3 border-t ${isDark ? 'border-amber-700/50' : 'border-amber-200'}`}>
                 <p className="text-xs text-gray-600">
                   📖 For detailed instructions, see <code className="bg-gray-100 px-1 rounded">SETUP_GUIDE.md</code> in the project root.
                 </p>

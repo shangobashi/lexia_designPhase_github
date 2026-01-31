@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileUploader } from '@/components/uploads/file-uploader';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
+import { useTheme } from '@/contexts/theme-context';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Document } from '@/types/document';
 import { 
   getUserDocuments, 
@@ -16,54 +16,70 @@ import {
 } from '@/lib/supabase';
 import { Search, FileText, Filter, Plus, File, Trash2, Download, ExternalLink, FileCog, FolderPlus } from 'lucide-react';
 
+type DocumentType = 'all' | 'pdf' | 'doc' | 'image' | 'text';
+type SortOption = 'newest' | 'oldest' | 'name' | 'size';
+
 export default function UploadsPage() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { theme } = useTheme();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [storageUsage, setStorageUsage] = useState({ files: 0, totalSize: 0 });
+  const [activeTab, setActiveTab] = useState('all-documents');
+  const [typeFilter, setTypeFilter] = useState<DocumentType>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
+  
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const DOCS_PER_PAGE = 6;
   
   useEffect(() => {
-    if (!user) return;
-    
-    const fetchDocuments = async () => {
-      setIsLoading(true);
-      try {
-        const [docs, usage] = await Promise.all([
-          getUserDocuments(),
-          getUserStorageUsage()
-        ]);
-        
-        // Transform Supabase documents to match frontend interface
-        const transformedDocs = docs.map(doc => ({
-          id: doc.id,
-          name: doc.name,
-          size: doc.file_size,
-          type: doc.mime_type,
-          url: doc.url || getFileUrl('documents', doc.storage_path),
-          uploadedAt: doc.uploaded_at,
-          caseId: doc.case_id
-        }));
-        
-        setDocuments(transformedDocs);
-        setStorageUsage(usage);
-      } catch (error) {
-        console.error('Error fetching documents', error);
-        toast({
-          title: 'Erreur',
-          description: 'Échec du chargement des documents',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchDocuments();
-  }, [user, toast]);
+    if (!authLoading && user) {
+      const fetchDocuments = async () => {
+        setIsLoading(true);
+        try {
+          const [docs, usage] = await Promise.all([
+            getUserDocuments(),
+            getUserStorageUsage()
+          ]);
+          
+          // Transform Supabase documents to match frontend interface
+          const transformedDocs = docs.map(doc => ({
+            id: doc.id,
+            name: doc.name,
+            size: doc.file_size,
+            type: doc.mime_type,
+            url: doc.url || getFileUrl('documents', doc.storage_path),
+            uploadedAt: doc.uploaded_at,
+            caseId: doc.case_id
+          }));
+          
+          setDocuments(transformedDocs);
+          setStorageUsage(usage);
+        } catch (error) {
+          console.error('Error fetching documents', error);
+          toast({
+            title: 'Erreur',
+            description: 'Échec du chargement des documents',
+            variant: 'destructive',
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      fetchDocuments();
+    } else if (!authLoading && !user) {
+      setIsLoading(false);
+      setDocuments([]);
+      setStorageUsage({ files: 0, totalSize: 0 });
+    }
+  }, [authLoading, user]); // Removed toast from dependencies to prevent unnecessary re-renders
   
   const handleFilesAdded = async (files: File[]) => {
     if (!user) {
@@ -151,10 +167,11 @@ export default function UploadsPage() {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
   
-  const handleDeleteDocument = async (documentId: string) => {
+  const handleDeleteDocument = useCallback(async (documentId: string) => {
     try {
       await deleteDocument(documentId);
       setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+      setSelectedDocuments(prev => prev.filter(id => id !== documentId));
       
       // Update storage usage
       const newUsage = await getUserStorageUsage();
@@ -172,7 +189,40 @@ export default function UploadsPage() {
         variant: 'destructive',
       });
     }
-  };
+  }, [toast]);
+  
+  const handleBulkDelete = useCallback(async () => {
+    try {
+      // Delete documents one by one (could be optimized with a bulk delete API)
+      await Promise.all(selectedDocuments.map(docId => deleteDocument(docId)));
+      setDocuments(prev => prev.filter(doc => !selectedDocuments.includes(doc.id)));
+      setSelectedDocuments([]);
+      
+      // Update storage usage
+      const newUsage = await getUserStorageUsage();
+      setStorageUsage(newUsage);
+      
+      toast({
+        title: 'Documents supprimés',
+        description: `${selectedDocuments.length} document(s) supprimé(s) avec succès`,
+      });
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      toast({
+        title: 'Erreur de suppression',
+        description: 'Impossible de supprimer les documents',
+        variant: 'destructive',
+      });
+    }
+  }, [selectedDocuments, toast]);
+  
+  const toggleDocumentSelection = useCallback((docId: string) => {
+    setSelectedDocuments(prev => 
+      prev.includes(docId) 
+        ? prev.filter(id => id !== docId)
+        : [...prev, docId]
+    );
+  }, []);
   
   const handleDownload = async (document: any) => {
     try {
@@ -204,6 +254,16 @@ export default function UploadsPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
   
+  // Helper function to format date
+  const formatDisplayDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+  };
+  
   const storagePercentage = (storageUsage.totalSize / (1024 * 1024 * 1024)) * 100; // 1GB limit
   
   const getFileIcon = (fileType: string) => {
@@ -220,224 +280,453 @@ export default function UploadsPage() {
     }
   };
   
-  const filteredDocuments = searchTerm
-    ? documents.filter(
-        (doc) =>
-          doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          doc.caseId.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : documents;
+  // Advanced filtering and sorting with memoization for performance
+  const filteredAndSortedDocuments = useMemo(() => {
+    let filtered = documents;
     
-  if (isLoading && !user) {
+    // Apply search filter
+    if (debouncedSearchTerm) {
+      filtered = filtered.filter(
+        (doc) =>
+          doc.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          doc.caseId.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          doc.type.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      );
+    }
+    
+    // Apply type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(doc => {
+        switch (typeFilter) {
+          case 'pdf':
+            return doc.type.includes('pdf');
+          case 'doc':
+            return doc.type.includes('word') || doc.type.includes('docx');
+          case 'image':
+            return doc.type.includes('image');
+          case 'text':
+            return doc.type.includes('text');
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime();
+        case 'oldest':
+          return new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime();
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'size':
+          return b.size - a.size;
+        default:
+          return 0;
+      }
+    });
+    
+    return sorted;
+  }, [documents, debouncedSearchTerm, typeFilter, sortBy]);
+  
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSortedDocuments.length / DOCS_PER_PAGE);
+  const paginatedDocuments = useMemo(() => {
+    const startIndex = (currentPage - 1) * DOCS_PER_PAGE;
+    return filteredAndSortedDocuments.slice(startIndex, startIndex + DOCS_PER_PAGE);
+  }, [filteredAndSortedDocuments, currentPage, DOCS_PER_PAGE]);
+  
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, typeFilter, sortBy]);
+    
+  // Show loading state during authentication and initial data fetch
+  if (authLoading || (isLoading && documents.length === 0)) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-medium text-lg mb-2">Connexion requise</h3>
-          <p className="text-muted-foreground">Veuillez vous connecter pour accéder à vos documents</p>
+      <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-6`}>
+        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl mb-6`}>
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-slate-700 rounded mb-4"></div>
+            <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-2/3"></div>
+          </div>
+        </div>
+        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-xl mb-6`}>
+          <div className="animate-pulse">
+            <div className="h-12 bg-gray-200 dark:bg-slate-700 rounded"></div>
+          </div>
+        </div>
+        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-xl`}>
+          <div className="animate-pulse space-y-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-20 bg-gray-200 dark:bg-slate-700 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show authentication required
+  if (!user) {
+    return (
+      <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-6`}>
+        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-12 text-center`}>
+          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>Connexion requise</h3>
+          <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>
+            Veuillez vous connecter pour accéder à vos documents.
+          </p>
         </div>
       </div>
     );
   }
   
   return (
-    <div className="space-y-6">
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-6`}>
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Documents</h1>
-          <p className="text-muted-foreground">
-            Gérez et organisez vos documents juridiques
-          </p>
+      <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl mb-6`}>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <h1 className={`text-2xl font-clash font-bold tracking-tight ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Documents</h1>
+            <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
+              Gérez et organisez vos documents juridiques
+            </p>
+          </div>
+          <button 
+            onClick={() => setActiveTab('upload')}
+            className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-6 py-3 rounded-xl font-clash font-medium flex items-center space-x-2`}
+          >
+            <Plus className="h-4 w-4" />
+            <span>Ajouter des fichiers</span>
+          </button>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Télécharger des fichiers
-        </Button>
       </div>
       
       {/* Document Management Tabs */}
-      <Tabs defaultValue="all-documents" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="all-documents">Tous les documents</TabsTrigger>
-          <TabsTrigger value="upload">Upload des fichiers</TabsTrigger>
-          <TabsTrigger value="organize">Organiser</TabsTrigger>
-        </TabsList>
+      <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-xl mb-6`}>
+        <div className="flex space-x-1 p-2">
+          <button
+            onClick={() => setActiveTab('all-documents')}
+            className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${
+              activeTab === 'all-documents'
+                ? (theme === 'dark' ? 'bg-slate-700 text-slate-100' : 'bg-gray-100 text-gray-900')
+                : (theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50')
+            }`}
+          >
+            Tous les documents
+          </button>
+          <button
+            onClick={() => setActiveTab('upload')}
+            className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${
+              activeTab === 'upload'
+                ? (theme === 'dark' ? 'bg-slate-700 text-slate-100' : 'bg-gray-100 text-gray-900')
+                : (theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50')
+            }`}
+          >
+            Ajout des fichiers
+          </button>
+          <button
+            onClick={() => setActiveTab('organize')}
+            className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${
+              activeTab === 'organize'
+                ? (theme === 'dark' ? 'bg-slate-700 text-slate-100' : 'bg-gray-100 text-gray-900')
+                : (theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50')
+            }`}
+          >
+            Organiser
+          </button>
+        </div>
+      </div>
         
-        {/* All Documents Tab */}
-        <TabsContent value="all-documents" className="space-y-4">
+      {/* Tab Content */}
+      <div className={`${activeTab === 'all-documents' ? 'block' : 'hidden'}`}>
+        <div className="space-y-4">
           {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Rechercher des documents par nom ou ID de dossier..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 py-2 rounded-md border border-input bg-background"
-              />
+          <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-4 rounded-xl`}>
+            <div className="flex flex-col lg:flex-row gap-4 items-center">
+              <div className="flex-1">
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="Rechercher par nom, type ou ID de dossier..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className={`w-full pl-10 pr-4 py-3 rounded-xl focus:outline-none ${theme === 'dark' ? 'dark-input' : 'border border-gray-300 focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white/90'}`}
+                  />
+                  <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-slate-400' : 'text-gray-400'} absolute left-3 top-3.5`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => setTypeFilter('all')}
+                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${typeFilter === 'all' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'all' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'all' ? 'text-gray-700' : 'text-gray-600')}`}
+                >
+                  Tous
+                </button>
+                <button 
+                  onClick={() => setTypeFilter('pdf')}
+                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${typeFilter === 'pdf' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'pdf' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'pdf' ? 'text-gray-700' : 'text-gray-600')}`}
+                >
+                  PDF
+                </button>
+                <button 
+                  onClick={() => setTypeFilter('doc')}
+                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${typeFilter === 'doc' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'doc' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'doc' ? 'text-gray-700' : 'text-gray-600')}`}
+                >
+                  DOC
+                </button>
+                <button 
+                  onClick={() => setTypeFilter('image')}
+                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${typeFilter === 'image' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'image' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'image' ? 'text-gray-700' : 'text-gray-600')}`}
+                >
+                  Images
+                </button>
+              </div>
+              
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className={`rounded-lg px-3 py-2 text-sm ${theme === 'dark' ? 'dark-input text-slate-200' : 'border border-gray-300 text-gray-700 bg-white/90'}`}
+              >
+                <option value="newest">Plus récent</option>
+                <option value="oldest">Plus ancien</option>
+                <option value="name">Nom A-Z</option>
+                <option value="size">Taille</option>
+              </select>
             </div>
-            
-            <Button variant="outline" className="sm:w-auto">
-              <Filter className="mr-2 h-4 w-4" /> Filtrer
-            </Button>
           </div>
           
           {/* Document List */}
-          {isLoading ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-card border border-border rounded-lg h-28 animate-pulse" />
-              ))}
-            </div>
-          ) : filteredDocuments.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {filteredDocuments.map((doc) => (
-                <Card key={doc.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-4">
-                      {getFileIcon(doc.type)}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{doc.name}</p>
-                        <div className="flex items-center text-xs text-muted-foreground mt-1">
-                          <span>Dossier : {doc.caseId}</span>
-                          <span className="mx-2">•</span>
-                          <span>{new Date(doc.uploadedAt).toLocaleDateString()}</span>
-                          <span className="mx-2">•</span>
-                          <span>{formatFileSize(doc.size)}</span>
+          {paginatedDocuments.length > 0 ? (
+            <>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {paginatedDocuments.map((doc, index) => (
+                <div key={`${doc.id}-${index}`} className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-6 cursor-pointer h-64 flex flex-col`}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-3">
+                        {getFileIcon(doc.type)}
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg truncate`}>
+                            {doc.name}
+                          </h3>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex justify-end mt-3 pt-3 border-t border-border">
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDownload(doc)}
-                          title="Télécharger"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" title="Analyser">
-                          <FileCog className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteDocument(doc.id)}
-                          title="Supprimer"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      <div className={`flex items-center text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'} mb-3`}>
+                        <span>Dossier : {doc.caseId}</span>
+                        <span className="mx-2">•</span>
+                        <span>{formatFileSize(doc.size)}</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  </div>
+                  
+                  <div className="mt-auto">
+                    <div className={`flex items-center justify-between text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'} mb-4`}>
+                      <span>Téléchargé le {formatDisplayDate(doc.uploadedAt)}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-end space-x-2">
+                      <button 
+                        onClick={() => handleDownload(doc)}
+                        className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                        title="Télécharger"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                      <button 
+                        className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                        title="Analyser"
+                      >
+                        <FileCog className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteDocument(doc.id)}
+                        className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' : 'text-red-400 hover:text-red-600 hover:bg-red-100'}`}
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <div className="flex space-x-1">
+                    <button 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-2 rounded-lg transition-colors ${
+                        currentPage === 1 
+                          ? (theme === 'dark' ? 'text-slate-600 cursor-not-allowed' : 'text-gray-400 cursor-not-allowed')
+                          : (theme === 'dark' ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
+                      </svg>
+                    </button>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-2 rounded-lg transition-colors font-clash font-medium ${
+                          currentPage === pageNum
+                            ? `text-white ${theme === 'dark' ? 'bg-slate-600' : 'bg-gray-700'}`
+                            : (theme === 'dark' 
+                              ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30' 
+                              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100')
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+                    
+                    <button 
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-2 rounded-lg transition-colors ${
+                        currentPage === totalPages 
+                          ? (theme === 'dark' ? 'text-slate-600 cursor-not-allowed' : 'text-gray-400 cursor-not-allowed')
+                          : (theme === 'dark' ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="border border-border rounded-lg bg-card p-8 text-center">
-              {searchTerm ? (
+            <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-12 text-center`}>
+              {debouncedSearchTerm || typeFilter !== 'all' ? (
                 <>
-                  <h3 className="font-medium text-lg mb-2">Aucun document ne correspond à votre recherche</h3>
-                  <p className="text-muted-foreground mb-4">Essayez une autre recherche ou effacez vos filtres</p>
-                  <Button variant="outline" onClick={() => setSearchTerm('')}>Effacer la recherche</Button>
+                  <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+                    <Search className={`h-8 w-8 ${theme === 'dark' ? 'text-slate-400' : 'text-gray-400'}`} />
+                  </div>
+                  <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>Aucun document ne correspond aux filtres</h3>
+                  <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>Essayez une autre recherche ou modifiez vos filtres</p>
+                  <button 
+                    onClick={() => {
+                      setSearchTerm('');
+                      setTypeFilter('all');
+                    }}
+                    className={`px-6 py-3 rounded-xl font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30 border border-slate-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-300'}`}
+                  >
+                    Réinitialiser les filtres
+                  </button>
                 </>
               ) : (
                 <>
-                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="font-medium text-lg mb-2">Aucun document encore</h3>
-                  <p className="text-muted-foreground mb-4">Téléchargez votre premier document pour commencer</p>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" /> Télécharger des fichiers
-                  </Button>
+                  <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+                    <FileText className={`h-8 w-8 ${theme === 'dark' ? 'text-slate-400' : 'text-gray-400'}`} />
+                  </div>
+                  <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>Aucun document</h3>
+                  <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>Ajoutez votre premier document pour commencer avec Kingsley</p>
+                  <button 
+                    onClick={() => setActiveTab('upload')}
+                    className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-6 py-3 rounded-xl font-clash font-medium flex items-center space-x-2 mx-auto`}
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Ajouter des fichiers</span>
+                  </button>
                 </>
               )}
             </div>
           )}
-        </TabsContent>
+        </div>
+      </div>
         
-        {/* Upload Files Tab */}
-        <TabsContent value="upload" className="space-y-6">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Upload de documents</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                Uploadez des documents tels que des contrats, des documents de cour, des photographies ou toute autre preuve pertinente pour vos affaires juridiques.
-              </p>
-              
-              <FileUploader
-                onFilesAdded={handleFilesAdded}
-                onFileRemove={handleFileRemove}
-                files={uploadedFiles}
-                maxFiles={10}
-                acceptedFileTypes={{
-                  'application/pdf': ['.pdf'],
-                  'application/msword': ['.doc'],
-                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                  'text/plain': ['.txt'],
-                  'image/jpeg': ['.jpg', '.jpeg'],
-                  'image/png': ['.png']
-                }}
-                maxSizeInBytes={20 * 1024 * 1024} // 20MB
-                disabled={isUploading}
-              />
-              
-              <div className="mt-6 pt-6 border-t border-border">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="text-sm text-muted-foreground">
-                    <p><span className="font-medium">Stockage :</span> {formatFileSize(storageUsage.totalSize)} utilisés sur 1 Go</p>
-                    <div className="w-full bg-muted rounded-full h-1.5 mt-1">
-                      <div 
-                        className="bg-primary h-1.5 rounded-full transition-all" 
-                        style={{ width: `${Math.min(storagePercentage, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-3">
-                    <Button variant="outline">
-                      <FolderPlus className="h-4 w-4 mr-2" />
-                      Ajouter à un dossier
-                    </Button>
-                    <Button 
-                      disabled={uploadedFiles.length === 0 || isUploading}
-                      onClick={() => handleFilesAdded(uploadedFiles)}
-                    >
-                      {isUploading ? 'Téléchargement...' : 'Traiter les documents'}
-                    </Button>
+      {/* Upload Files Tab */}
+      <div className={`${activeTab === 'upload' ? 'block' : 'hidden'}`}>
+        <div className="space-y-6">
+          <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl`}>
+            <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>Upload de documents</h3>
+            <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>
+              Uploadez des documents tels que des contrats, des documents de cour, des photographies ou toute autre preuve pertinente pour vos affaires juridiques.
+            </p>
+            
+            <FileUploader
+              onFilesAdded={handleFilesAdded}
+              onFileRemove={handleFileRemove}
+              files={uploadedFiles}
+              maxFiles={10}
+              acceptedFileTypes={{
+                'application/pdf': ['.pdf'],
+                'application/msword': ['.doc'],
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                'text/plain': ['.txt'],
+                'image/jpeg': ['.jpg', '.jpeg'],
+                'image/png': ['.png']
+              }}
+              maxSizeInBytes={20 * 1024 * 1024} // 20MB
+              disabled={isUploading}
+            />
+            
+            <div className={`mt-6 pt-6 border-t ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'}`}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
+                  <p><span className="font-clash font-medium">Stockage :</span> {formatFileSize(storageUsage.totalSize)} utilisés sur 1 Go</p>
+                  <div className={`w-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-200'} rounded-full h-1.5 mt-1`}>
+                    <div 
+                      className={`${theme === 'dark' ? 'bg-slate-400' : 'bg-gray-600'} h-1.5 rounded-full transition-all`}
+                      style={{ width: `${Math.min(storagePercentage, 100)}%` }}
+                    />
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Organize Tab */}
-        <TabsContent value="organize">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Organiser des documents</h3>
-              <p className="text-muted-foreground mb-4">Grouper des documents dans des dossiers et les assigner à des dossiers</p>
-              
-              {/* This would be a drag-and-drop interface in the full implementation */}
-              <div className="border border-border rounded-md p-8 text-center">
-                <div className="mx-auto mb-4 p-4 rounded-full bg-primary/10 inline-block">
-                  <FileCog className="h-6 w-6 text-primary" />
+                
+                <div className="flex space-x-3">
+                  <button className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30 border border-slate-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-300'} flex items-center space-x-2`}>
+                    <FolderPlus className="h-4 w-4" />
+                    <span>Ajouter à un dossier</span>
+                  </button>
+                  <button 
+                    disabled={uploadedFiles.length === 0 || isUploading}
+                    onClick={() => handleFilesAdded(uploadedFiles)}
+                    className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-6 py-3 rounded-xl font-clash font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {isUploading ? 'Téléchargement...' : 'Traiter les documents'}
+                  </button>
                 </div>
-                <h3 className="font-medium mb-2">Organisation des documents en cours de développement</h3>
-                <p className="text-sm text-muted-foreground mb-4">Cette fonctionnalité est actuellement en cours de développement</p>
-                <Button variant="outline">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  En savoir plus
-                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+          </div>
+        </div>
+      </div>
+        
+      {/* Organize Tab */}
+      <div className={`${activeTab === 'organize' ? 'block' : 'hidden'}`}>
+        <div className="space-y-6">
+          <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl`}>
+            <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>Organiser des documents</h3>
+            <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>Grouper des documents dans des dossiers et les assigner à des dossiers</p>
+            
+            {/* This would be a drag-and-drop interface in the full implementation */}
+            <div className={`border ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'} rounded-xl p-8 text-center`}>
+              <div className={`mx-auto mb-4 p-4 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'} inline-block`}>
+                <FileCog className={`h-6 w-6 ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`} />
+              </div>
+              <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>Organisation des documents en cours de développement</h3>
+              <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>Cette fonctionnalité est actuellement en cours de développement</p>
+              <button className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30 border border-slate-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-300'} flex items-center space-x-2 mx-auto`}>
+                <ExternalLink className="h-4 w-4" />
+                <span>En savoir plus</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
