@@ -1,9 +1,10 @@
 
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useTheme } from '@/contexts/theme-context';
+import { ChevronLeft } from 'lucide-react';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -15,33 +16,41 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: SidebarProps) {
   const { theme } = useTheme();
 
+  const handleToggleCollapse = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    localStorage.setItem('sidebar-collapsed', JSON.stringify(next));
+  };
+
   return (
     <aside className={cn(
-      "w-64 fixed h-full z-40 sidebar transition-transform duration-300",
-      collapsed && "w-16",
+      "fixed h-full z-40 sidebar transition-all duration-300 ease-in-out",
+      collapsed ? "w-16" : "w-64",
       mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
     )}>
-      <div className="p-6">
+      <div className={cn("p-6 flex flex-col h-full", collapsed && "p-3")}>
         {/* Logo */}
-        <div className="flex items-center space-x-3 mb-8">
-          <div className={`w-12 h-12 flex items-center justify-center`}>
+        <div className={cn("flex items-center mb-8", collapsed ? "justify-center" : "space-x-3")}>
+          <div className={cn("flex items-center justify-center flex-shrink-0", collapsed ? "w-10 h-10" : "w-12 h-12")}>
             <img
               src={`${import.meta.env.BASE_URL}kingsley-logo.png`}
               alt="Kingsley Logo"
               className="w-full h-full object-contain"
             />
           </div>
-          {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`text-xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}
-            >
-              Kingsley
-            </motion.span>
-          )}
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.span
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.2 }}
+                className={`text-xl font-clash font-light whitespace-nowrap overflow-hidden ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}
+              >
+                Kingsley
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
         
         {/* Navigation Links */}
@@ -121,29 +130,67 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: Sidebar
             />
           </div>
         </nav>
-      </div>
-      
-      {/* User Profile */}
-      <div className="absolute bottom-6 left-6 right-6">
-        <div className={`rounded-xl p-4 ${
-          theme === 'dark' 
-            ? 'bg-slate-700/50 border border-slate-600/30' 
-            : 'bg-gray-50 border border-gray-200'
-        }`}>
-          <div className="flex items-center space-x-3">
-            <div className={`w-8 h-8 rounded-full ${
-              theme === 'dark' ? 'bg-slate-500' : 'bg-gray-300'
-            }`}></div>
-            {!collapsed && (
-              <div>
-                <div className={`text-sm font-clash font-medium ${
-                  theme === 'dark' ? 'text-slate-100' : 'text-gray-900'
-                }`}>Invité</div>
-                <div className={`text-xs ${
-                  theme === 'dark' ? 'text-slate-300' : 'text-gray-500'
-                }`}>Gratuit</div>
-              </div>
-            )}
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Collapse Toggle */}
+        <div className={cn("hidden lg:flex mb-4", collapsed ? "justify-center" : "justify-end pr-1")}>
+          <Tooltip content={collapsed ? "Déplier" : "Replier"}>
+            <button
+              onClick={handleToggleCollapse}
+              className={cn(
+                "sidebar-collapse-toggle p-2 rounded-xl transition-all duration-300",
+                theme === 'dark'
+                  ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+                  : "text-gray-400 hover:text-gray-700 hover:bg-gray-100/80"
+              )}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <motion.div
+                animate={{ rotate: collapsed ? 180 : 0 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </motion.div>
+            </button>
+          </Tooltip>
+        </div>
+
+        {/* User Profile */}
+        <div className={cn(collapsed ? "px-0" : "")}>
+          <div className={cn(
+            "rounded-xl transition-all duration-300",
+            collapsed ? "p-2" : "p-4",
+            theme === 'dark'
+              ? 'bg-slate-700/50 border border-slate-600/30'
+              : 'bg-gray-50 border border-gray-200'
+          )}>
+            <div className={cn("flex items-center", collapsed ? "justify-center" : "space-x-3")}>
+              <div className={cn(
+                "rounded-full flex-shrink-0",
+                collapsed ? "w-7 h-7" : "w-8 h-8",
+                theme === 'dark' ? 'bg-slate-500' : 'bg-gray-300'
+              )} />
+              <AnimatePresence>
+                {!collapsed && (
+                  <motion.div
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden whitespace-nowrap"
+                  >
+                    <div className={`text-sm font-clash font-medium ${
+                      theme === 'dark' ? 'text-slate-100' : 'text-gray-900'
+                    }`}>Invité</div>
+                    <div className={`text-xs ${
+                      theme === 'dark' ? 'text-slate-300' : 'text-gray-500'
+                    }`}>Gratuit</div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>

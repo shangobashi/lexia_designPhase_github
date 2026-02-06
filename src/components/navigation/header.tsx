@@ -30,7 +30,7 @@ export default function Header({ toggleSidebar, isCollapsed, hideAIButton = fals
     <header className={`${theme === 'dark' ? 'dark-header' : 'light-header'} px-6 py-4`}>
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-3 md:space-x-5">
-          {/* Mobile menu toggle */}
+          {/* Mobile menu toggle (desktop collapse handled by sidebar's own toggle) */}
           <button
             onClick={toggleSidebar}
             className={`lg:hidden p-2 rounded-lg ${theme === 'dark' ? 'text-slate-200 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`}

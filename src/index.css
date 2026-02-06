@@ -2039,6 +2039,22 @@ input:checked + .slider:before {
     }
 }
 
+/* Sidebar Collapse Toggle */
+.sidebar-collapse-toggle {
+    backdrop-filter: blur(8px);
+    border: 1px solid transparent;
+}
+
+.sidebar-collapse-toggle:hover {
+    border-color: rgba(80, 86, 98, 0.12);
+    box-shadow: 0 2px 8px rgba(80, 86, 98, 0.08);
+}
+
+.dark .sidebar-collapse-toggle:hover {
+    border-color: rgba(100, 116, 139, 0.15);
+    box-shadow: 0 2px 8px rgba(15, 15, 35, 0.3);
+}
+
 /* Accessibility - respecting user motion preferences */
 @media (prefers-reduced-motion: reduce) {
     .sidebar-item,
