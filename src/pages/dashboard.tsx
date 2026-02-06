@@ -11,20 +11,20 @@ const formatDate = (dateString: string) => {
 };
 
 // Simple AI Setup Banner component
-const AISetupBanner = () => {
+const AISetupBanner = ({ theme }: { theme: string }) => {
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+    <div className={`${theme === 'dark' ? 'bg-blue-900/20 border-blue-800/30' : 'bg-blue-50 border-blue-200'} border rounded-xl p-4 mb-6`}>
       <div className="flex items-center space-x-3">
-        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className={`w-8 h-8 ${theme === 'dark' ? 'bg-blue-900/40' : 'bg-blue-100'} rounded-lg flex items-center justify-center`}>
+          <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-clash font-medium text-blue-900">Configuration IA recommandée</h3>
-          <p className="text-xs text-blue-700">Optimisez votre expérience en configurant vos préférences d'assistance juridique.</p>
+          <h3 className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-blue-200' : 'text-blue-900'}`}>Configuration IA recommandée</h3>
+          <p className={`text-xs ${theme === 'dark' ? 'text-blue-300/80' : 'text-blue-700'}`}>Optimisez votre expérience en configurant vos préférences d'assistance juridique.</p>
         </div>
-        <button className="text-xs text-blue-600 hover:text-blue-800 font-clash font-medium">Configurer</button>
+        <button className={`text-xs ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'} font-clash font-medium`}>Configurer</button>
       </div>
     </div>
   );
@@ -73,7 +73,7 @@ export default function DashboardPage() {
   return (
           <main className="p-4 sm:p-6">
             {/* AI Setup Banner */}
-            <AISetupBanner />
+            <AISetupBanner theme={theme} />
             
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

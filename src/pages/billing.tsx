@@ -448,50 +448,50 @@ export default function BillingPage() {
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-slate-300">Crédits utilisés ce mois</span>
-                  <span className="font-clash font-medium text-slate-800 dark:text-slate-100">3 / 10</span>
+                  <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Crédits utilisés ce mois</span>
+                  <span className={`font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>3 / 10</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-slate-300">Prochaine facturation</span>
-                  <span className="font-clash font-medium text-slate-800 dark:text-slate-100">—</span>
+                  <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Prochaine facturation</span>
+                  <span className={`font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>—</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-slate-300">Statut</span>
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs rounded-full font-clash font-medium">Invité</span>
+                  <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Statut</span>
+                  <span className={`px-2 py-1 ${theme === 'dark' ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'} text-xs rounded-full font-clash font-medium`}>Invité</span>
                 </div>
               </div>
             </div>
-            
+
             <div className="lg:w-80">
-              <h4 className="text-sm font-clash font-medium text-gray-700 dark:text-slate-200 mb-3">Utilisation mensuelle</h4>
+              <h4 className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'} mb-3`}>Utilisation mensuelle</h4>
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600 dark:text-slate-300">Crédits utilisés</span>
-                    <span className="font-clash font-medium text-slate-800 dark:text-slate-100">3 / 10</span>
+                    <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Crédits utilisés</span>
+                    <span className={`font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>3 / 10</span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-slate-700/50 rounded-full h-2">
-                    <div className="progress-bar dark:dark-progress-bar h-2 rounded-full" style={{width: '30%'}}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600 dark:text-slate-300">Documents générés</span>
-                    <span className="font-clash font-medium text-slate-800 dark:text-slate-100">0</span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-slate-700/50 rounded-full h-2">
-                    <div className="progress-bar dark:dark-progress-bar h-2 rounded-full" style={{width: '0%'}}></div>
+                  <div className={`w-full ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full h-2`}>
+                    <div className={`progress-bar ${theme === 'dark' ? 'dark-progress-bar' : ''} h-2 rounded-full`} style={{width: '30%'}}></div>
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600 dark:text-slate-300">Stockage utilisé</span>
-                    <span className="font-clash font-medium text-slate-800 dark:text-slate-100">5 MB / 100 MB</span>
+                    <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Documents générés</span>
+                    <span className={`font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>0</span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-slate-700/50 rounded-full h-2">
-                    <div className="progress-bar dark:dark-progress-bar h-2 rounded-full" style={{width: '5%'}}></div>
+                  <div className={`w-full ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full h-2`}>
+                    <div className={`progress-bar ${theme === 'dark' ? 'dark-progress-bar' : ''} h-2 rounded-full`} style={{width: '0%'}}></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Stockage utilisé</span>
+                    <span className={`font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>5 MB / 100 MB</span>
+                  </div>
+                  <div className={`w-full ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full h-2`}>
+                    <div className={`progress-bar ${theme === 'dark' ? 'dark-progress-bar' : ''} h-2 rounded-full`} style={{width: '5%'}}></div>
                   </div>
                 </div>
               </div>
@@ -564,29 +564,29 @@ export default function BillingPage() {
                     <span className={`${theme === 'dark' ? 'bg-slate-600 text-slate-100' : 'bg-gray-700 text-white'} px-4 py-1 rounded-full text-xs font-clash font-medium`}>Recommandé</span>
                   </div>
             <div className="text-center mb-6">
-              <h3 className="text-lg font-clash font-semibold text-slate-800 dark:text-slate-100 mb-2">Basic</h3>
-              <div className="text-3xl font-clash font-light text-slate-800 dark:text-slate-100 mb-1">49,99€</div>
-              <div className="text-gray-600 dark:text-slate-300">par mois</div>
+              <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>Basic</h3>
+              <div className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-1`}>49,99€</div>
+              <div className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>par mois</div>
             </div>
-            
+
             <ul className="space-y-3 mb-6 flex-grow min-h-[120px]">
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">50 crédits/mois</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>50 crédits/mois</span>
               </li>
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">Consultation avancée</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Consultation avancée</span>
               </li>
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">Support par email prioritaire</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Support par email prioritaire</span>
               </li>
             </ul>
             
@@ -602,29 +602,29 @@ export default function BillingPage() {
                 <div className={`${theme === 'dark' ? 'dark-pricing-card' : 'pricing-card'} rounded-2xl p-6 flex flex-col`}>
             
             <div className="text-center mb-6">
-              <h3 className="text-lg font-clash font-semibold text-slate-800 dark:text-slate-100 mb-2">Premium</h3>
-              <div className="text-3xl font-clash font-light text-slate-800 dark:text-slate-100 mb-1">∞</div>
-              <div className="text-gray-600 dark:text-slate-300">illimité</div>
+              <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>Premium</h3>
+              <div className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-1`}>∞</div>
+              <div className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>illimité</div>
             </div>
-            
+
             <ul className="space-y-3 mb-6 flex-grow min-h-[120px]">
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">Sur Mesure</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Sur Mesure</span>
               </li>
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">Conseil expert personnalisé</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Conseil expert personnalisé</span>
               </li>
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">Support prioritaire téléphone</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Support prioritaire téléphone</span>
               </li>
             </ul>
             

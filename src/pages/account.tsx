@@ -172,16 +172,16 @@ export default function AccountPage() {
   };
   
   return (
-    <div className="min-h-screen sophisticated-bg">
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'}`}>
       <div className="flex h-screen">
         {/* Sidebar */}
-        <div className="w-64 sidebar fixed h-full z-40">
+        <div className={`w-64 ${theme === 'dark' ? 'dark-sidebar' : 'sidebar'} fixed h-full z-40`}>
           <div className="p-6">
             <div className="flex items-center space-x-3 mb-8">
-              <div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
-                <span className="text-white font-clash font-semibold text-sm">L</span>
+              <div className={`w-8 h-8 ${theme === 'dark' ? 'bg-slate-200' : 'bg-gray-700'} rounded-lg flex items-center justify-center`}>
+                <span className={`font-clash font-semibold text-sm ${theme === 'dark' ? 'text-gray-800' : 'text-white'}`}>L</span>
               </div>
-              <span className="text-xl font-clash font-light text-slate-800">Kingsley</span>
+              <span className={`text-xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Kingsley</span>
             </div>
             
             <nav className="space-y-2">
