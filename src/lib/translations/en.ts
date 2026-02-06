@@ -441,6 +441,10 @@ const en = {
     fileUploadSoon: 'File upload coming soon',
     fileUploadSoonDesc: 'This version does not yet store attachments.',
     defaultUser: 'You',
+    modeFast: 'Fast',
+    modeFastDesc: 'Instant responses',
+    modeThinking: 'Thinking',
+    modeThinkingDesc: 'In-depth analysis',
   },
 
   // Uploads Page

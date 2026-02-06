@@ -441,6 +441,10 @@ const fr = {
     fileUploadSoon: 'Envoi de fichiers bient\u00f4t disponible',
     fileUploadSoonDesc: 'Cette version ne stocke pas encore les pi\u00e8ces jointes.',
     defaultUser: 'Vous',
+    modeFast: 'Rapide',
+    modeFastDesc: 'R\u00e9ponses instantan\u00e9es',
+    modeThinking: 'R\u00e9flexion',
+    modeThinkingDesc: 'Analyse approfondie',
   },
 
   // Uploads Page

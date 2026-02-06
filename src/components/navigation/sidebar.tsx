@@ -57,30 +57,43 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: Sidebar
           </div>
         </div>
 
-        {/* Collapse Toggle Button */}
-        <div className={cn("mb-6 hidden lg:flex justify-center")}>
-          <Tooltip content={collapsed ? t.sidebar.expand : t.sidebar.collapse}>
+        {/* Collapse Toggle Button - hidden on mobile, visible on lg+ */}
+        <div className="hidden lg:block mb-2">
+          {collapsed ? (
+            <Tooltip content={t.sidebar.expand}>
+              <button
+                onClick={handleToggleCollapse}
+                className={cn(
+                  "sidebar-item flex items-center justify-center p-3 rounded-xl transition-all duration-300",
+                  theme === 'dark'
+                    ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100/80"
+                )}
+                aria-label="Expand sidebar"
+              >
+                <motion.div
+                  animate={{ rotate: 180 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </motion.div>
+              </button>
+            </Tooltip>
+          ) : (
             <button
               onClick={handleToggleCollapse}
               className={cn(
-                "sidebar-collapse-toggle rounded-xl transition-all duration-300",
-                collapsed
-                  ? "p-3 flex items-center justify-center"
-                  : "p-1.5 rounded-lg",
+                "sidebar-item flex items-center px-4 py-3 space-x-3 rounded-xl transition-all duration-300",
                 theme === 'dark'
                   ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
                   : "text-gray-400 hover:text-gray-700 hover:bg-gray-100/80"
               )}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label="Collapse sidebar"
             >
-              <motion.div
-                animate={{ rotate: collapsed ? 180 : 0 }}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              >
-                <ChevronLeft className={cn(collapsed ? "w-5 h-5" : "w-4 h-4")} />
-              </motion.div>
+              <ChevronLeft className="w-5 h-5" />
+              <span className="font-clash font-medium">{t.sidebar.collapse}</span>
             </button>
-          </Tooltip>
+          )}
         </div>
 
         {/* Navigation Links */}
