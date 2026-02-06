@@ -37,22 +37,8 @@ export default function Header({ toggleSidebar, isCollapsed, hideAIButton = fals
           >
             <Menu className="h-5 w-5" />
           </button>
-          {/* Brand */}
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 flex items-center justify-center">
-              <img
-                src={`${import.meta.env.BASE_URL}kingsley-logo.png`}
-                alt="Kingsley Logo"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <span className={`text-xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
-              Kingsley
-            </span>
-          </div>
-
-          {/* Search */}
-          <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} hidden md:flex items-center rounded-xl px-4 py-2 w-64 lg:w-96`}>
+          {/* Search - takes main space since brand is in sidebar */}
+          <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} hidden md:flex items-center rounded-xl px-4 py-2.5 flex-1 max-w-2xl`}>
             <Search className={`${theme === 'dark' ? 'text-slate-400' : 'text-gray-400'} h-4 w-4 mr-3`} />
             <input 
               type="text" 

@@ -29,28 +29,51 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: Sidebar
       mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
     )}>
       <div className={cn("p-6 flex flex-col h-full", collapsed && "p-3")}>
-        {/* Logo */}
-        <div className={cn("flex items-center mb-8", collapsed ? "justify-center" : "space-x-3")}>
-          <div className={cn("flex items-center justify-center flex-shrink-0", collapsed ? "w-10 h-10" : "w-12 h-12")}>
-            <img
-              src={`${import.meta.env.BASE_URL}kingsley-logo.png`}
-              alt="Kingsley Logo"
-              className="w-full h-full object-contain"
-            />
+        {/* Logo + Collapse Toggle */}
+        <div className={cn("flex items-center mb-8", collapsed ? "justify-center" : "justify-between")}>
+          <div className={cn("flex items-center", collapsed ? "" : "space-x-3")}>
+            <div className={cn("flex items-center justify-center flex-shrink-0", collapsed ? "w-10 h-10" : "w-12 h-12")}>
+              <img
+                src={`${import.meta.env.BASE_URL}kingsley-logo.png`}
+                alt="Kingsley Logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className={`text-xl font-clash font-light whitespace-nowrap overflow-hidden ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}
+                >
+                  Kingsley
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.2 }}
-                className={`text-xl font-clash font-light whitespace-nowrap overflow-hidden ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}
+          <div className="hidden lg:block">
+            <Tooltip content={collapsed ? "Déplier" : "Replier"}>
+              <button
+                onClick={handleToggleCollapse}
+                className={cn(
+                  "sidebar-collapse-toggle p-1.5 rounded-lg transition-all duration-300",
+                  theme === 'dark'
+                    ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100/80"
+                )}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
-                Kingsley
-              </motion.span>
-            )}
-          </AnimatePresence>
+                <motion.div
+                  animate={{ rotate: collapsed ? 180 : 0 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </motion.div>
+              </button>
+            </Tooltip>
+          </div>
         </div>
         
         {/* Navigation Links */}
@@ -133,29 +156,6 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: Sidebar
 
         {/* Spacer */}
         <div className="flex-1" />
-
-        {/* Collapse Toggle */}
-        <div className={cn("hidden lg:flex mb-4", collapsed ? "justify-center" : "justify-end pr-1")}>
-          <Tooltip content={collapsed ? "Déplier" : "Replier"}>
-            <button
-              onClick={handleToggleCollapse}
-              className={cn(
-                "sidebar-collapse-toggle p-2 rounded-xl transition-all duration-300",
-                theme === 'dark'
-                  ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-                  : "text-gray-400 hover:text-gray-700 hover:bg-gray-100/80"
-              )}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              <motion.div
-                animate={{ rotate: collapsed ? 180 : 0 }}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </motion.div>
-            </button>
-          </Tooltip>
-        </div>
 
         {/* User Profile */}
         <div className={cn(collapsed ? "px-0" : "")}>
