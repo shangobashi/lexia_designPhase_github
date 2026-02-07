@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
 import { Case } from '@/types/case';
 import { getUserCases } from '@/lib/supabase';
 
@@ -11,7 +12,7 @@ const formatDate = (dateString: string) => {
 };
 
 // Simple AI Setup Banner component
-const AISetupBanner = ({ theme }: { theme: string }) => {
+const AISetupBanner = ({ theme, t }: { theme: string; t: any }) => {
   return (
     <div className={`${theme === 'dark' ? 'bg-blue-900/20 border-blue-800/30' : 'bg-blue-50 border-blue-200'} border rounded-xl p-4 mb-6`}>
       <div className="flex items-center space-x-3">
@@ -21,10 +22,10 @@ const AISetupBanner = ({ theme }: { theme: string }) => {
           </svg>
         </div>
         <div className="flex-1">
-          <h3 className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-blue-200' : 'text-blue-900'}`}>Configuration IA recommandée</h3>
-          <p className={`text-xs ${theme === 'dark' ? 'text-blue-300/80' : 'text-blue-700'}`}>Optimisez votre expérience en configurant vos préférences d'assistance juridique.</p>
+          <h3 className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-blue-200' : 'text-blue-900'}`}>{t.dashboard.aiSetup.title}</h3>
+          <p className={`text-xs ${theme === 'dark' ? 'text-blue-300/80' : 'text-blue-700'}`}>{t.dashboard.aiSetup.description}</p>
         </div>
-        <button className={`text-xs ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'} font-clash font-medium`}>Configurer</button>
+        <button className={`text-xs ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'} font-clash font-medium`}>{t.dashboard.aiSetup.configure}</button>
       </div>
     </div>
   );
@@ -33,6 +34,7 @@ const AISetupBanner = ({ theme }: { theme: string }) => {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [recentCases, setRecentCases] = useState<Case[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -73,14 +75,14 @@ export default function DashboardPage() {
   return (
           <main className="p-4 sm:p-6">
             {/* AI Setup Banner */}
-            <AISetupBanner theme={theme} />
+            <AISetupBanner theme={theme} t={t} />
             
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Dossiers actifs</p>
+                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.activeCases}</p>
                     <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{recentCases.filter(c => c.status === 'active').length || 12}</p>
                   </div>
                   <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50'} rounded-xl flex items-center justify-center`}>
@@ -93,14 +95,14 @@ export default function DashboardPage() {
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"/>
                   </svg>
-                  +2 ce mois
+                  {t.dashboard.stats.thisMonth}
                 </div>
               </div>
               
               <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Consultations</p>
+                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.consultations}</p>
                     <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{recentCases.reduce((total, c) => total + c.messages.length, 0) || 89}</p>
                   </div>
                   <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-green-900/30' : 'bg-green-50'} rounded-xl flex items-center justify-center`}>
@@ -113,15 +115,15 @@ export default function DashboardPage() {
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"/>
                   </svg>
-                  +15 cette semaine
+                  {t.dashboard.stats.thisWeek}
                 </div>
               </div>
               
               <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Crédits restants</p>
-                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{user?.isGuest ? (user?.profile?.credits_remaining || 10) : 'Illimité'}</p>
+                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.remainingCredits}</p>
+                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{user?.isGuest ? (user?.profile?.credits_remaining || 10) : t.common.unlimited}</p>
                   </div>
                   <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-purple-900/30' : 'bg-purple-50'} rounded-xl flex items-center justify-center`}>
                     <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,15 +132,15 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className={`mt-4 flex items-center text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
-                  <span>{user?.isGuest ? 'Plan Gratuit' : 'Plan Gratuit'}</span>
+                  <span>{t.common.freePlan}</span>
                 </div>
               </div>
               
               <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Statut</p>
-                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>Actif</p>
+                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.status}</p>
+                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{t.dashboard.stats.activeStatus}</p>
                   </div>
                   <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-green-900/30' : 'bg-green-50'} rounded-xl flex items-center justify-center`}>
                     <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,7 +149,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className={`mt-4 flex items-center text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
-                  <span>Renouvellement le 15/08</span>
+                  <span>{t.dashboard.stats.renewalDate}</span>
                 </div>
               </div>
             </div>
@@ -155,9 +157,9 @@ export default function DashboardPage() {
             {/* Recent Cases */}
             <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6`}>
               <div className="flex justify-between items-center mb-6">
-                <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Dossiers récents</h2>
+                <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.dashboard.recentCases.title}</h2>
                 <button className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-4 py-2 rounded-xl font-clash font-medium text-sm`}>
-                  Nouveau dossier
+                  {t.dashboard.recentCases.newCase}
                 </button>
               </div>
               
@@ -181,12 +183,12 @@ export default function DashboardPage() {
                             (theme === 'dark' ? 'bg-yellow-900/50 text-yellow-300' : 'bg-yellow-100 text-yellow-700') :
                             (theme === 'dark' ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700')
                         }`}>
-                          {caseItem.status === 'active' ? 'En cours' : 
-                           caseItem.status === 'pending' ? 'Révision' : 'Terminé'}
+                          {caseItem.status === 'active' ? t.dashboard.recentCases.inProgress :
+                           caseItem.status === 'pending' ? t.dashboard.recentCases.review : t.dashboard.recentCases.completed}
                         </span>
                       </div>
                       <div className={`flex items-center justify-between text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                        <span>Créé le {formatDate(caseItem.createdAt)}</span>
+                        <span>{t.dashboard.recentCases.createdOn} {formatDate(caseItem.createdAt)}</span>
                         <span>{caseItem.messages.length} messages</span>
                       </div>
                     </div>
@@ -197,42 +199,42 @@ export default function DashboardPage() {
                     <div className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-4`}>
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-sm`}>Contrat de bail commercial</h3>
-                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mt-1`}>Révision des clauses de résiliation</p>
+                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-sm`}>{t.dashboard.mockCases.case1.title}</h3>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mt-1`}>{t.dashboard.mockCases.case1.description}</p>
                         </div>
-                        <span className={`px-2 py-1 text-xs rounded-full font-clash font-medium ${theme === 'dark' ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'}`}>En cours</span>
+                        <span className={`px-2 py-1 text-xs rounded-full font-clash font-medium ${theme === 'dark' ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'}`}>{t.dashboard.recentCases.inProgress}</span>
                       </div>
                       <div className={`flex items-center justify-between text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                        <span>Créé le 10 juillet</span>
-                        <span>5 messages</span>
+                        <span>{t.dashboard.mockCases.case1.date}</span>
+                        <span>{t.dashboard.mockCases.case1.messages}</span>
                       </div>
                     </div>
                     
                     <div className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-4`}>
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-sm`}>Succession familiale</h3>
-                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mt-1`}>Répartition des biens immobiliers</p>
+                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-sm`}>{t.dashboard.mockCases.case2.title}</h3>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mt-1`}>{t.dashboard.mockCases.case2.description}</p>
                         </div>
-                        <span className={`px-2 py-1 text-xs rounded-full font-clash font-medium ${theme === 'dark' ? 'bg-yellow-900/50 text-yellow-300' : 'bg-yellow-100 text-yellow-700'}`}>Révision</span>
+                        <span className={`px-2 py-1 text-xs rounded-full font-clash font-medium ${theme === 'dark' ? 'bg-yellow-900/50 text-yellow-300' : 'bg-yellow-100 text-yellow-700'}`}>{t.dashboard.recentCases.review}</span>
                       </div>
                       <div className={`flex items-center justify-between text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                        <span>Créé le 8 juillet</span>
-                        <span>12 messages</span>
+                        <span>{t.dashboard.mockCases.case2.date}</span>
+                        <span>{t.dashboard.mockCases.case2.messages}</span>
                       </div>
                     </div>
                     
                     <div className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-4`}>
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-sm`}>Litige commercial</h3>
-                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mt-1`}>Rupture de contrat fournisseur</p>
+                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-sm`}>{t.dashboard.mockCases.case3.title}</h3>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mt-1`}>{t.dashboard.mockCases.case3.description}</p>
                         </div>
-                        <span className={`px-2 py-1 text-xs rounded-full font-clash font-medium ${theme === 'dark' ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700'}`}>Terminé</span>
+                        <span className={`px-2 py-1 text-xs rounded-full font-clash font-medium ${theme === 'dark' ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700'}`}>{t.dashboard.recentCases.completed}</span>
                       </div>
                       <div className={`flex items-center justify-between text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                        <span>Créé le 5 juillet</span>
-                        <span>8 messages</span>
+                        <span>{t.dashboard.mockCases.case3.date}</span>
+                        <span>{t.dashboard.mockCases.case3.messages}</span>
                       </div>
                     </div>
                   </>

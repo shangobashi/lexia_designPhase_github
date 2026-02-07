@@ -58,10 +58,16 @@ export const Tooltip: React.FC<TooltipProps> = ({
   };
 
   // Clone children to add event listeners
+  // Handle both string and function classNames (NavLink uses function className)
+  const originalClassName = children.props.className;
+  const mergedClassName = typeof originalClassName === 'function'
+    ? (...args: any[]) => `${originalClassName(...args)} relative`
+    : `${originalClassName || ''} relative`;
+
   const child = React.cloneElement(React.Children.only(children), {
     onMouseEnter: handleMouseEnter,
     onMouseLeave: handleMouseLeave,
-    className: `${children.props.className || ''} relative`,
+    className: mergedClassName,
   });
 
   return (

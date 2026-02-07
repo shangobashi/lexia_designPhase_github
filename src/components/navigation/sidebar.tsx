@@ -30,7 +30,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: Sidebar
       collapsed ? "w-16" : "w-64",
       mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
     )}>
-      <div className={cn("p-6 flex flex-col h-full", collapsed && "p-3")}>
+      <div className={cn("p-6 flex flex-col h-full", collapsed && "px-2 py-3")}>
         {/* Logo */}
         <div className={cn("flex items-center mb-6", collapsed ? "justify-center" : "")}>
           <div className={cn("flex items-center", collapsed ? "" : "space-x-3")}>
@@ -64,19 +64,14 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: Sidebar
               <button
                 onClick={handleToggleCollapse}
                 className={cn(
-                  "sidebar-item flex items-center justify-center p-3 rounded-xl transition-all duration-300",
+                  "sidebar-item w-full flex items-center justify-center p-3 rounded-xl transition-all duration-300",
                   theme === 'dark'
                     ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
                     : "text-gray-400 hover:text-gray-700 hover:bg-gray-100/80"
                 )}
                 aria-label="Expand sidebar"
               >
-                <motion.div
-                  animate={{ rotate: 180 }}
-                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </motion.div>
+                <ChevronLeft className="w-5 h-5 rotate-180" />
               </button>
             </Tooltip>
           ) : (

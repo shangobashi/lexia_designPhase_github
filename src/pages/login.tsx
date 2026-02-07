@@ -3,11 +3,13 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function LoginPage() {
   const { login, googleLogin, microsoftLogin, continueAsGuest } = useAuth();
   const { toast } = useToast();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -25,53 +27,53 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast({
-        title: "Connexion réussie",
-        description: "Heureux de vous revoir sur Kingsley",
+        title: t.login.toasts.success,
+        description: t.login.toasts.successDesc,
         variant: "success",
       });
       navigate(from, { replace: true });
     } catch (error: any) {
       toast({
-        title: "Échec de la connexion",
-        description: error.message || "Veuillez vérifier vos identifiants et réessayer",
+        title: t.login.toasts.failed,
+        description: error.message || t.login.toasts.failedDesc,
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   const handleGoogleLogin = async () => {
     try {
       await googleLogin();
       toast({
-        title: "Connexion réussie",
-        description: "Heureux de vous revoir sur Kingsley",
+        title: t.login.toasts.success,
+        description: t.login.toasts.successDesc,
         variant: "success",
       });
       navigate(from, { replace: true });
     } catch (error: any) {
       toast({
-        title: "Échec de la connexion Google",
-        description: error.message || "Veuillez réessayer plus tard",
+        title: t.login.toasts.googleFailed,
+        description: error.message || t.login.toasts.retryLater,
         variant: "destructive",
       });
     }
   };
-  
+
   const handleMicrosoftLogin = async () => {
     try {
       await microsoftLogin();
       toast({
-        title: "Connexion réussie",
-        description: "Heureux de vous revoir sur Kingsley",
+        title: t.login.toasts.success,
+        description: t.login.toasts.successDesc,
         variant: "success",
       });
       navigate(from, { replace: true });
     } catch (error: any) {
       toast({
-        title: "Échec de la connexion Microsoft",
-        description: error.message || "Veuillez réessayer plus tard",
+        title: t.login.toasts.microsoftFailed,
+        description: error.message || t.login.toasts.retryLater,
         variant: "destructive",
       });
     }
@@ -92,15 +94,15 @@ export default function LoginPage() {
       
       <div className="space-y-8">
         <div className="text-center">
-          <h2 className={`text-3xl font-clash font-light mb-3 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Connexion</h2>
-          <p className={`font-clash font-light ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Accès professionnel</p>
+          <h2 className={`text-3xl font-clash font-light mb-3 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.login.title}</h2>
+          <p className={`font-clash font-light ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.login.subtitle}</p>
         </div>
         
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-4">
             <input
               type="email"
-              placeholder="Adresse e-mail"
+              placeholder={t.login.emailPlaceholder}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -113,7 +115,7 @@ export default function LoginPage() {
             
             <input
               type="password"
-              placeholder="Mot de passe"
+              placeholder={t.login.passwordPlaceholder}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -133,7 +135,7 @@ export default function LoginPage() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Récupération d'accès
+                {t.login.forgotPassword}
               </Link>
             </div>
           </div>
@@ -143,22 +145,22 @@ export default function LoginPage() {
             className="executive-button w-full text-white py-4 rounded-2xl font-clash font-medium shimmer" 
             disabled={isLoading}
           >
-            {isLoading ? "Connexion en cours..." : "Initialiser la connexion"}
+            {isLoading ? t.login.submitting : t.login.submitButton}
           </button>
         </form>
         
         <div className="text-center">
           <p className={`text-sm font-clash font-light ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-            Nouvel utilisateur ?
-            <Link 
-              to="/register" 
+            {t.login.newUser}
+            <Link
+              to="/register"
               className={`font-clash font-medium ml-1 transition-colors ${
-                theme === 'dark' 
-                  ? 'text-slate-200 hover:text-slate-100' 
+                theme === 'dark'
+                  ? 'text-slate-200 hover:text-slate-100'
                   : 'text-slate-800 hover:text-slate-600'
               }`}
             >
-              Créer un compte
+              {t.login.createAccount}
             </Link>
           </p>
         </div>

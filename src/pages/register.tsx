@@ -5,10 +5,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Scale, Mail, Lock, User, Github, UserPlus } from 'lucide-react';
+import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function RegisterPage() {
   const { register, googleLogin, microsoftLogin, continueAsGuest } = useAuth();
   const { toast } = useToast();
+  const { theme } = useTheme();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -27,15 +31,15 @@ export default function RegisterPage() {
     try {
       await register(email, password, name);
       toast({
-        title: "Inscription réussie",
-        description: "Bienvenue sur Kingsley",
+        title: t.register.toasts.success,
+        description: t.register.toasts.successDesc,
         variant: "success",
       });
       navigate(from, { replace: true });
     } catch (error: any) {
       toast({
-        title: "Échec de l'inscription",
-        description: error.message || "Veuillez vérifier vos informations et réessayer",
+        title: t.register.toasts.failed,
+        description: error.message || t.register.toasts.failedDesc,
         variant: "destructive",
       });
     } finally {
@@ -55,15 +59,15 @@ export default function RegisterPage() {
       
       <div className="space-y-8">
         <div className="text-center">
-          <h2 className="text-3xl font-clash font-light text-slate-800 mb-3">Créer un compte</h2>
-          <p className="text-gray-600 font-clash font-light">Saisissez vos informations pour commencer</p>
+          <h2 className="text-3xl font-clash font-light text-slate-800 mb-3">{t.register.title}</h2>
+          <p className="text-gray-600 font-clash font-light">{t.register.subtitle}</p>
         </div>
         
         <form onSubmit={handleRegister} className="space-y-6">
           <div className="space-y-4">
             <input
               type="text"
-              placeholder="Nom complet"
+              placeholder={t.register.namePlaceholder}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -72,7 +76,7 @@ export default function RegisterPage() {
             
             <input
               type="email"
-              placeholder="Adresse e-mail"
+              placeholder={t.register.emailPlaceholder}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -81,7 +85,7 @@ export default function RegisterPage() {
             
             <input
               type="password"
-              placeholder="Mot de passe"
+              placeholder={t.register.passwordPlaceholder}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -89,31 +93,31 @@ export default function RegisterPage() {
             />
             
             <p className="text-xs text-gray-500 font-clash font-light">
-              Le mot de passe doit comporter au moins 8 caractères
+              {t.register.passwordHint}
             </p>
           </div>
           
           <button type="submit" className="executive-button w-full text-white py-4 rounded-2xl font-clash font-medium shimmer" disabled={isLoading}>
-            {isLoading ? "Création du compte..." : "Créer le compte"}
+            {isLoading ? t.register.submitting : t.register.submitButton}
           </button>
           
           <div className="text-xs text-center text-gray-500 font-clash font-light">
-            En créant un compte, vous acceptez nos{' '}
+            {t.register.termsPrefix}{' '}
             <Link to="/terms" className="text-slate-800 hover:text-slate-600 transition-colors">
-              Conditions d'utilisation
+              {t.register.termsLink}
             </Link>{' '}
-            et notre{' '}
+            {t.register.termsMiddle}{' '}
             <Link to="/privacy" className="text-slate-800 hover:text-slate-600 transition-colors">
-              Politique de confidentialité
+              {t.register.privacyLink}
             </Link>
           </div>
         </form>
         
         <div className="text-center">
           <p className="text-sm text-slate-600 font-clash font-light">
-            Vous avez déjà un compte ?{' '}
+            {t.register.hasAccount}{' '}
             <Link to="/login" className="text-slate-800 hover:text-slate-600 font-clash font-medium ml-1 transition-colors">
-              Se connecter
+              {t.register.signIn}
             </Link>
           </p>
         </div>
