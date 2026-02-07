@@ -6,7 +6,7 @@ export default function AuthLayout() {
   const { theme } = useTheme();
   
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg document-flow' : 'light-sophisticated-bg light-book-flow'} flex`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg document-flow' : 'sophisticated-bg book-flow'} flex`}>
       {/* Floating Icons Background - positioned away from logo area */}
       {theme === 'dark' ? (
         <>
@@ -36,8 +36,7 @@ export default function AuthLayout() {
         </>
       )}
       
-      {/* Texture Overlay */}
-      <div className="texture-overlay absolute inset-0"></div>
+      {/* Texture Overlay removed to prevent yellow tint */}
       
       {/* Theme Toggle */}
       <div className="fixed top-6 right-6 z-50">

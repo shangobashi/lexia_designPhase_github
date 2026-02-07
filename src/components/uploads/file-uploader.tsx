@@ -33,8 +33,8 @@ export function FileUploader({
       
       if (files.length + acceptedFiles.length > maxFiles) {
         toast({
-          title: 'Too many files',
-          description: `You can only upload a maximum of ${maxFiles} files`,
+          title: 'Trop de fichiers',
+          description: `Vous pouvez télécharger un maximum de ${maxFiles} fichiers`,
           variant: 'destructive',
         });
         return;
@@ -44,8 +44,8 @@ export function FileUploader({
       const validFiles = acceptedFiles.filter(file => {
         if (file.size > maxSizeInBytes) {
           toast({
-            title: 'File too large',
-            description: `${file.name} exceeds the maximum size limit of ${formatFileSize(maxSizeInBytes)}`,
+            title: 'Fichier trop volumineux',
+            description: `${file.name} dépasse la taille maximale de ${formatFileSize(maxSizeInBytes)}`,
             variant: 'destructive',
           });
           return false;
@@ -64,9 +64,9 @@ export function FileUploader({
   });
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return '0 Octets';
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ['Octets', 'Ko', 'Mo', 'Go'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
@@ -107,12 +107,12 @@ export function FileUploader({
         <input {...getInputProps()} />
         <div className="flex flex-col items-center">
           <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-          <p className="text-base font-medium">Drag and drop files here</p>
+          <p className="text-base font-medium">Glissez-déposez vos fichiers ici</p>
           <p className="text-sm text-muted-foreground mt-1 mb-2">
-            or click to browse your files
+            ou cliquez pour parcourir vos fichiers
           </p>
           <p className="text-xs text-muted-foreground">
-            Accepted file types: PDF, DOC, DOCX, TXT, JPG, PNG (max {formatFileSize(maxSizeInBytes)})
+            Types de fichiers acceptés : PDF, DOC, DOCX, TXT, JPG, PNG (max {formatFileSize(maxSizeInBytes)})
           </p>
         </div>
       </div>
@@ -120,7 +120,7 @@ export function FileUploader({
       {/* File List */}
       {files.length > 0 && (
         <div className="mt-4">
-          <p className="text-sm font-medium mb-2">Uploaded Files ({files.length}/{maxFiles})</p>
+          <p className="text-sm font-medium mb-2">Fichiers téléchargés ({files.length}/{maxFiles})</p>
           <div className="space-y-2">
             <AnimatePresence initial={false}>
               {files.map((file, index) => (
@@ -157,7 +157,7 @@ export function FileUploader({
       {files.length === maxFiles && (
         <div className="flex items-center p-2 text-xs text-muted-foreground bg-background rounded-md">
           <AlertCircle className="h-4 w-4 mr-2 text-warning" />
-          Maximum file limit reached. Remove some files to upload more.
+          Limite de fichiers atteinte. Supprimez des fichiers pour en ajouter d'autres.
         </div>
       )}
     </div>

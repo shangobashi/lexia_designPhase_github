@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { supabase, getProfile, Profile } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, getProfile, Profile } from '@/lib/supabase';
 import { getGuestSession } from '@/lib/guest-session';
 
 // Types
@@ -36,20 +36,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const continueAsGuest = () => {
-    // Get current guest session to show correct remaining queries
     const guestSession = getGuestSession();
     const remaining = Math.max(0, guestSession.maxQueries - guestSession.queriesUsed);
-    
+
     const guestUser: User = {
       id: 'guest-user',
       email: 'guest@kingsley.com',
-      displayName: 'Invité',
+      displayName: null,
       photoURL: null,
       isGuest: true,
       profile: {
         id: 'guest-user',
         email: 'guest@kingsley.com',
-        full_name: 'Invité',
+        full_name: null,
         avatar_url: null,
         subscription_status: 'trialing',
         subscription_plan: 'free',
@@ -66,8 +65,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    
-    // Get initial session
+    if (!isSupabaseConfigured) {
+      console.warn('Supabase not configured - entering guest-only mode');
+      setLoading(false);
+      return;
+    }
+
     const getInitialSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error) {
@@ -80,11 +83,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     getInitialSession();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth event:', event);
-        
+
         if (session?.user) {
           await handleUserSession(session.user);
         } else {
@@ -109,7 +111,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     } catch (error) {
       console.error('Error loading profile:', error);
-      // Still set basic user info even if profile loading fails
       setUser({
         id: supabaseUser.id,
         email: supabaseUser.email || '',
@@ -119,16 +120,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const ensureSupabase = () => {
+    if (!isSupabaseConfigured) {
+      throw new Error('Supabase non configuré - mode invité uniquement');
+    }
+  };
+
   const login = async (email: string, password: string) => {
+    ensureSupabase();
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-      
+
       if (error) throw error;
-      
+
       if (data.user) {
         await handleUserSession(data.user);
       }
@@ -139,8 +147,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
-  
+
   const register = async (email: string, password: string, name: string) => {
+    ensureSupabase();
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -152,16 +161,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       });
-      
+
       if (error) throw error;
-      
-      // If user needs email confirmation, they won't be immediately logged in
+
       if (data.user && !data.session) {
-        // Email confirmation required
-        throw new Error('Veuillez vérifier votre boîte email et cliquer sur le lien de confirmation pour activer votre compte.');
-      }
-      
-      if (data.user && data.session) {
+        // Auto-confirm is enabled — try signing in immediately
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          throw new Error('Compte créé. Veuillez vous connecter avec vos identifiants.');
+        }
+        if (signInData.user) {
+          await handleUserSession(signInData.user);
+        }
+      } else if (data.user && data.session) {
         await handleUserSession(data.user);
       }
     } catch (error) {
@@ -171,12 +183,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
-  
+
   const logout = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+      }
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
@@ -185,17 +199,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
-  
+
   const googleLogin = async () => {
+    ensureSupabase();
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/dashboard`
         }
       });
-      
+
       if (error) throw error;
     } catch (error) {
       console.error('Google login error:', error);
@@ -204,17 +219,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
-  
+
   const microsoftLogin = async () => {
+    ensureSupabase();
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
           redirectTo: `${window.location.origin}/dashboard`
         }
       });
-      
+
       if (error) throw error;
     } catch (error) {
       console.error('Microsoft login error:', error);
@@ -223,50 +239,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
-  
+
   const resetPassword = async (email: string) => {
+    ensureSupabase();
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       });
-      
+
       if (error) throw error;
     } catch (error) {
       console.error('Password reset error:', error);
       throw error;
     }
   };
-  
+
   const updateProfile = async (data: Partial<User>) => {
+    ensureSupabase();
     if (!user) throw new Error('No user logged in');
-    
+
     try {
-      // Update auth metadata if needed
       const authUpdates: any = {};
       if (data.displayName) {
         authUpdates.data = { full_name: data.displayName };
       }
-      
+
       if (Object.keys(authUpdates).length > 0) {
         const { error: authError } = await supabase.auth.updateUser(authUpdates);
         if (authError) throw authError;
       }
-      
-      // Update profile in database
+
       const profileUpdates: any = {};
       if (data.displayName) profileUpdates.full_name = data.displayName;
       if (data.photoURL) profileUpdates.avatar_url = data.photoURL;
-      
+
       if (Object.keys(profileUpdates).length > 0) {
         const { error: profileError } = await supabase
           .from('profiles')
           .update(profileUpdates)
           .eq('id', user.id);
-          
+
         if (profileError) throw profileError;
       }
-      
-      // Refresh user data
+
       await handleUserSession(await supabase.auth.getUser().then(({ data }) => data.user!));
     } catch (error) {
       console.error('Profile update error:', error);

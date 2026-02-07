@@ -4,12 +4,15 @@ import { ArrowLeft, Play, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { LanguageToggle } from '@/components/ui/language-toggle';
 import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function DemoPage() {
   const { continueAsGuest } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const handleGuestAccess = () => {
     continueAsGuest();
@@ -35,7 +38,7 @@ export default function DemoPage() {
                 className={`flex items-center space-x-2 transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-slate-800'}`}
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span className="font-clash font-medium">Retour</span>
+                <span className="font-clash font-medium">{t.demo.back}</span>
               </Link>
               <div className="flex items-center space-x-2">
                 <div className={`w-10 h-10 flex items-center justify-center`}>
@@ -46,8 +49,9 @@ export default function DemoPage() {
             </div>
             <div className="flex items-center space-x-4">
               <ThemeToggle />
+              <LanguageToggle />
               <button className={`font-clash text-white px-6 py-2 rounded-xl font-medium ${theme === 'dark' ? 'dark-primary-button' : 'primary-button'}`} onClick={handleGuestAccess}>
-                Commencer
+                {t.demo.getStarted}
               </button>
             </div>
           </div>
@@ -60,10 +64,10 @@ export default function DemoPage() {
           {/* Page Header */}
           <div className="text-center mb-12">
             <h1 className={`font-clash text-4xl font-light tracking-tight mb-6 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
-              Découvrez Kingsley en action
+              {t.demo.title}
             </h1>
             <p className={`font-clash text-lg max-w-2xl mx-auto leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
-              Regardez comment notre assistant IA juridique révolutionne la pratique du droit belge
+              {t.demo.subtitle}
             </p>
           </div>
 
@@ -95,37 +99,37 @@ export default function DemoPage() {
           <div className="text-center mb-12">
             <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-8 max-w-3xl mx-auto`}>
               <h2 className={`font-clash text-2xl font-semibold mb-4 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
-                Une démonstration complète de Kingsley
+                {t.demo.fullDemo}
               </h2>
               <p className={`font-clash text-lg leading-relaxed mb-6 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
-                Cette vidéo vous montre comment Kingsley peut vous aider à :
+                {t.demo.videoHelps}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
                 <div className="text-center">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto ${theme === 'dark' ? 'bg-slate-600/30' : 'bg-gray-100'}`}>
                     <span className={`text-2xl ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>💬</span>
                   </div>
-                  <h3 className={`font-clash font-semibold mb-2 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Poser des questions</h3>
+                  <h3 className={`font-clash font-semibold mb-2 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.demo.askQuestions}</h3>
                   <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                    Consultation juridique instantanée en français
+                    {t.demo.askQuestionsDesc}
                   </p>
                 </div>
                 <div className="text-center">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto ${theme === 'dark' ? 'bg-slate-600/30' : 'bg-gray-100'}`}>
                     <span className={`text-2xl ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>📄</span>
                   </div>
-                  <h3 className={`font-clash font-semibold mb-2 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Générer des documents</h3>
+                  <h3 className={`font-clash font-semibold mb-2 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.demo.generateDocs}</h3>
                   <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                    Contrats et documents juridiques automatiques
+                    {t.demo.generateDocsDesc}
                   </p>
                 </div>
                 <div className="text-center">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto ${theme === 'dark' ? 'bg-slate-600/30' : 'bg-gray-100'}`}>
                     <span className={`text-2xl ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>📁</span>
                   </div>
-                  <h3 className={`font-clash font-semibold mb-2 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Gérer vos dossiers</h3>
+                  <h3 className={`font-clash font-semibold mb-2 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.demo.manageCases}</h3>
                   <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                    Organisation centralisée de vos affaires
+                    {t.demo.manageCasesDesc}
                   </p>
                 </div>
               </div>
@@ -136,27 +140,27 @@ export default function DemoPage() {
           <div className="text-center">
             <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-8 max-w-2xl mx-auto`}>
               <h3 className={`font-clash text-2xl font-semibold mb-4 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
-                Prêt à essayer Kingsley ?
+                {t.demo.readyToTry}
               </h3>
               <p className={`font-clash text-lg mb-8 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
-                Commencez votre essai gratuit dès maintenant et découvrez la puissance de l'IA juridique
+                {t.demo.startTrialDesc}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button 
                   className={`font-clash text-white px-8 py-4 rounded-2xl font-medium text-lg relative overflow-hidden ${theme === 'dark' ? 'dark-cta-primary' : 'light-cta-primary'}`}
                   onClick={handleGuestAccess}
                 >
-                  <span className="relative z-10">Commencer l'essai gratuit</span>
+                  <span className="relative z-10">{t.demo.startTrial}</span>
                 </button>
                 <button 
                   className={`font-clash px-8 py-4 rounded-2xl font-medium text-lg relative overflow-hidden ${theme === 'dark' ? 'dark-cta-secondary text-slate-200' : 'light-cta-secondary text-gray-700'}`}
                   onClick={handleViewPricing}
                 >
-                  <span className="relative z-10">Voir les prix</span>
+                  <span className="relative z-10">{t.demo.viewPricing}</span>
                 </button>
               </div>
               <p className={`font-clash text-sm mt-6 ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                10 questions gratuites • Sans engagement • Support en français
+                {t.demo.freeInfo}
               </p>
             </div>
           </div>
@@ -174,9 +178,9 @@ export default function DemoPage() {
               <span className={`font-clash text-lg font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Kingsley</span>
             </div>
             <div className={`flex space-x-6 text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
-              <a href="#" className={`font-clash transition-colors ${theme === 'dark' ? 'hover:text-slate-100' : 'hover:text-slate-800'}`}>Conditions</a>
-              <a href="#" className={`font-clash transition-colors ${theme === 'dark' ? 'hover:text-slate-100' : 'hover:text-slate-800'}`}>Confidentialité</a>
-              <a href="#" className={`font-clash transition-colors ${theme === 'dark' ? 'hover:text-slate-100' : 'hover:text-slate-800'}`}>Support</a>
+              <a href="#" className={`font-clash transition-colors ${theme === 'dark' ? 'hover:text-slate-100' : 'hover:text-slate-800'}`}>{t.common.conditions}</a>
+              <a href="#" className={`font-clash transition-colors ${theme === 'dark' ? 'hover:text-slate-100' : 'hover:text-slate-800'}`}>{t.common.privacy}</a>
+              <a href="#" className={`font-clash transition-colors ${theme === 'dark' ? 'hover:text-slate-100' : 'hover:text-slate-800'}`}>{t.common.support}</a>
             </div>
           </div>
         </div>

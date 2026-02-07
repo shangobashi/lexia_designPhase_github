@@ -6,6 +6,7 @@ import { CheckCircle, Crown, Zap, CreditCard, Loader2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
 import { supabase } from '@/lib/supabase';
 import { Input } from '@/components/ui/input';
 
@@ -39,6 +40,7 @@ function PaymentDialog({ isOpen, onClose, plan }: { isOpen: boolean; onClose: ()
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +50,8 @@ function PaymentDialog({ isOpen, onClose, plan }: { isOpen: boolean; onClose: ()
     setTimeout(() => {
       setIsProcessing(false);
       toast({
-        title: 'Paiement réussi!',
-        description: `Votre abonnement ${plan?.name} a été activé avec succès.`,
+        title: t.billing.payment.success,
+        description: t.billing.payment.successDesc.replace('{plan}', plan?.name || ''),
         variant: 'default',
       });
       onClose();
@@ -62,7 +64,7 @@ function PaymentDialog({ isOpen, onClose, plan }: { isOpen: boolean; onClose: ()
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className={`w-full max-w-md mx-4 ${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6`}>
         <div className="flex items-center justify-between mb-6">
-          <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Finaliser le paiement</h2>
+          <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.billing.payment.title}</h2>
           <button 
             onClick={onClose}
             className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
@@ -78,14 +80,14 @@ function PaymentDialog({ isOpen, onClose, plan }: { isOpen: boolean; onClose: ()
               {plan.name === 'Basic' ? '49,99€' : '∞'}
             </div>
             <div className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
-              {plan.name === 'Basic' ? 'par mois' : 'illimité'}
+              {plan.name === 'Basic' ? t.common.perMonth : t.common.unlimited}
             </div>
           </div>
         </div>
         
         <form onSubmit={handlePayment} className="space-y-4">
           <div>
-            <label className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Nom sur la carte</label>
+            <label className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.payment.nameOnCard}</label>
             <input
               type="text"
               value={name}
@@ -96,7 +98,7 @@ function PaymentDialog({ isOpen, onClose, plan }: { isOpen: boolean; onClose: ()
             />
           </div>
           <div>
-            <label className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Numéro de carte</label>
+            <label className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.payment.cardNumber}</label>
             <input
               type="text"
               value={cardNumber}
@@ -109,7 +111,7 @@ function PaymentDialog({ isOpen, onClose, plan }: { isOpen: boolean; onClose: ()
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Date d'expiration</label>
+              <label className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.payment.expiry}</label>
               <input
                 type="text"
                 value={expiryDate}
@@ -121,7 +123,7 @@ function PaymentDialog({ isOpen, onClose, plan }: { isOpen: boolean; onClose: ()
               />
             </div>
             <div>
-              <label className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>CVV</label>
+              <label className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.payment.cvv}</label>
               <input
                 type="text"
                 value={cvv}
@@ -141,10 +143,10 @@ function PaymentDialog({ isOpen, onClose, plan }: { isOpen: boolean; onClose: ()
             {isProcessing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />
-                Traitement en cours...
+                {t.billing.payment.processing}
               </>
             ) : (
-              `Payer ${plan.name === 'Basic' ? '49,99€' : '∞'}`
+              `${t.billing.payment.pay} ${plan.name === 'Basic' ? '49,99€' : '∞'}`
             )}
           </button>
         </form>
@@ -158,6 +160,7 @@ export default function BillingPage() {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   
   const [pricingPlans, setPricingPlans] = useState<Record<string, PricingPlan>>({});
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -172,13 +175,13 @@ export default function BillingPage() {
     
     if (success) {
       toast({
-        title: 'Paiement réussi!',
-        description: 'Votre abonnement a été activé avec succès.',
+        title: t.billing.payment.success,
+        description: t.billing.payment.successDesc.replace('{plan}', ''),
       });
     } else if (canceled) {
       toast({
-        title: 'Paiement annulé',
-        description: 'Votre paiement a été annulé. Aucune charge n\'a été effectuée.',
+        title: t.billing.payment.canceled,
+        description: t.billing.payment.canceledDesc,
         variant: 'destructive',
       });
     }
@@ -195,49 +198,32 @@ export default function BillingPage() {
         // Original pricing plans from the project (in cents for Stripe)
         const pricing = {
           free: {
-            name: 'Essai gratuit',
-            description: 'Pour les particuliers qui souhaitent essayer Kingsley',
+            name: t.common.free,
+            description: t.billing.pricingFeatures.free.description,
             price: 0,
             credits: 10,
             priceId: 'price_free_trial',
-            features: [
-              '10 consultations juridiques gratuites',
-              'Accès aux ressources de base du droit belge',
-              'Stockage de documents limité (25MB)'
-            ],
+            features: [...t.billing.pricingFeatures.free.features],
             isCurrent: user?.profile?.subscription_plan === 'free'
           },
           basic: {
-            name: 'Basique',
-            description: 'Pour les particuliers ayant des besoins juridiques occasionnels',
+            name: t.billing.pricingFeatures.basic.name,
+            description: t.billing.pricingFeatures.basic.description,
             price: 4999, // €49.99 in cents
             credits: 25,
             priceId: 'price_basic_monthly',
             stripePriceId: 'price_basic_monthly',
-            features: [
-              '25 consultations juridiques par mois',
-              '10 générations de documents',
-              'Accès aux ressources complètes du droit belge',
-              'Stockage de documents (100MB)',
-              'Support par email'
-            ],
+            features: [...t.billing.pricingFeatures.basic.features],
             isCurrent: user?.profile?.subscription_plan === 'basic'
           },
           premium: {
-            name: 'Premium',
-            description: 'Pour les particuliers ayant des besoins juridiques réguliers',
+            name: t.billing.plans.premium.name,
+            description: t.billing.pricingFeatures.premium.description,
             price: 19999, // €199.99 in cents
             credits: 999,
             priceId: 'price_premium_monthly',
             stripePriceId: 'price_premium_monthly',
-            features: [
-              'Consultations juridiques illimitées',
-              'Générations de documents illimitées',
-              'Accès prioritaire aux dernières mises à jour juridiques',
-              'Stockage de documents (1GB)',
-              'Support prioritaire email et téléphone',
-              'Configurations de prompts système personnalisées'
-            ],
+            features: [...t.billing.pricingFeatures.premium.features],
             isCurrent: user?.profile?.subscription_plan === 'premium'
           }
         };
@@ -286,15 +272,15 @@ export default function BillingPage() {
     try {
       // For now, show a placeholder message since Stripe isn't fully set up
       toast({
-        title: 'Gestion de l\'abonnement',
-        description: 'Le portail de gestion sera disponible prochainement.',
+        title: t.billing.payment.manageTitle,
+        description: t.billing.payment.manageDesc,
         variant: 'default',
       });
     } catch (error) {
       console.error('Error creating customer portal session:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible d\'accéder au portail client. Veuillez réessayer.',
+        title: t.billing.payment.errorTitle,
+        description: t.billing.payment.errorDesc,
         variant: 'destructive',
       });
     }
@@ -320,8 +306,8 @@ export default function BillingPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-clash font-bold tracking-tight">Facturation et abonnements</h1>
-          <p className="text-muted-foreground">Gérez vos abonnements et consultez votre facturation</p>
+          <h1 className="text-2xl font-clash font-bold tracking-tight">{t.billing.title}</h1>
+          <p className="text-muted-foreground">{t.billing.subtitle}</p>
         </div>
         <div className="flex items-center justify-center h-32">
           <Loader2 className="h-8 w-8 animate-spin" />
@@ -335,9 +321,9 @@ export default function BillingPage() {
     return (
       <div className="container mx-auto px-4 py-12 max-w-6xl">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-clash font-bold tracking-tight mb-4">Tarifs Kingsley</h1>
+          <h1 className="text-4xl font-clash font-bold tracking-tight mb-4">{t.billing.publicTitle}</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Choisissez le plan qui correspond le mieux à vos besoins juridiques
+            {t.billing.publicSubtitle}
           </p>
         </div>
         
@@ -353,15 +339,15 @@ export default function BillingPage() {
                   </span>
                   {key === 'basic' && (
                     <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
-                      Populaire
+                      {t.billing.popular}
                     </span>
                   )}
                 </CardTitle>
                 <CardDescription>
                   <span className="text-3xl font-clash font-bold">
-                    {plan.price === 0 ? 'Gratuit' : formatPrice(plan.price)}
+                    {plan.price === 0 ? t.common.free : formatPrice(plan.price)}
                   </span>
-                  {plan.price > 0 && <span className="text-muted-foreground">/mois</span>}
+                  {plan.price > 0 && <span className="text-muted-foreground">/{t.common.perMonth.split(' ')[1] || t.common.perMonth}</span>}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -381,7 +367,7 @@ export default function BillingPage() {
                   asChild
                 >
                   <a href={key === 'free' ? '/register' : '/register'}>
-                    {key === 'free' ? 'Commencer gratuitement' : 'Choisir ce plan'}
+                    {key === 'free' ? t.billing.startFree : t.billing.choosePlan}
                   </a>
                 </Button>
               </CardFooter>
@@ -391,16 +377,16 @@ export default function BillingPage() {
         
         {/* CTA Section */}
         <div className="text-center bg-muted rounded-lg p-8">
-          <h2 className="text-2xl font-clash font-bold mb-4">Prêt à commencer ?</h2>
+          <h2 className="text-2xl font-clash font-bold mb-4">{t.billing.readyToStart}</h2>
           <p className="text-muted-foreground mb-6">
-            Rejoignez des centaines d'utilisateurs qui font confiance à Kingsley pour leurs besoins juridiques.
+            {t.billing.readyToStartDesc}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild>
-              <a href="/register">Créer un compte gratuit</a>
+              <a href="/register">{t.billing.createFreeAccount}</a>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <a href="/login">Se connecter</a>
+              <a href="/login">{t.billing.signIn}</a>
             </Button>
           </div>
         </div>
@@ -413,8 +399,8 @@ export default function BillingPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-clash font-bold tracking-tight">Facturation et abonnements</h1>
-          <p className="text-muted-foreground">Gérez vos abonnements et consultez votre facturation</p>
+          <h1 className="text-2xl font-clash font-bold tracking-tight">{t.billing.title}</h1>
+          <p className="text-muted-foreground">{t.billing.subtitle}</p>
         </div>
         <Card>
           <CardContent className="pt-6">
@@ -430,68 +416,68 @@ export default function BillingPage() {
             {/* Current Plan */}
             {userProfile && (
               <div className={`rounded-2xl p-6 mb-8 ${theme === 'dark' ? 'dark-executive-card' : 'executive-card'}`}>
-          <h2 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Abonnement actuel</h2>
+          <h2 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.billing.currentPlan.title}</h2>
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Plan Gratuit</h3>
-                  <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>Plan d'essai avec fonctionnalités de base</p>
+                  <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.billing.currentPlan.freePlan}</h3>
+                  <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.billing.currentPlan.freePlanDesc}</p>
                 </div>
                 <div className="text-right">
                   <div className={`text-2xl font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
                     0€
                   </div>
-                  <div className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>par mois</div>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.common.perMonth}</div>
                 </div>
               </div>
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-slate-300">Crédits utilisés ce mois</span>
-                  <span className="font-clash font-medium text-slate-800 dark:text-slate-100">3 / 10</span>
+                  <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.billing.currentPlan.creditsUsed}</span>
+                  <span className={`font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>3 / 10</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-slate-300">Prochaine facturation</span>
-                  <span className="font-clash font-medium text-slate-800 dark:text-slate-100">—</span>
+                  <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.billing.currentPlan.nextBilling}</span>
+                  <span className={`font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>—</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-slate-300">Statut</span>
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs rounded-full font-clash font-medium">Invité</span>
+                  <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.billing.currentPlan.status}</span>
+                  <span className={`px-2 py-1 ${theme === 'dark' ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'} text-xs rounded-full font-clash font-medium`}>{t.billing.currentPlan.guestStatus}</span>
                 </div>
               </div>
             </div>
-            
+
             <div className="lg:w-80">
-              <h4 className="text-sm font-clash font-medium text-gray-700 dark:text-slate-200 mb-3">Utilisation mensuelle</h4>
+              <h4 className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'} mb-3`}>{t.billing.currentPlan.monthlyUsage}</h4>
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600 dark:text-slate-300">Crédits utilisés</span>
-                    <span className="font-clash font-medium text-slate-800 dark:text-slate-100">3 / 10</span>
+                    <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.billing.currentPlan.creditsUsedLabel}</span>
+                    <span className={`font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>3 / 10</span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-slate-700/50 rounded-full h-2">
-                    <div className="progress-bar dark:dark-progress-bar h-2 rounded-full" style={{width: '30%'}}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600 dark:text-slate-300">Documents générés</span>
-                    <span className="font-clash font-medium text-slate-800 dark:text-slate-100">0</span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-slate-700/50 rounded-full h-2">
-                    <div className="progress-bar dark:dark-progress-bar h-2 rounded-full" style={{width: '0%'}}></div>
+                  <div className={`w-full ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full h-2`}>
+                    <div className={`progress-bar ${theme === 'dark' ? 'dark-progress-bar' : ''} h-2 rounded-full`} style={{width: '30%'}}></div>
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600 dark:text-slate-300">Stockage utilisé</span>
-                    <span className="font-clash font-medium text-slate-800 dark:text-slate-100">5 MB / 100 MB</span>
+                    <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.billing.currentPlan.docsGenerated}</span>
+                    <span className={`font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>0</span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-slate-700/50 rounded-full h-2">
-                    <div className="progress-bar dark:dark-progress-bar h-2 rounded-full" style={{width: '5%'}}></div>
+                  <div className={`w-full ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full h-2`}>
+                    <div className={`progress-bar ${theme === 'dark' ? 'dark-progress-bar' : ''} h-2 rounded-full`} style={{width: '0%'}}></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.billing.currentPlan.storageUsed}</span>
+                    <span className={`font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>5 MB / 100 MB</span>
+                  </div>
+                  <div className={`w-full ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full h-2`}>
+                    <div className={`progress-bar ${theme === 'dark' ? 'dark-progress-bar' : ''} h-2 rounded-full`} style={{width: '5%'}}></div>
                   </div>
                 </div>
               </div>
@@ -507,14 +493,14 @@ export default function BillingPage() {
                   : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Gérer l'abonnement
+              {t.billing.currentPlan.manageSubscription}
             </button>
             <button className={`px-4 py-2 rounded-xl transition-all ${
               theme === 'dark' 
                 ? 'dark-secondary-button text-slate-200' 
                 : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}>
-              Télécharger la facture
+              {t.billing.currentPlan.downloadInvoice}
             </button>
           </div>
               </div>
@@ -522,71 +508,71 @@ export default function BillingPage() {
 
             {/* Pricing Plans */}
             <div className="mb-8">
-              <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-6`}>Plans disponibles</h2>
+              <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-6`}>{t.billing.plans.title}</h2>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Free Plan */}
                 <div className={`${theme === 'dark' ? 'dark-pricing-card' : 'pricing-card'} rounded-2xl p-6 flex flex-col`}>
                   <div className="text-center mb-6">
-                    <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>Gratuit</h3>
+                    <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>{t.billing.plans.free.name}</h3>
                     <div className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-1`}>0€</div>
-                    <div className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>par mois</div>
+                    <div className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.common.perMonth}</div>
                   </div>
-                  
+
                   <ul className="space-y-3 mb-6 flex-grow min-h-[120px]">
                     <li className="flex items-start space-x-3 text-sm">
                       <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                       </svg>
-                      <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>10 crédits/mois</span>
+                      <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.plans.free.credits}</span>
                     </li>
                     <li className="flex items-start space-x-3 text-sm">
                       <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                       </svg>
-                      <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Consultation juridique de base</span>
+                      <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.plans.free.basicConsultation}</span>
                     </li>
                     <li className="flex items-start space-x-3 text-sm">
                       <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                       </svg>
-                      <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Support par email</span>
+                      <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.plans.free.emailSupport}</span>
                     </li>
                   </ul>
                   
                   <button className={`w-full ${theme === 'dark' ? 'bg-slate-700/50 text-slate-400' : 'bg-gray-100 text-gray-500'} py-3 rounded-xl cursor-not-allowed`}>
-                    Plan actuel
+                    {t.billing.plans.free.currentPlan}
                   </button>
                 </div>
 
                 {/* Basic Plan */}
                 <div className={`${theme === 'dark' ? 'dark-pricing-card featured' : 'pricing-card featured'} rounded-2xl p-6 relative flex flex-col`}>
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className={`${theme === 'dark' ? 'bg-slate-600 text-slate-100' : 'bg-gray-700 text-white'} px-4 py-1 rounded-full text-xs font-clash font-medium`}>Recommandé</span>
+                    <span className={`${theme === 'dark' ? 'bg-slate-600 text-slate-100' : 'bg-gray-700 text-white'} px-4 py-1 rounded-full text-xs font-clash font-medium`}>{t.billing.plans.basic.recommended}</span>
                   </div>
             <div className="text-center mb-6">
-              <h3 className="text-lg font-clash font-semibold text-slate-800 dark:text-slate-100 mb-2">Basic</h3>
-              <div className="text-3xl font-clash font-light text-slate-800 dark:text-slate-100 mb-1">49,99€</div>
-              <div className="text-gray-600 dark:text-slate-300">par mois</div>
+              <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>{t.billing.plans.basic.name}</h3>
+              <div className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-1`}>49,99€</div>
+              <div className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.common.perMonth}</div>
             </div>
-            
+
             <ul className="space-y-3 mb-6 flex-grow min-h-[120px]">
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">50 crédits/mois</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.plans.basic.credits}</span>
               </li>
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">Consultation avancée</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.plans.basic.advancedConsultation}</span>
               </li>
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">Support par email prioritaire</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.plans.basic.priorityEmail}</span>
               </li>
             </ul>
             
@@ -594,7 +580,7 @@ export default function BillingPage() {
                     className={`w-full ${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white py-3 rounded-xl`}
                     onClick={() => handleUpgrade('basic')}
                   >
-                    Passer au Basic
+                    {t.billing.plans.basic.upgrade}
                   </button>
                 </div>
 
@@ -602,29 +588,29 @@ export default function BillingPage() {
                 <div className={`${theme === 'dark' ? 'dark-pricing-card' : 'pricing-card'} rounded-2xl p-6 flex flex-col`}>
             
             <div className="text-center mb-6">
-              <h3 className="text-lg font-clash font-semibold text-slate-800 dark:text-slate-100 mb-2">Premium</h3>
-              <div className="text-3xl font-clash font-light text-slate-800 dark:text-slate-100 mb-1">∞</div>
-              <div className="text-gray-600 dark:text-slate-300">illimité</div>
+              <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>{t.billing.plans.premium.name}</h3>
+              <div className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-1`}>∞</div>
+              <div className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.billing.plans.premium.unlimited}</div>
             </div>
-            
+
             <ul className="space-y-3 mb-6 flex-grow min-h-[120px]">
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">Sur Mesure</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.plans.premium.custom}</span>
               </li>
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">Conseil expert personnalisé</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.plans.premium.expertAdvice}</span>
               </li>
               <li className="flex items-start space-x-3 text-sm">
-                <svg className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'} mt-0.5 flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
-                <span className="text-gray-700 dark:text-slate-200">Support prioritaire téléphone</span>
+                <span className={`${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.plans.premium.phoneSupport}</span>
               </li>
             </ul>
             
@@ -632,7 +618,7 @@ export default function BillingPage() {
                     className={`w-full ${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white py-3 rounded-xl relative overflow-hidden group`}
                     onClick={() => handleUpgrade('premium')}
                   >
-                    <span className="relative z-10">Passer au Premium</span>
+                    <span className="relative z-10">{t.billing.plans.premium.upgrade}</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
                   </button>
                 </div>
@@ -641,10 +627,10 @@ export default function BillingPage() {
 
             {/* Billing History */}
             <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6`}>
-              <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>Historique de facturation</h2>
+              <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>{t.billing.history.title}</h2>
               <div className="text-center py-12">
-                <h3 className={`text-lg font-clash font-medium mb-2 ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>Aucun historique</h3>
-                <p className={`${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>Votre historique de facturation apparaîtra ici après votre premier abonnement payant.</p>
+                <h3 className={`text-lg font-clash font-medium mb-2 ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.history.noHistory}</h3>
+                <p className={`${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>{t.billing.history.noHistoryDesc}</p>
               </div>
             </div>
       {/* Payment Dialog */}

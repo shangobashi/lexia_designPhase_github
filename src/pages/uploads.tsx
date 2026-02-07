@@ -4,6 +4,7 @@ import { FileUploader } from '@/components/uploads/file-uploader';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Document } from '@/types/document';
 import { 
@@ -23,6 +24,7 @@ export default function UploadsPage() {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -64,8 +66,8 @@ export default function UploadsPage() {
         } catch (error) {
           console.error('Error fetching documents', error);
           toast({
-            title: 'Erreur',
-            description: 'Échec du chargement des documents',
+            title: t.uploads.toasts.error,
+            description: t.uploads.toasts.loadFailed,
             variant: 'destructive',
           });
         } finally {
@@ -84,8 +86,8 @@ export default function UploadsPage() {
   const handleFilesAdded = async (files: File[]) => {
     if (!user) {
       toast({
-        title: 'Erreur',
-        description: 'Vous devez être connecté pour télécharger des fichiers',
+        title: t.uploads.toasts.error,
+        description: t.uploads.toasts.loginRequired,
         variant: 'destructive',
       });
       return;
@@ -127,8 +129,8 @@ export default function UploadsPage() {
         } catch (fileError) {
           console.error(`Failed to upload ${file.name}:`, fileError);
           toast({
-            title: 'Échec du téléchargement',
-            description: `Impossible de télécharger ${file.name}`,
+            title: t.uploads.toasts.uploadFailed,
+            description: `${t.uploads.toasts.uploadFailedDesc} ${file.name}`,
             variant: 'destructive',
           });
         }
@@ -143,8 +145,8 @@ export default function UploadsPage() {
         setStorageUsage(newUsage);
         
         toast({
-          title: 'Fichiers téléchargés avec succès',
-          description: `${successfulUploads.length} fichier(s) téléchargé(s)`,
+          title: t.uploads.toasts.uploadSuccess,
+          description: `${successfulUploads.length} ${t.uploads.toasts.uploadSuccessDesc}`,
         });
       }
       
@@ -154,8 +156,8 @@ export default function UploadsPage() {
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: 'Erreur de téléchargement',
-        description: 'Une erreur est survenue lors du téléchargement',
+        title: t.uploads.toasts.uploadError,
+        description: t.uploads.toasts.uploadErrorDesc,
         variant: 'destructive',
       });
     } finally {
@@ -178,19 +180,19 @@ export default function UploadsPage() {
       setStorageUsage(newUsage);
       
       toast({
-        title: 'Document supprimé',
-        description: 'Le document a été supprimé avec succès',
+        title: t.uploads.toasts.deleteSuccess,
+        description: t.uploads.toasts.deleteSuccessDesc,
       });
     } catch (error) {
       console.error('Delete error:', error);
       toast({
-        title: 'Erreur de suppression',
-        description: 'Impossible de supprimer le document',
+        title: t.uploads.toasts.deleteError,
+        description: t.uploads.toasts.deleteErrorDesc,
         variant: 'destructive',
       });
     }
   }, [toast]);
-  
+
   const handleBulkDelete = useCallback(async () => {
     try {
       // Delete documents one by one (could be optimized with a bulk delete API)
@@ -203,14 +205,14 @@ export default function UploadsPage() {
       setStorageUsage(newUsage);
       
       toast({
-        title: 'Documents supprimés',
-        description: `${selectedDocuments.length} document(s) supprimé(s) avec succès`,
+        title: t.uploads.toasts.bulkDeleteSuccess,
+        description: `${selectedDocuments.length} ${t.uploads.toasts.bulkDeleteSuccessDesc}`,
       });
     } catch (error) {
       console.error('Bulk delete error:', error);
       toast({
-        title: 'Erreur de suppression',
-        description: 'Impossible de supprimer les documents',
+        title: t.uploads.toasts.deleteError,
+        description: t.uploads.toasts.bulkDeleteError,
         variant: 'destructive',
       });
     }
@@ -239,8 +241,8 @@ export default function UploadsPage() {
     } catch (error) {
       console.error('Download error:', error);
       toast({
-        title: 'Erreur de téléchargement',
-        description: 'Impossible de télécharger le fichier',
+        title: t.uploads.toasts.downloadError,
+        description: t.uploads.toasts.downloadErrorDesc,
         variant: 'destructive',
       });
     }
@@ -374,9 +376,9 @@ export default function UploadsPage() {
     return (
       <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-6`}>
         <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-12 text-center`}>
-          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>Connexion requise</h3>
+          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>{t.uploads.loginRequired}</h3>
           <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>
-            Veuillez vous connecter pour accéder à vos documents.
+            {t.uploads.loginRequiredDesc}
           </p>
         </div>
       </div>
@@ -389,9 +391,9 @@ export default function UploadsPage() {
       <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl mb-6`}>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h1 className={`text-2xl font-clash font-bold tracking-tight ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Documents</h1>
+            <h1 className={`text-2xl font-clash font-bold tracking-tight ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.uploads.title}</h1>
             <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
-              Gérez et organisez vos documents juridiques
+              {t.uploads.subtitle}
             </p>
           </div>
           <button 
@@ -399,11 +401,11 @@ export default function UploadsPage() {
             className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-6 py-3 rounded-xl font-clash font-medium flex items-center space-x-2`}
           >
             <Plus className="h-4 w-4" />
-            <span>Ajouter des fichiers</span>
+            <span>{t.uploads.addFiles}</span>
           </button>
         </div>
       </div>
-      
+
       {/* Document Management Tabs */}
       <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-xl mb-6`}>
         <div className="flex space-x-1 p-2">
@@ -415,7 +417,7 @@ export default function UploadsPage() {
                 : (theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50')
             }`}
           >
-            Tous les documents
+            {t.uploads.tabs.allDocuments}
           </button>
           <button
             onClick={() => setActiveTab('upload')}
@@ -425,7 +427,7 @@ export default function UploadsPage() {
                 : (theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50')
             }`}
           >
-            Ajout des fichiers
+            {t.uploads.tabs.upload}
           </button>
           <button
             onClick={() => setActiveTab('organize')}
@@ -435,7 +437,7 @@ export default function UploadsPage() {
                 : (theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50')
             }`}
           >
-            Organiser
+            {t.uploads.tabs.organize}
           </button>
         </div>
       </div>
@@ -450,7 +452,7 @@ export default function UploadsPage() {
                 <div className="relative">
                   <input 
                     type="text" 
-                    placeholder="Rechercher par nom, type ou ID de dossier..." 
+                    placeholder={t.uploads.searchPlaceholder} 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className={`w-full pl-10 pr-4 py-3 rounded-xl focus:outline-none ${theme === 'dark' ? 'dark-input' : 'border border-gray-300 focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white/90'}`}
@@ -466,7 +468,7 @@ export default function UploadsPage() {
                   onClick={() => setTypeFilter('all')}
                   className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${typeFilter === 'all' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'all' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'all' ? 'text-gray-700' : 'text-gray-600')}`}
                 >
-                  Tous
+                  {t.uploads.filterAll}
                 </button>
                 <button 
                   onClick={() => setTypeFilter('pdf')}
@@ -493,10 +495,10 @@ export default function UploadsPage() {
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
                 className={`rounded-lg px-3 py-2 text-sm ${theme === 'dark' ? 'dark-input text-slate-200' : 'border border-gray-300 text-gray-700 bg-white/90'}`}
               >
-                <option value="newest">Plus récent</option>
-                <option value="oldest">Plus ancien</option>
-                <option value="name">Nom A-Z</option>
-                <option value="size">Taille</option>
+                <option value="newest">{t.uploads.sortNewest}</option>
+                <option value="oldest">{t.uploads.sortOldest}</option>
+                <option value="name">{t.uploads.sortName}</option>
+                <option value="size">{t.uploads.sortSize}</option>
               </select>
             </div>
           </div>
@@ -518,7 +520,7 @@ export default function UploadsPage() {
                         </div>
                       </div>
                       <div className={`flex items-center text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'} mb-3`}>
-                        <span>Dossier : {doc.caseId}</span>
+                        <span>{t.uploads.caseLabel} {doc.caseId}</span>
                         <span className="mx-2">•</span>
                         <span>{formatFileSize(doc.size)}</span>
                       </div>
@@ -527,27 +529,27 @@ export default function UploadsPage() {
                   
                   <div className="mt-auto">
                     <div className={`flex items-center justify-between text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'} mb-4`}>
-                      <span>Téléchargé le {formatDisplayDate(doc.uploadedAt)}</span>
+                      <span>{t.uploads.uploadedOn} {formatDisplayDate(doc.uploadedAt)}</span>
                     </div>
                     
                     <div className="flex items-center justify-end space-x-2">
                       <button 
                         onClick={() => handleDownload(doc)}
                         className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
-                        title="Télécharger"
+                        title={t.uploads.download}
                       >
                         <Download className="h-4 w-4" />
                       </button>
                       <button 
                         className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
-                        title="Analyser"
+                        title={t.uploads.analyze}
                       >
                         <FileCog className="h-4 w-4" />
                       </button>
                       <button 
                         onClick={() => handleDeleteDocument(doc.id)}
                         className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' : 'text-red-400 hover:text-red-600 hover:bg-red-100'}`}
-                        title="Supprimer"
+                        title={t.common.delete}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -615,8 +617,8 @@ export default function UploadsPage() {
                   <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
                     <Search className={`h-8 w-8 ${theme === 'dark' ? 'text-slate-400' : 'text-gray-400'}`} />
                   </div>
-                  <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>Aucun document ne correspond aux filtres</h3>
-                  <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>Essayez une autre recherche ou modifiez vos filtres</p>
+                  <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>{t.uploads.noDocumentsFilter}</h3>
+                  <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>{t.uploads.noDocumentsFilterDesc}</p>
                   <button 
                     onClick={() => {
                       setSearchTerm('');
@@ -624,7 +626,7 @@ export default function UploadsPage() {
                     }}
                     className={`px-6 py-3 rounded-xl font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30 border border-slate-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-300'}`}
                   >
-                    Réinitialiser les filtres
+                    {t.uploads.resetFilters}
                   </button>
                 </>
               ) : (
@@ -632,14 +634,14 @@ export default function UploadsPage() {
                   <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
                     <FileText className={`h-8 w-8 ${theme === 'dark' ? 'text-slate-400' : 'text-gray-400'}`} />
                   </div>
-                  <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>Aucun document</h3>
-                  <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>Ajoutez votre premier document pour commencer avec Kingsley</p>
+                  <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>{t.uploads.noDocuments}</h3>
+                  <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>{t.uploads.noDocumentsDesc}</p>
                   <button 
                     onClick={() => setActiveTab('upload')}
                     className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-6 py-3 rounded-xl font-clash font-medium flex items-center space-x-2 mx-auto`}
                   >
                     <Plus className="h-4 w-4" />
-                    <span>Ajouter des fichiers</span>
+                    <span>{t.uploads.addFiles}</span>
                   </button>
                 </>
               )}
@@ -652,9 +654,9 @@ export default function UploadsPage() {
       <div className={`${activeTab === 'upload' ? 'block' : 'hidden'}`}>
         <div className="space-y-6">
           <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl`}>
-            <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>Upload de documents</h3>
+            <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>{t.uploads.uploadTitle}</h3>
             <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>
-              Uploadez des documents tels que des contrats, des documents de cour, des photographies ou toute autre preuve pertinente pour vos affaires juridiques.
+              {t.uploads.uploadDesc}
             </p>
             
             <FileUploader
@@ -677,7 +679,7 @@ export default function UploadsPage() {
             <div className={`mt-6 pt-6 border-t ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'}`}>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
-                  <p><span className="font-clash font-medium">Stockage :</span> {formatFileSize(storageUsage.totalSize)} utilisés sur 1 Go</p>
+                  <p><span className="font-clash font-medium">{t.uploads.storage}</span> {formatFileSize(storageUsage.totalSize)} {t.uploads.storageOf}</p>
                   <div className={`w-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-200'} rounded-full h-1.5 mt-1`}>
                     <div 
                       className={`${theme === 'dark' ? 'bg-slate-400' : 'bg-gray-600'} h-1.5 rounded-full transition-all`}
@@ -689,14 +691,14 @@ export default function UploadsPage() {
                 <div className="flex space-x-3">
                   <button className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30 border border-slate-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-300'} flex items-center space-x-2`}>
                     <FolderPlus className="h-4 w-4" />
-                    <span>Ajouter à un dossier</span>
+                    <span>{t.uploads.addToCase}</span>
                   </button>
                   <button 
                     disabled={uploadedFiles.length === 0 || isUploading}
                     onClick={() => handleFilesAdded(uploadedFiles)}
                     className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-6 py-3 rounded-xl font-clash font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    {isUploading ? 'Téléchargement...' : 'Traiter les documents'}
+                    {isUploading ? t.uploads.uploading : t.uploads.processDocuments}
                   </button>
                 </div>
               </div>
@@ -709,19 +711,19 @@ export default function UploadsPage() {
       <div className={`${activeTab === 'organize' ? 'block' : 'hidden'}`}>
         <div className="space-y-6">
           <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl`}>
-            <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>Organiser des documents</h3>
-            <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>Grouper des documents dans des dossiers et les assigner à des dossiers</p>
+            <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>{t.uploads.organizeTitle}</h3>
+            <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>{t.uploads.organizeDesc}</p>
             
             {/* This would be a drag-and-drop interface in the full implementation */}
             <div className={`border ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'} rounded-xl p-8 text-center`}>
               <div className={`mx-auto mb-4 p-4 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'} inline-block`}>
                 <FileCog className={`h-6 w-6 ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`} />
               </div>
-              <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>Organisation des documents en cours de développement</h3>
-              <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>Cette fonctionnalité est actuellement en cours de développement</p>
+              <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>{t.uploads.organizeDev}</h3>
+              <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>{t.uploads.organizeDevDesc}</p>
               <button className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30 border border-slate-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-300'} flex items-center space-x-2 mx-auto`}>
                 <ExternalLink className="h-4 w-4" />
-                <span>En savoir plus</span>
+                <span>{t.common.learnMore}</span>
               </button>
             </div>
           </div>

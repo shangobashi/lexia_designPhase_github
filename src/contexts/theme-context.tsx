@@ -46,20 +46,20 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const isInitialLoad = !localStorage.getItem('theme-initialized');
     
     if (!isInitialLoad) {
-      root.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      root.style.transition = 'background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease';
     }
-    
+
     // Apply theme classes
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
     localStorage.setItem('theme', theme);
     localStorage.setItem('theme-initialized', 'true');
-    
-    // Remove transition after theme change
+
+    // Remove transition quickly after theme change
     if (!isInitialLoad) {
       setTimeout(() => {
         root.style.transition = '';
-      }, 300);
+      }, 150);
     }
   }, [theme]);
 

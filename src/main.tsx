@@ -7,6 +7,7 @@ import './index.css';
 import { Toaster } from './components/ui/toaster';
 import { AuthProvider } from './contexts/auth-context';
 import { ThemeProvider } from './contexts/theme-context';
+import { LanguageProvider } from './contexts/language-context';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -17,10 +18,12 @@ createRoot(document.getElementById('root')!).render(
       }}
     >
       <ThemeProvider>
-        <AuthProvider>
-          <App />
-          <Toaster />
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <App />
+            <Toaster />
+          </AuthProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </HashRouter>
   </StrictMode>

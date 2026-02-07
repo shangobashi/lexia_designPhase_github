@@ -1,20 +1,28 @@
-import { supabase } from './supabase';
+import { isSupabaseConfigured, supabase } from './supabase';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // Helper to get auth token
-const getAuthToken = async () => {
-  const { data: { session }, error } = await supabase.auth.getSession();
-  if (error || !session) {
-    throw new Error('User not authenticated');
+const getAuthToken = async (): Promise<string | null> => {
+  if (!isSupabaseConfigured) {
+    return null;
   }
-  return session.access_token;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  } catch {
+    return null;
+  }
 };
 
 // Helper for authenticated API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const token = await getAuthToken();
-  
+
+  if (!token) {
+    throw new Error('User not authenticated');
+  }
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -37,8 +45,7 @@ export const aiApi = {
   async chat(messages: any[], caseId?: string, provider?: string, isGuestUser?: boolean) {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
-    // Try to attach Supabase token when available; otherwise fall back to guest header
-    const token = await getAuthToken().catch(() => null);
+    const token = await getAuthToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     } else {
@@ -68,7 +75,7 @@ export const aiApi = {
 
   async analyzeDocuments(documents: string[], caseId?: string, provider?: string, isGuestUser?: boolean) {
     return this.chat(
-      [{ role: 'user', content: `Veuillez analyser les documents suivants et fournir un résumé en cinq points : ${documents.join('\n\n')}` }],
+      [{ role: 'user', content: `Veuillez analyser les documents suivants et fournir un rÃ©sumÃ© en cinq points : ${documents.join('\n\n')}` }],
       caseId,
       provider,
       isGuestUser

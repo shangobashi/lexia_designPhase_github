@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
 import { Case } from '@/types/case';
 import { getUserCases } from '@/lib/supabase';
 
 export default function DashboardTestPage() {
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [recentCases, setRecentCases] = useState<Case[]>([]);
 
   useEffect(() => {
@@ -88,7 +90,7 @@ export default function DashboardTestPage() {
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900">{user?.displayName || 'Invité'}</div>
+                  <div className="text-sm font-medium text-gray-900">{user?.isGuest ? t.common.guest : (user?.displayName || t.common.guest)}</div>
                   <div className="text-xs text-gray-500">Gratuit</div>
                 </div>
               </div>

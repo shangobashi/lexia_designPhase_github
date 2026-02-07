@@ -1,98 +1,103 @@
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Brain, Sparkles, Zap, HelpCircle, Bot } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Brain, Zap, ChevronDown } from 'lucide-react';
+import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
+import { KingsleyMode } from '@/lib/ai-providers/openrouter';
+import { cn } from '@/lib/utils';
 
-export type AIProvider = 'gemini' | 'openai' | 'anthropic' | 'local' | 'demo';
+export type AIProvider = 'openrouter';
 
 interface AIProviderSwitchProps {
   currentProvider: AIProvider;
   onProviderChange: (provider: AIProvider) => void;
+  mode: KingsleyMode;
+  onModeChange: (mode: KingsleyMode) => void;
 }
 
-const getProviderLabel = (provider: AIProvider): string => {
-  switch (provider) {
-    case 'gemini':
-      return 'Google Gemini';
-    case 'openai':
-      return 'OpenAI';
-    case 'anthropic':
-      return 'Anthropic Claude';
-    case 'local':
-      return 'Modèle local';
-    case 'demo':
-      return 'Mode démo';
-    default:
-      return 'Fournisseur inconnu';
-  }
+const MODE_ICONS: Record<KingsleyMode, typeof Brain> = {
+  fast: Zap,
+  thinking: Brain,
 };
 
-const getProviderIcon = (provider: AIProvider) => {
-  switch (provider) {
-    case 'gemini':
-      return <Sparkles className="h-4 w-4" />;
-    case 'openai':
-      return <Zap className="h-4 w-4" />;
-    case 'anthropic':
-      return <Brain className="h-4 w-4" />;
-    case 'local':
-      return <Bot className="h-4 w-4" />;
-    case 'demo':
-      return <HelpCircle className="h-4 w-4" />;
-    default:
-      return <Brain className="h-4 w-4" />;
-  }
-};
+export function AIProviderSwitch({ mode, onModeChange }: AIProviderSwitchProps) {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const isDark = theme === 'dark';
 
-export function AIProviderSwitch({ currentProvider, onProviderChange }: AIProviderSwitchProps) {
+  const MODE_CONFIG: Record<KingsleyMode, { label: string; desc: string }> = {
+    fast: { label: t.chat.modeFast, desc: t.chat.modeFastDesc },
+    thinking: { label: t.chat.modeThinking, desc: t.chat.modeThinkingDesc },
+  };
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const current = MODE_CONFIG[mode];
+  const Icon = MODE_ICONS[mode];
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-300 rounded-xl text-sm font-medium transition-colors">
-          {getProviderIcon(currentProvider)}
-          {getProviderLabel(currentProvider)}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600/30 rounded-xl shadow-lg backdrop-blur-md p-2">
-        <DropdownMenuItem onClick={() => onProviderChange('gemini')} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-600/50 rounded-lg cursor-pointer transition-colors">
-          <Sparkles className="h-4 w-4 text-green-600" />
-          <div className="flex flex-col">
-            <span className="text-slate-800 dark:text-slate-100 font-medium">Google Gemini</span>
-            <span className="text-xs text-green-600">Gratuit • Recommandé</span>
-          </div>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onProviderChange('openai')} className="gap-2">
-          <Zap className="h-4 w-4" />
-          <div className="flex flex-col">
-            <span>OpenAI</span>
-            <span className="text-xs text-blue-600">GPT récente</span>
-          </div>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onProviderChange('anthropic')} className="gap-2">
-          <Brain className="h-4 w-4" />
-          <div className="flex flex-col">
-            <span>Anthropic Claude</span>
-            <span className="text-xs text-purple-600">Long contexte</span>
-          </div>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onProviderChange('local')} className="gap-2">
-          <Bot className="h-4 w-4" />
-          <div className="flex flex-col">
-            <span>Modèle local</span>
-            <span className="text-xs text-orange-600">Sans clé</span>
-          </div>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onProviderChange('demo')} className="gap-2">
-          <HelpCircle className="h-4 w-4" />
-          <div className="flex flex-col">
-            <span>Mode démo</span>
-            <span className="text-xs text-gray-600">Réponse instantanée</span>
-          </div>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer",
+          isDark
+            ? 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+        )}
+      >
+        <Icon className={cn("h-4 w-4", mode === 'fast' ? 'text-amber-500' : 'text-blue-600')} />
+        <span>Kingsley â€” {current.label}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && 'rotate-180')} />
+      </button>
+
+      {open && (
+        <div className={cn(
+          "absolute right-0 top-full mt-2 w-56 rounded-xl border shadow-lg z-50 overflow-hidden",
+          isDark
+            ? 'bg-slate-800 border-slate-700'
+            : 'bg-white border-gray-200'
+        )}>
+          {(Object.keys(MODE_CONFIG) as KingsleyMode[]).map((m) => {
+            const cfg = MODE_CONFIG[m];
+            const MIcon = MODE_ICONS[m];
+            const isActive = m === mode;
+            return (
+              <button
+                key={m}
+                type="button"
+                onClick={() => { onModeChange(m); setOpen(false); }}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors",
+                  isActive
+                    ? isDark ? 'bg-blue-600/20 text-blue-300' : 'bg-blue-50 text-blue-700'
+                    : isDark ? 'text-slate-300 hover:bg-slate-700/50' : 'text-gray-700 hover:bg-gray-50'
+                )}
+              >
+                <MIcon className={cn(
+                  "h-4 w-4 flex-shrink-0",
+                  m === 'fast' ? 'text-amber-500' : 'text-blue-600'
+                )} />
+                <div>
+                  <div className="text-sm font-medium">{cfg.label}</div>
+                  <div className={cn("text-xs", isDark ? 'text-slate-500' : 'text-gray-400')}>{cfg.desc}</div>
+                </div>
+                {isActive && (
+                  <span className="ml-auto w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

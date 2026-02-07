@@ -1,37 +1,33 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey || 
-    supabaseUrl === 'your-supabase-url' || 
-    supabaseAnonKey === 'your-supabase-anon-key') {
-  throw new Error(`
-🔑 Missing Supabase Configuration!
+export const isSupabaseConfigured = !!(
+  supabaseUrl &&
+  supabaseAnonKey &&
+  supabaseUrl !== 'your-supabase-url' &&
+  supabaseAnonKey !== 'your-supabase-anon-key'
+);
 
-Please update your .env file with real Supabase credentials:
-
-1. Go to https://app.supabase.com
-2. Create a new project or select existing one
-3. Go to Settings > API
-4. Copy your Project URL and Anon Key
-5. Update .env file with real values
-
-Current values: 
-- URL: ${supabaseUrl}
-- Key: ${supabaseAnonKey ? 'Set but invalid' : 'Missing'}
-
-See SETUP_GUIDE.md for detailed instructions.
-  `);
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+// Create client with real or empty credentials
+export const supabase: SupabaseClient = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
   }
-});
+);
+
+function ensureConfigured() {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase non configuré - cette fonctionnalité nécessite une connexion Supabase.');
+  }
+}
 
 // Database types (generated from schema)
 export interface Database {
@@ -256,35 +252,37 @@ export type UsageLog = Database['public']['Tables']['usage_logs']['Row'];
 
 // Helper functions for common operations
 export const getCurrentUser = async () => {
+  ensureConfigured();
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error) throw error;
   return user;
 };
 
 export const getProfile = async (userId?: string) => {
+  ensureConfigured();
   const uid = userId || (await getCurrentUser())?.id;
   if (!uid) throw new Error('No user ID provided');
-  
+
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', uid)
     .single();
-    
+
   if (error) throw error;
   return data;
 };
 
 export const createCase = async (title: string, description: string) => {
+  ensureConfigured();
   const user = await getCurrentUser();
   if (!user) throw new Error('User not authenticated');
-  
-  // Generate case ID
+
   const { data: caseId, error: caseIdError } = await supabase
     .rpc('generate_case_id');
-    
+
   if (caseIdError) throw caseIdError;
-  
+
   const { data, error } = await supabase
     .from('cases')
     .insert({
@@ -295,15 +293,16 @@ export const createCase = async (title: string, description: string) => {
     })
     .select()
     .single();
-    
+
   if (error) throw error;
   return data;
 };
 
 export const getUserCases = async (userId?: string) => {
+  ensureConfigured();
   const uid = userId || (await getCurrentUser())?.id;
   if (!uid) throw new Error('No user ID provided');
-  
+
   const { data, error } = await supabase
     .from('cases')
     .select(`
@@ -313,12 +312,13 @@ export const getUserCases = async (userId?: string) => {
     `)
     .eq('user_id', uid)
     .order('created_at', { ascending: false });
-    
+
   if (error) throw error;
   return data;
 };
 
 export const getCaseById = async (caseId: string) => {
+  ensureConfigured();
   const { data, error } = await supabase
     .from('cases')
     .select(`
@@ -328,31 +328,33 @@ export const getCaseById = async (caseId: string) => {
     `)
     .eq('id', caseId)
     .single();
-    
+
   if (error) throw error;
   return data;
 };
 
 export const deleteCase = async (caseId: string) => {
+  ensureConfigured();
   const user = await getCurrentUser();
   if (!user) throw new Error('User not authenticated');
-  
+
   const { error } = await supabase
     .from('cases')
     .delete()
     .eq('id', caseId)
-    .eq('user_id', user.id); // Ensure user can only delete their own cases
-    
+    .eq('user_id', user.id);
+
   if (error) throw error;
 };
 
 export const addMessage = async (
-  caseId: string, 
-  content: string, 
+  caseId: string,
+  content: string,
   sender: 'user' | 'assistant',
   aiProvider?: string,
   tokenCount?: number
 ) => {
+  ensureConfigured();
   const { data, error } = await supabase
     .from('messages')
     .insert({
@@ -364,7 +366,7 @@ export const addMessage = async (
     })
     .select()
     .single();
-    
+
   if (error) throw error;
   return data;
 };
@@ -377,9 +379,10 @@ export const trackUsage = async (
   tokenCount?: number,
   metadata?: any
 ) => {
+  ensureConfigured();
   const user = await getCurrentUser();
   if (!user) throw new Error('User not authenticated');
-  
+
   const { data, error } = await supabase
     .rpc('track_usage', {
       p_user_id: user.id,
@@ -390,26 +393,27 @@ export const trackUsage = async (
       p_token_count: tokenCount,
       p_metadata: metadata,
     });
-    
+
   if (error) throw error;
   return data;
 };
 
 // File upload helpers
 export const uploadFile = async (file: File, bucket: string = 'documents', path?: string) => {
+  ensureConfigured();
   const user = await getCurrentUser();
   if (!user) throw new Error('User not authenticated');
-  
+
   const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
   const filePath = path || `${user.id}/${fileName}`;
-  
+
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(filePath, file, {
       cacheControl: '3600',
       upsert: false
     });
-  
+
   if (error) throw error;
   return { ...data, fileName, filePath };
 };
@@ -418,31 +422,33 @@ export const getFileUrl = (bucket: string = 'documents', path: string) => {
   const { data } = supabase.storage
     .from(bucket)
     .getPublicUrl(path);
-  
+
   return data.publicUrl;
 };
 
 export const deleteFile = async (bucket: string = 'documents', path: string) => {
+  ensureConfigured();
   const { error } = await supabase.storage
     .from(bucket)
     .remove([path]);
-  
+
   if (error) throw error;
 };
 
 export const getUserStorageUsage = async (userId?: string) => {
+  ensureConfigured();
   const uid = userId || (await getCurrentUser())?.id;
   if (!uid) throw new Error('No user ID provided');
-  
+
   const { data, error } = await supabase.storage
     .from('documents')
     .list(uid, {
       limit: 1000,
       sortBy: { column: 'name', order: 'asc' }
     });
-  
+
   if (error) throw error;
-  
+
   const totalSize = data?.reduce((acc, file) => acc + (file.metadata?.size || 0), 0) || 0;
   return { files: data?.length || 0, totalSize };
 };
@@ -457,6 +463,7 @@ export const createDocument = async (document: {
   storagePath: string;
   url?: string;
 }) => {
+  ensureConfigured();
   const { data, error } = await supabase
     .from('documents')
     .insert([{
@@ -471,15 +478,16 @@ export const createDocument = async (document: {
     }])
     .select()
     .single();
-  
+
   if (error) throw error;
   return data;
 };
 
 export const getUserDocuments = async (userId?: string) => {
+  ensureConfigured();
   const uid = userId || (await getCurrentUser())?.id;
   if (!uid) throw new Error('No user ID provided');
-  
+
   const { data, error } = await supabase
     .from('documents')
     .select(`
@@ -488,32 +496,30 @@ export const getUserDocuments = async (userId?: string) => {
     `)
     .eq('cases.user_id', uid)
     .order('uploaded_at', { ascending: false });
-  
+
   if (error) throw error;
   return data;
 };
 
 export const deleteDocument = async (documentId: string) => {
-  // First get the document to find the storage path
+  ensureConfigured();
   const { data: document, error: fetchError } = await supabase
     .from('documents')
     .select('storage_path')
     .eq('id', documentId)
     .single();
-    
+
   if (fetchError) throw fetchError;
-  
-  // Delete from storage
+
   if (document?.storage_path) {
     await deleteFile('documents', document.storage_path);
   }
-  
-  // Delete from database
+
   const { error } = await supabase
     .from('documents')
     .delete()
     .eq('id', documentId);
-  
+
   if (error) throw error;
 };
 

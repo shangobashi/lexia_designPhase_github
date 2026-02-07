@@ -1,8 +1,10 @@
 import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
 import { Link } from 'react-router-dom';
 
 export default function PricingPage() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} py-16`}>
@@ -11,13 +13,13 @@ export default function PricingPage() {
         <div className="text-center mb-32">
           {/* Main Title - Bold emphasis with perfect spacing */}
           <h1 className={`font-clash text-6xl font-semibold mb-8 tracking-tight leading-none ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
-            Tarifs Kingsley
+            {t.pricing.title}
           </h1>
           
           {/* Subtitle - Supporting information with generous breathing room */}
           <div className="max-w-3xl mx-auto">
             <p className={`font-clash text-xl font-light leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
-              Choisissez le plan qui correspond à vos besoins juridiques
+              {t.pricing.subtitle}
             </p>
           </div>
         </div>
@@ -33,14 +35,14 @@ export default function PricingPage() {
                   ? 'bg-slate-600/40 text-slate-300 border border-slate-500/30' 
                   : 'bg-gray-200/80 text-gray-600 border border-gray-300/50'
               }`}>
-                Gratuit
+                {t.pricing.free.badge}
               </div>
             </div>
-            
+
             {/* Plan Title - Consistent height and spacing */}
             <div className="h-16 flex items-center justify-center mb-8">
               <h3 className={`font-clash text-2xl font-semibold text-center tracking-tight ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
-                Découverte
+                {t.pricing.free.name}
               </h3>
             </div>
             
@@ -57,15 +59,15 @@ export default function PricingPage() {
               <ul className={`space-y-5 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className={`w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 ${theme === 'dark' ? 'bg-slate-400/60' : 'bg-gray-400/60'}`}></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">10 questions par mois</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.free.questions}</span>
                 </li>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className={`w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 ${theme === 'dark' ? 'bg-slate-400/60' : 'bg-gray-400/60'}`}></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Consultation juridique de base</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.free.basicConsultation}</span>
                 </li>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className={`w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 ${theme === 'dark' ? 'bg-slate-400/60' : 'bg-gray-400/60'}`}></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Support par email</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.free.emailSupport}</span>
                 </li>
               </ul>
             </div>
@@ -80,7 +82,7 @@ export default function PricingPage() {
                     : 'bg-gray-200/90 text-gray-700 hover:bg-gray-300/90 border border-gray-300/60'
                 }`}
               >
-                Commencer gratuitement
+                {t.pricing.free.cta}
               </Link>
             </div>
           </div>
@@ -94,14 +96,14 @@ export default function PricingPage() {
             {/* Tier Badge - Consistent height with hero emphasis */}
             <div className="flex justify-center mb-8 h-12">
               <div className="font-clash px-8 py-3 rounded-2xl text-sm font-semibold tracking-wide bg-blue-500 text-white border border-blue-400 shadow-xl transform hover:scale-105 transition-transform duration-200 flex items-center">
-                Populaire
+                {t.pricing.professional.badge}
               </div>
             </div>
             
             {/* Plan Title - Consistent height and spacing */}
             <div className="h-16 flex items-center justify-center mb-8">
               <h3 className={`font-clash text-2xl font-semibold text-center tracking-tight ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
-                Professionnel
+                {t.pricing.professional.name}
               </h3>
             </div>
             
@@ -118,23 +120,23 @@ export default function PricingPage() {
               <ul className={`space-y-5 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className="w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 bg-blue-400/80"></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Questions illimitées</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.professional.unlimitedQuestions}</span>
                 </li>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className="w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 bg-blue-400/80"></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Génération de documents</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.professional.docGeneration}</span>
                 </li>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className="w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 bg-blue-400/80"></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Gestion de dossiers</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.professional.caseManagement}</span>
                 </li>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className="w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 bg-blue-400/80"></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Support prioritaire</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.professional.prioritySupport}</span>
                 </li>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className="w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 bg-blue-400/80"></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Accès API</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.professional.apiAccess}</span>
                 </li>
               </ul>
             </div>
@@ -145,7 +147,7 @@ export default function PricingPage() {
                 to="/register"
                 className="font-clash block w-full text-center py-4 px-8 rounded-2xl font-semibold text-base leading-none tracking-wide bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl border border-blue-400 h-full flex items-center justify-center shadow-2xl"
               >
-                Choisir Professionnel
+                {t.pricing.professional.cta}
               </Link>
             </div>
           </div>
@@ -159,14 +161,14 @@ export default function PricingPage() {
                   ? 'bg-slate-600/40 text-slate-300 border border-slate-500/30' 
                   : 'bg-gray-200/80 text-gray-600 border border-gray-300/50'
               }`}>
-                Premium
+                {t.pricing.premium.badge}
               </div>
             </div>
-            
+
             {/* Plan Title - Consistent height and spacing */}
             <div className="h-16 flex items-center justify-center mb-8">
               <h3 className={`font-clash text-2xl font-semibold text-center tracking-tight ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
-                Premium
+                {t.pricing.premium.name}
               </h3>
             </div>
             
@@ -184,23 +186,23 @@ export default function PricingPage() {
               <ul className={`space-y-5 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className={`w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 ${theme === 'dark' ? 'bg-slate-400/60' : 'bg-gray-400/60'}`}></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Tout du plan Professionnel</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.premium.everything}</span>
                 </li>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className={`w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 ${theme === 'dark' ? 'bg-slate-400/60' : 'bg-gray-400/60'}`}></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Intégration personnalisée</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.premium.customIntegration}</span>
                 </li>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className={`w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 ${theme === 'dark' ? 'bg-slate-400/60' : 'bg-gray-400/60'}`}></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Formation équipe</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.premium.teamTraining}</span>
                 </li>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className={`w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 ${theme === 'dark' ? 'bg-slate-400/60' : 'bg-gray-400/60'}`}></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">Support dédié</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.premium.dedicatedSupport}</span>
                 </li>
                 <li className="flex items-start space-x-4 min-h-[24px]">
                   <span className={`w-1.5 h-1.5 rounded-full mt-2.5 flex-shrink-0 ${theme === 'dark' ? 'bg-slate-400/60' : 'bg-gray-400/60'}`}></span>
-                  <span className="font-clash text-sm font-light leading-relaxed">SLA garantie</span>
+                  <span className="font-clash text-sm font-light leading-relaxed">{t.pricing.premium.sla}</span>
                 </li>
               </ul>
             </div>
@@ -212,7 +214,7 @@ export default function PricingPage() {
                   ? 'bg-slate-600/80 text-slate-100 hover:bg-slate-500/90 border border-slate-500/50' 
                   : 'bg-gray-200/90 text-gray-700 hover:bg-gray-300/90 border border-gray-300/60'
               }`}>
-                Nous contacter
+                {t.pricing.premium.cta}
               </button>
             </div>
           </div>
@@ -228,7 +230,7 @@ export default function PricingPage() {
                 : 'text-gray-600 hover:text-slate-800'
             }`}
           >
-            ← Retour à l'accueil
+            {t.pricing.backToHome}
           </Link>
         </div>
       </div>

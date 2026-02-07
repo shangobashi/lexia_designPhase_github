@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getUserCases, deleteCase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
 import { useDebounce } from '@/hooks/useDebounce';
 import { formatDate } from '@/lib/utils';
 
@@ -36,6 +37,7 @@ export default function CasesPage() {
   
   const { user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
+  const { t, language } = useLanguage();
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   
   const CASES_PER_PAGE = 6;
@@ -538,13 +540,19 @@ export default function CasesPage() {
   const filteredAndSortedCases = useMemo(() => {
     let filtered = cases;
     
-    // Apply search filter
+    // Apply search filter (search against translated titles/descriptions)
     if (debouncedSearchTerm) {
+      const mockTranslations = t.cases.mockCases as Record<string, { title: string; description: string }> | undefined;
       filtered = filtered.filter(
-        (c) =>
-          c.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-          c.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-          c.caseId.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+        (c) => {
+          const title = (mockTranslations && c.id in mockTranslations) ? mockTranslations[c.id].title : c.title;
+          const description = (mockTranslations && c.id in mockTranslations) ? mockTranslations[c.id].description : c.description;
+          return (
+            title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+            description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+            c.caseId.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+          );
+        }
       );
     }
     
@@ -570,7 +578,7 @@ export default function CasesPage() {
     });
     
     return sorted;
-  }, [cases, debouncedSearchTerm, statusFilter, sortBy]);
+  }, [cases, debouncedSearchTerm, statusFilter, sortBy, t]);
   
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedCases.length / CASES_PER_PAGE);
@@ -620,17 +628,17 @@ export default function CasesPage() {
     switch (status) {
       case 'active':
         return {
-          text: 'En cours',
+          text: t.common.active,
           className: theme === 'dark' ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'
         };
       case 'pending':
         return {
-          text: 'Attente',
+          text: t.common.pending,
           className: theme === 'dark' ? 'bg-purple-900/50 text-purple-300' : 'bg-purple-100 text-purple-700'
         };
       case 'closed':
         return {
-          text: 'Terminé',
+          text: t.common.closed,
           className: theme === 'dark' ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700'
         };
       default:
@@ -641,13 +649,31 @@ export default function CasesPage() {
     }
   };
 
+  // Helper function to get translated case title and description for mock cases
+  const getCaseTitle = (caseItem: Case): string => {
+    const mockTranslations = t.cases.mockCases as Record<string, { title: string; description: string }> | undefined;
+    if (mockTranslations && caseItem.id in mockTranslations) {
+      return mockTranslations[caseItem.id].title;
+    }
+    return caseItem.title;
+  };
+
+  const getCaseDescription = (caseItem: Case): string => {
+    const mockTranslations = t.cases.mockCases as Record<string, { title: string; description: string }> | undefined;
+    if (mockTranslations && caseItem.id in mockTranslations) {
+      return mockTranslations[caseItem.id].description;
+    }
+    return caseItem.description;
+  };
+
   // Helper function to format date
   const formatDisplayDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
-      day: 'numeric', 
-      month: 'long', 
-      year: 'numeric' 
+    const locale = language === 'fr' ? 'fr-FR' : 'en-US';
+    return date.toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
     });
   };
   
@@ -667,9 +693,9 @@ export default function CasesPage() {
     return (
       <div className="min-h-screen sophisticated-bg p-6">
         <div className="executive-card rounded-2xl p-12 text-center">
-          <h3 className="font-clash font-semibold text-slate-800 text-lg mb-2">Connexion requise</h3>
+          <h3 className="font-clash font-semibold text-slate-800 text-lg mb-2">{t.cases.loginRequired}</h3>
           <p className="text-gray-600 mb-6">
-            Veuillez vous connecter pour voir vos dossiers.
+            {t.cases.loginRequiredDesc}
           </p>
         </div>
       </div>
@@ -681,7 +707,7 @@ export default function CasesPage() {
     return (
       <div className="min-h-screen sophisticated-bg p-6">
         <div className="executive-card rounded-2xl p-12 text-center">
-          <h3 className="font-clash font-semibold text-slate-800 text-lg mb-2">Erreur</h3>
+          <h3 className="font-clash font-semibold text-slate-800 text-lg mb-2">{t.common.error}</h3>
           <p className="text-gray-600 mb-6">
             {error}
           </p>
@@ -699,7 +725,7 @@ export default function CasesPage() {
                   <div className="relative">
                     <input 
                       type="text" 
-                      placeholder="Rechercher par titre, description ou mots-clés..." 
+                      placeholder={t.cases.searchPlaceholder} 
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className={`w-full pl-10 pr-4 py-3 rounded-xl focus:outline-none ${theme === 'dark' ? 'dark-input' : 'border border-gray-300 focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white/90'}`}
@@ -715,25 +741,25 @@ export default function CasesPage() {
                     onClick={() => setStatusFilter('all')}
                     className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${statusFilter === 'all' ? 'active' : ''} ${theme === 'dark' ? (statusFilter === 'all' ? 'text-slate-200' : 'text-slate-300') : (statusFilter === 'all' ? 'text-gray-700' : 'text-gray-600')}`}
                   >
-                    Tous
+                    {t.cases.filterAll}
                   </button>
-                  <button 
+                  <button
                     onClick={() => setStatusFilter('active')}
                     className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${statusFilter === 'active' ? 'active' : ''} ${theme === 'dark' ? (statusFilter === 'active' ? 'text-slate-200' : 'text-slate-300') : (statusFilter === 'active' ? 'text-gray-700' : 'text-gray-600')}`}
                   >
-                    En cours
+                    {t.cases.filterActive}
                   </button>
-                  <button 
+                  <button
                     onClick={() => setStatusFilter('closed')}
                     className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${statusFilter === 'closed' ? 'active' : ''} ${theme === 'dark' ? (statusFilter === 'closed' ? 'text-slate-200' : 'text-slate-300') : (statusFilter === 'closed' ? 'text-gray-700' : 'text-gray-600')}`}
                   >
-                    Terminés
+                    {t.cases.filterClosed}
                   </button>
-                  <button 
+                  <button
                     onClick={() => setStatusFilter('pending')}
                     className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${statusFilter === 'pending' ? 'active' : ''} ${theme === 'dark' ? (statusFilter === 'pending' ? 'text-slate-200' : 'text-slate-300') : (statusFilter === 'pending' ? 'text-gray-700' : 'text-gray-600')}`}
                   >
-                    Archivés
+                    {t.cases.filterArchived}
                   </button>
                 </div>
                 
@@ -742,9 +768,9 @@ export default function CasesPage() {
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
                   className={`rounded-lg px-3 py-2 text-sm ${theme === 'dark' ? 'dark-input text-slate-200' : 'border border-gray-300 text-gray-700 bg-white/90'}`}
                 >
-                  <option value="newest">Trier par date</option>
-                  <option value="title">Trier par titre</option>
-                  <option value="status">Trier par statut</option>
+                  <option value="newest">{t.cases.sortByDate}</option>
+                  <option value="title">{t.cases.sortByTitle}</option>
+                  <option value="status">{t.cases.sortByStatus}</option>
                 </select>
               </div>
             </div>
@@ -767,10 +793,10 @@ export default function CasesPage() {
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex-1">
                               <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2 line-clamp-2`}>
-                                {caseItem.title}
+                                {getCaseTitle(caseItem)}
                               </h3>
                               <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} text-sm mb-3 line-clamp-3 flex-1`}>
-                                {caseItem.description}
+                                {getCaseDescription(caseItem)}
                               </p>
                             </div>
                             <span className={`px-3 py-1 text-xs rounded-full font-clash font-medium ml-2 flex-shrink-0 ${statusInfo.className}`}>
@@ -780,8 +806,8 @@ export default function CasesPage() {
                           
                           <div className="mt-auto">
                             <div className={`flex items-center justify-between text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'} mb-4`}>
-                              <span>Créé le {formatDisplayDate(caseItem.createdAt)}</span>
-                              <span>{caseItem.documents?.length || 0} documents</span>
+                              <span>{t.cases.createdOn} {formatDisplayDate(caseItem.createdAt)}</span>
+                              <span>{caseItem.documents?.length || 0} {t.common.documents}</span>
                             </div>
                             
                             <div className="flex items-center justify-between">
@@ -790,7 +816,7 @@ export default function CasesPage() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                                 </svg>
                                 <span className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                                  {caseItem.messages?.length || 0} messages
+                                  {caseItem.messages?.length || 0} {t.common.messages}
                                 </span>
                               </div>
                               <button 
@@ -871,12 +897,12 @@ export default function CasesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
                 </div>
-                <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>Aucun dossier</h3>
+                <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>{t.cases.noCases}</h3>
                 <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>
-                  Créez votre premier dossier pour commencer avec Kingsley
+                  {t.cases.noCasesDesc}
                 </p>
                 <button className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-6 py-3 rounded-xl font-clash font-medium`}>
-                  {user?.isGuest ? "Commencer la consultation" : "Créer un dossier"}
+                  {user?.isGuest ? t.cases.startConsultation : t.cases.createCase}
                 </button>
               </div>
             )}
