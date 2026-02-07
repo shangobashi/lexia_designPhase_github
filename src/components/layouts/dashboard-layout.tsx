@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useOutlet, Navigate } from 'react-router-dom';
 import Sidebar from '@/components/navigation/sidebar';
 import Header from '@/components/navigation/header';
-import { SetupBanner } from '@/components/setup-banner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
@@ -71,7 +70,6 @@ export default function DashboardLayout() {
       />
 
       <main className={`flex-1 flex flex-col overflow-hidden min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
-        <SetupBanner />
         <Header
           toggleSidebar={() => {
             // On mobile, toggle mobile overlay; on desktop, toggle collapse
