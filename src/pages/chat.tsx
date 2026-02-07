@@ -5,10 +5,21 @@ import { AIProviderSwitch } from '@/components/ai-provider-switch';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
-import { getOpenRouterProvider, KingsleyMode } from '@/lib/ai-providers/openrouter';
+import { generateStreamingChat, KingsleyMode } from '@/lib/ai-service';
 import { config } from '@/lib/config';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types/message';
+
+const ERROR_MESSAGES = [
+  "Objection! All my neural pathways are currently in recess. Even AI lawyers need a break sometimes. Please try again in a moment.",
+  "Court is temporarily adjourned. My legal circuits are experiencing a brief intermission. I'll be back faster than a Belgian court ruling.",
+  "The jury of AI models is currently deliberating... in another dimension. Please retry — justice delayed is not justice denied!",
+  "My legal library seems to have misplaced itself. Like a good lawyer, I'll find the right argument — just give me another try.",
+  "Brief technical sidebar: all engines are refueling. In the meantime, may I suggest a nice Belgian waffle while you wait?",
+];
+
+const getRandomErrorMessage = () =>
+  ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)];
 
 export default function ChatPage() {
   const { user, continueAsGuest } = useAuth();
@@ -34,7 +45,6 @@ export default function ChatPage() {
 
   const handleModeChange = useCallback((newMode: KingsleyMode) => {
     setMode(newMode);
-    getOpenRouterProvider().setMode(newMode);
   }, []);
 
   const handleSend = useCallback(async (text: string) => {
@@ -59,18 +69,32 @@ export default function ChatPage() {
         content: m.content,
       }));
 
-      const orProvider = getOpenRouterProvider();
-      orProvider.setMode(mode);
-      const result = await orProvider.generateStreamingResponse(
+      const result = await generateStreamingChat(
         payloadMessages,
         config.defaultSystemPrompt,
+        mode,
         (partialText) => {
           setStreamingText(partialText);
         }
       );
 
-      if (result.error) {
-        throw new Error(result.error);
+      if (result.error || !result.message) {
+        // All providers failed — show a beautiful, funny error in the chat
+        const aiErrorMessage: Message = {
+          id: uuid(),
+          content: getRandomErrorMessage(),
+          sender: 'assistant',
+          timestamp: new Date().toISOString(),
+          caseId: 'ad-hoc',
+        };
+        setMessages(prev => [...prev, aiErrorMessage]);
+
+        toast({
+          title: t.chat.errorTitle,
+          description: result.error || t.chat.errorDefault,
+          variant: 'destructive',
+        });
+        return;
       }
 
       const aiMessage: Message = {
@@ -83,6 +107,16 @@ export default function ChatPage() {
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error: any) {
+      // Unexpected error — still show something in the chat
+      const aiErrorMessage: Message = {
+        id: uuid(),
+        content: getRandomErrorMessage(),
+        sender: 'assistant',
+        timestamp: new Date().toISOString(),
+        caseId: 'ad-hoc',
+      };
+      setMessages(prev => [...prev, aiErrorMessage]);
+
       toast({
         title: t.chat.errorTitle,
         description: error?.message || t.chat.errorDefault,
@@ -92,7 +126,7 @@ export default function ChatPage() {
       setIsSending(false);
       setStreamingText('');
     }
-  }, [isSending, toast, mode]);
+  }, [isSending, toast, mode, t]);
 
   const handleClear = () => setMessages([]);
 

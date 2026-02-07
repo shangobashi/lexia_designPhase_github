@@ -6,12 +6,13 @@ export type KingsleyMode = 'fast' | 'thinking';
 
 const MODE_MODELS: Record<KingsleyMode, string[]> = {
   fast: [
-    'z-ai/glm-4.7-flash:online',
-    'openai/gpt-oss-safeguard-20b:online',
+    'openai/gpt-oss-20b:free',
+    'deepseek/deepseek-v3.2-20251201',
   ],
   thinking: [
-    'z-ai/glm-4.7:online',
-    'moonshotai/kimi-k2.5:online',
+    'openai/gpt-oss-20b:free',
+    'deepseek/deepseek-v3.2-20251201',
+    'moonshotai/kimi-k2.5-0127',
   ],
 };
 
@@ -66,7 +67,6 @@ export class OpenRouterProvider {
             messages: formattedMessages,
             temperature: 0.5,
             max_tokens: 1500,
-            plugins: [{ id: 'web', max_results: 5 }],
           }),
           signal: controller.signal,
         });
@@ -75,7 +75,7 @@ export class OpenRouterProvider {
 
         if (!response.ok) {
           const err = await response.json().catch(() => ({}));
-          console.warn(`OpenRouter ${model} failed:`, err);
+          console.warn(`OpenRouter ${model} failed (${response.status}):`, err?.error?.message || err);
           continue;
         }
 
@@ -130,7 +130,6 @@ export class OpenRouterProvider {
             temperature: 0.5,
             max_tokens: 1500,
             stream: true,
-            plugins: [{ id: 'web', max_results: 5 }],
           }),
           signal: controller.signal,
         });
@@ -139,7 +138,7 @@ export class OpenRouterProvider {
 
         if (!response.ok) {
           const err = await response.json().catch(() => ({}));
-          console.warn(`OpenRouter ${model} stream failed:`, err);
+          console.warn(`OpenRouter ${model} stream failed (${response.status}):`, err?.error?.message || err);
           continue;
         }
 

@@ -1,7 +1,8 @@
+import { getGeminiProvider } from './ai-providers/gemini';
+import { getMistralProvider } from './ai-providers/mistral';
 import { getOpenRouterProvider } from './ai-providers/openrouter';
-import { getFallbackProvider } from './ai-providers/fallback';
 
-export type AIProvider = 'openrouter' | 'fallback';
+export type KingsleyMode = 'fast' | 'thinking';
 
 export interface AIMessage {
   role: 'system' | 'user' | 'assistant';
@@ -13,67 +14,107 @@ export interface AIResponse {
   error?: string;
 }
 
-export interface AIConfig {
-  provider: AIProvider;
-  apiKey: string;
-}
-
-export const generateAIResponse = async (
+/**
+ * Orchestrates AI provider chains based on mode.
+ *
+ * Fast mode:     Gemini 2.5 Flash → Mistral Small → error
+ * Thinking mode: OpenRouter (GPT OSS 20B → DeepSeek V3.2 → Kimi K2.5) → Gemini → Mistral → error
+ */
+export const generateStreamingChat = async (
   messages: AIMessage[],
   systemPrompt: string,
-  config: AIConfig
+  mode: KingsleyMode,
+  onChunk: (text: string) => void
 ): Promise<AIResponse> => {
-  // Always use OpenRouter (Kingsley's engine)
-  const openrouterKey = import.meta.env.VITE_OPENROUTER_API_KEY || config.apiKey;
+  const errors: string[] = [];
 
-  if (openrouterKey) {
+  if (mode === 'fast') {
+    // Fast chain: Gemini → Mistral
     try {
-      const orProvider = getOpenRouterProvider(openrouterKey);
-      return await orProvider.generateResponse(messages, systemPrompt);
-    } catch (error) {
-      console.error('Kingsley AI error:', error);
+      const gemini = getGeminiProvider();
+      const result = await gemini.generateStreamingResponse(messages, systemPrompt, onChunk);
+      if (result.message) return result;
+    } catch (error: any) {
+      console.warn('[Kingsley] Gemini failed:', error.message);
+      errors.push(`Gemini: ${error.message}`);
+      onChunk('');
+    }
+
+    try {
+      const mistral = getMistralProvider();
+      const result = await mistral.generateStreamingResponse(messages, systemPrompt, onChunk);
+      if (result.message) return result;
+    } catch (error: any) {
+      console.warn('[Kingsley] Mistral failed:', error.message);
+      errors.push(`Mistral: ${error.message}`);
+      onChunk('');
+    }
+  } else {
+    // Thinking chain: OpenRouter → Gemini → Mistral
+    try {
+      const orProvider = getOpenRouterProvider();
+      orProvider.setMode('thinking');
+      const result = await orProvider.generateStreamingResponse(messages, systemPrompt, onChunk);
+      if (result.message) return result;
+    } catch (error: any) {
+      console.warn('[Kingsley] OpenRouter thinking failed:', error.message);
+      errors.push(`OpenRouter: ${error.message}`);
+      onChunk('');
+    }
+
+    // Fallback to Gemini if OpenRouter unavailable
+    try {
+      const gemini = getGeminiProvider();
+      const result = await gemini.generateStreamingResponse(messages, systemPrompt, onChunk);
+      if (result.message) return result;
+    } catch (error: any) {
+      console.warn('[Kingsley] Gemini thinking fallback failed:', error.message);
+      errors.push(`Gemini: ${error.message}`);
+      onChunk('');
+    }
+
+    // Fallback to Mistral
+    try {
+      const mistral = getMistralProvider();
+      const result = await mistral.generateStreamingResponse(messages, systemPrompt, onChunk);
+      if (result.message) return result;
+    } catch (error: any) {
+      console.warn('[Kingsley] Mistral thinking fallback failed:', error.message);
+      errors.push(`Mistral: ${error.message}`);
+      onChunk('');
     }
   }
 
-  // Final fallback: demo responses
-  const fallbackProvider = getFallbackProvider();
-  return await fallbackProvider.generateResponse(messages, systemPrompt);
+  // All providers exhausted — return error for chat display
+  const errorDetail = errors.join(' | ');
+  console.error(`[Kingsley] All ${mode} providers failed:`, errorDetail);
+
+  return {
+    message: '',
+    error: `All ${mode} mode providers are currently unavailable. ${errorDetail}`,
+  };
 };
 
-export const analyzeCaseDocuments = async (
-  documents: string[],
-  systemPrompt: string,
-  _config: AIConfig
+/**
+ * Non-streaming version for document analysis and other non-chat uses.
+ */
+export const generateAIResponse = async (
+  messages: AIMessage[],
+  systemPrompt: string
 ): Promise<AIResponse> => {
-  const openrouterKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-
-  if (openrouterKey) {
-    try {
-      const orProvider = getOpenRouterProvider(openrouterKey);
-      return await orProvider.analyzeDocuments(documents, systemPrompt);
-    } catch (error) {
-      console.error('Kingsley document analysis error:', error);
-    }
+  try {
+    const gemini = getGeminiProvider();
+    return await gemini.generateResponse(messages, systemPrompt);
+  } catch {
+    // continue
   }
 
-  const fallbackProvider = getFallbackProvider();
-  return await fallbackProvider.analyzeDocuments(documents, systemPrompt);
+  try {
+    const mistral = getMistralProvider();
+    return await mistral.generateResponse(messages, systemPrompt);
+  } catch {
+    // continue
+  }
+
+  return { message: '', error: 'All AI providers are currently unavailable.' };
 };
-
-class AIService {
-  private provider: AIProvider = 'openrouter';
-
-  setProvider(provider: AIProvider) {
-    this.provider = provider;
-  }
-
-  async chat(messages: any[]) {
-    return await generateAIResponse(
-      messages,
-      "You are Kingsley, a helpful Belgian legal AI assistant.",
-      { provider: this.provider, apiKey: '' }
-    );
-  }
-}
-
-export const aiService = new AIService();

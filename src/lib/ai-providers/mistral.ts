@@ -1,22 +1,13 @@
 import { AIMessage, AIResponse } from '../ai-service';
 
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const MISTRAL_ENDPOINT = 'https://api.mistral.ai/v1/chat/completions';
+const MISTRAL_MODEL = 'mistral-small-latest';
 
-export class GeminiProvider {
+export class MistralProvider {
   private apiKey: string;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY || '';
-  }
-
-  private toGeminiMessages(messages: AIMessage[]) {
-    return messages
-      .filter(m => m.role !== 'system')
-      .map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }],
-      }));
+    this.apiKey = apiKey || import.meta.env.VITE_MISTRAL_API_KEY || '';
   }
 
   async generateStreamingResponse(
@@ -25,46 +16,43 @@ export class GeminiProvider {
     onChunk: (text: string) => void
   ): Promise<AIResponse> {
     if (!this.apiKey) {
-      throw new Error('Gemini API key not configured.');
+      throw new Error('Mistral API key not configured.');
     }
 
-    const geminiMessages = this.toGeminiMessages(messages);
+    const formattedMessages = [
+      { role: 'system', content: systemPrompt },
+      ...messages,
+    ];
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 45000);
 
     try {
-      const response = await fetch(
-        `${GEMINI_ENDPOINT}/${GEMINI_MODEL}:streamGenerateContent?alt=sse`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': this.apiKey,
-          },
-          body: JSON.stringify({
-            system_instruction: {
-              parts: [{ text: systemPrompt }],
-            },
-            contents: geminiMessages,
-            generationConfig: {
-              temperature: 0.5,
-              maxOutputTokens: 4096,
-            },
-          }),
-          signal: controller.signal,
-        }
-      );
+      const response = await fetch(MISTRAL_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: MISTRAL_MODEL,
+          messages: formattedMessages,
+          temperature: 0.5,
+          max_tokens: 4096,
+          stream: true,
+        }),
+        signal: controller.signal,
+      });
 
       clearTimeout(timeout);
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        throw new Error(`Gemini ${response.status}: ${JSON.stringify(err)}`);
+        throw new Error(`Mistral ${response.status}: ${JSON.stringify(err)}`);
       }
 
       const reader = response.body?.getReader();
-      if (!reader) throw new Error('Gemini: no readable stream');
+      if (!reader) throw new Error('Mistral: no readable stream');
 
       const decoder = new TextDecoder();
       let fullText = '';
@@ -83,10 +71,10 @@ export class GeminiProvider {
 
           try {
             const parsed = JSON.parse(data);
-            const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) {
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
               receivedAny = true;
-              fullText += text;
+              fullText += delta;
               onChunk(fullText);
             }
           } catch {
@@ -99,11 +87,11 @@ export class GeminiProvider {
         return { message: fullText };
       }
 
-      throw new Error('Gemini: empty response');
+      throw new Error('Mistral: empty response');
     } catch (error: any) {
       clearTimeout(timeout);
       if (error.name === 'AbortError') {
-        throw new Error('Gemini: request timed out');
+        throw new Error('Mistral: request timed out');
       }
       throw error;
     }
@@ -130,12 +118,12 @@ export class GeminiProvider {
   }
 }
 
-let instance: GeminiProvider | null = null;
+let instance: MistralProvider | null = null;
 
-export const getGeminiProvider = (apiKey?: string): GeminiProvider => {
-  const key = apiKey || import.meta.env.VITE_GEMINI_API_KEY || '';
+export const getMistralProvider = (apiKey?: string): MistralProvider => {
+  const key = apiKey || import.meta.env.VITE_MISTRAL_API_KEY || '';
   if (!instance || apiKey) {
-    instance = new GeminiProvider(key);
+    instance = new MistralProvider(key);
   }
   return instance;
 };

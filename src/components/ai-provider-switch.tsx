@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Brain, Zap, ChevronDown } from 'lucide-react';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
-import { KingsleyMode } from '@/lib/ai-providers/openrouter';
+import { KingsleyMode } from '@/lib/ai-service';
 import { cn } from '@/lib/utils';
 
 export type AIProvider = 'openrouter';
