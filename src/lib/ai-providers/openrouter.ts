@@ -6,14 +6,14 @@ export type KingsleyMode = 'fast' | 'thinking';
 
 const MODE_MODELS: Record<KingsleyMode, string[]> = {
   fast: [
-    'cognitivecomputations/dolphin-mistral-24b-venice-edition:free',
     'mistralai/mistral-small-3.1-24b-instruct:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
+    'openai/gpt-oss-20b:free',
+    'stepfun/step-3.5-flash:free',
   ],
   thinking: [
-    'deepseek/deepseek-r1-0528:free',
+    'z-ai/glm-4.7',
+    'moonshotai/kimi-k2.5',
     'openai/gpt-oss-120b:free',
-    'openai/gpt-oss-20b:free',
   ],
 };
 
