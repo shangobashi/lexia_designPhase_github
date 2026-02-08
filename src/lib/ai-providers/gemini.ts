@@ -1,7 +1,7 @@
 import { AIMessage, AIResponse } from '../ai-service';
 
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3-flash-preview';
 
 export class GeminiProvider {
   private apiKey: string;
