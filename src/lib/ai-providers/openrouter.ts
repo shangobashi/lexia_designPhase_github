@@ -12,6 +12,7 @@ const MODE_MODELS: Record<KingsleyMode, string[]> = {
   ],
   thinking: [
     'z-ai/glm-4.7',
+    'z-ai/glm-4.5-air:free',
     'moonshotai/kimi-k2.5',
     'openai/gpt-oss-120b:free',
   ],
