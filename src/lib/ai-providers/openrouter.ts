@@ -6,13 +6,14 @@ export type KingsleyMode = 'fast' | 'thinking';
 
 const MODE_MODELS: Record<KingsleyMode, string[]> = {
   fast: [
-    'openai/gpt-oss-20b:free',
-    'deepseek/deepseek-v3.2-20251201',
+    'cognitivecomputations/dolphin-mistral-24b-venice-edition:free',
+    'mistralai/mistral-small-3.1-24b-instruct:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
   ],
   thinking: [
+    'deepseek/deepseek-r1-0528:free',
+    'openai/gpt-oss-120b:free',
     'openai/gpt-oss-20b:free',
-    'deepseek/deepseek-v3.2-20251201',
-    'moonshotai/kimi-k2.5-0127',
   ],
 };
 
@@ -66,7 +67,7 @@ export class OpenRouterProvider {
             model,
             messages: formattedMessages,
             temperature: 0.5,
-            max_tokens: 1500,
+            max_tokens: 4000,
           }),
           signal: controller.signal,
         });
@@ -128,7 +129,7 @@ export class OpenRouterProvider {
             model,
             messages: formattedMessages,
             temperature: 0.5,
-            max_tokens: 1500,
+            max_tokens: 4000,
             stream: true,
           }),
           signal: controller.signal,

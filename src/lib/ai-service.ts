@@ -17,8 +17,8 @@ export interface AIResponse {
 /**
  * Orchestrates AI provider chains based on mode.
  *
- * Fast mode:     Gemini 2.5 Flash → Mistral Small → error
- * Thinking mode: OpenRouter (GPT OSS 20B → DeepSeek V3.2 → Kimi K2.5) → Gemini → Mistral → error
+ * Fast mode:     Gemini 2.5 Flash → Mistral Small → OpenRouter (Dolphin 24B → Mistral 3.1 → Llama 70B) → error
+ * Thinking mode: OpenRouter (DeepSeek R1 → GPT OSS 120B → GPT OSS 20B) → Gemini → Mistral → error
  */
 export const generateStreamingChat = async (
   messages: AIMessage[],
@@ -29,7 +29,7 @@ export const generateStreamingChat = async (
   const errors: string[] = [];
 
   if (mode === 'fast') {
-    // Fast chain: Gemini → Mistral
+    // Fast chain: Gemini → Mistral → OpenRouter (Dolphin, GPT OSS, DeepSeek)
     try {
       const gemini = getGeminiProvider();
       const result = await gemini.generateStreamingResponse(messages, systemPrompt, onChunk);
@@ -47,6 +47,17 @@ export const generateStreamingChat = async (
     } catch (error: any) {
       console.warn('[Kingsley] Mistral failed:', error.message);
       errors.push(`Mistral: ${error.message}`);
+      onChunk('');
+    }
+
+    try {
+      const orProvider = getOpenRouterProvider();
+      orProvider.setMode('fast');
+      const result = await orProvider.generateStreamingResponse(messages, systemPrompt, onChunk);
+      if (result.message) return result;
+    } catch (error: any) {
+      console.warn('[Kingsley] OpenRouter fast fallback failed:', error.message);
+      errors.push(`OpenRouter: ${error.message}`);
       onChunk('');
     }
   } else {
