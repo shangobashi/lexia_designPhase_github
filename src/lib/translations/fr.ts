@@ -481,6 +481,12 @@ const fr = {
     stopListening: 'Arr\u00eater l\'\u00e9coute',
     generatingAudio: 'G\u00e9n\u00e9ration audio...',
     voiceError: '\u00c9chec de la g\u00e9n\u00e9ration vocale',
+    liveVoice: 'Voix en direct',
+    voiceAutoOn: 'Voix auto activ\u00e9e',
+    voiceAutoOff: 'Voix auto d\u00e9sactiv\u00e9e',
+    voiceSpeaking: 'Kingsley parle',
+    voiceTurnReady: '\u00c0 vous',
+    voiceSpeakingPlaceholder: 'Kingsley parle... pr\u00e9parez votre prochain message',
   },
 
   // Uploads Page

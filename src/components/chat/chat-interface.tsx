@@ -24,6 +24,7 @@ const TEXTAREA_MIN_HEIGHT = 44;
 const TEXTAREA_MAX_HEIGHT = 220;
 const EMPTY_STATE_GLYPH_SEQUENCE = ['☰', '☱', '☲', '☳', '☴', '☵', '☶', '☷', '☶', '☵', '☴', '☳', '☲', '☱'];
 const EMPTY_STATE_GLYPH_INTERVAL_MS = 230;
+const LIVE_VOICE_STORAGE_KEY = 'kingsley-live-voice-enabled';
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -109,6 +110,11 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const [loadedFiles, setLoadedFiles] = useState<LoadedFile[]>([]);
   const [isReadingFile, setIsReadingFile] = useState(false);
   const [emptyGlyph, setEmptyGlyph] = useState(EMPTY_STATE_GLYPH_SEQUENCE[0]);
+  const [isLiveVoiceEnabled, setIsLiveVoiceEnabled] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const storedValue = window.localStorage.getItem(LIVE_VOICE_STORAGE_KEY);
+    return storedValue ? storedValue === '1' : true;
+  });
   const { theme } = useTheme();
   const { t, language } = useLanguage();
   const { toast } = useToast();
@@ -130,6 +136,8 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const emptyIconRef = useRef<HTMLDivElement>(null);
   const emptyTitleRef = useRef<HTMLParagraphElement>(null);
   const emptySubtitleRef = useRef<HTMLParagraphElement>(null);
+  const autoPlayedMessageIdsRef = useRef<Set<string>>(new Set());
+  const voiceWasPlayingRef = useRef(false);
 
   useEffect(() => {
     scrollToBottom();
@@ -143,6 +151,40 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       variant: 'destructive',
     });
   }, [voiceError, toast, t.chat.voiceError]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(LIVE_VOICE_STORAGE_KEY, isLiveVoiceEnabled ? '1' : '0');
+  }, [isLiveVoiceEnabled]);
+
+  useEffect(() => {
+    if (!isLiveVoiceEnabled) return;
+    if (isVoiceLoading || isVoicePlaying) return;
+    if (isSending || streamingText) return;
+
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.sender !== 'assistant') return;
+    if (autoPlayedMessageIdsRef.current.has(lastMessage.id)) return;
+
+    autoPlayedMessageIdsRef.current.add(lastMessage.id);
+    void playVoice(lastMessage.id, lastMessage.content, language);
+  }, [
+    isLiveVoiceEnabled,
+    isVoiceLoading,
+    isVoicePlaying,
+    isSending,
+    streamingText,
+    messages,
+    playVoice,
+    language,
+  ]);
+
+  useEffect(() => {
+    if (voiceWasPlayingRef.current && !isVoicePlaying && !isVoiceLoading) {
+      textareaRef.current?.focus();
+    }
+    voiceWasPlayingRef.current = isVoicePlaying;
+  }, [isVoicePlaying, isVoiceLoading]);
 
   useEffect(() => {
     if (messages.length !== 0) return;
@@ -319,6 +361,22 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const getAttachmentLabel = (count: number) => (count === 1 ? t.chat.attachedFile : t.chat.attachedFilesLabel);
   const totalLoadedSize = loadedFiles.reduce((sum, file) => sum + file.size, 0);
   const isEmptyState = messages.length === 0;
+  const composerPlaceholder = isVoicePlaying ? t.chat.voiceSpeakingPlaceholder : t.chat.inputPlaceholder;
+  const voicePresenceLabel = isVoiceLoading
+    ? t.chat.generatingAudio
+    : isVoicePlaying
+      ? t.chat.voiceSpeaking
+      : t.chat.voiceTurnReady;
+
+  const toggleLiveVoice = () => {
+    setIsLiveVoiceEnabled((previousValue) => {
+      const nextValue = !previousValue;
+      if (!nextValue) {
+        stopVoice();
+      }
+      return nextValue;
+    });
+  };
 
   const VoiceOrb = ({ message }: { message: Message }) => {
     if (message.sender !== 'assistant') return null;
@@ -644,7 +702,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={t.chat.inputPlaceholder}
+                  placeholder={composerPlaceholder}
                   className={cn(
                     "w-full h-11 min-h-11 pl-12 pr-4 py-2.5 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-5 transition-[height]",
                     "[scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-corner]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full",
@@ -783,7 +841,39 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 )} />
                 <span>{isReadingFile ? t.chat.fileProcessing : t.chat.ready}</span>
               </div>
-              {isSending && <span className="animate-pulse">{t.chat.drafting}</span>}
+              <div className="flex items-center gap-2">
+                {(isVoiceLoading || isVoicePlaying) && (
+                  <span
+                    className={cn(
+                      "hidden rounded-full px-2 py-0.5 text-[10px] font-medium tracking-[0.08em] uppercase sm:inline-flex",
+                      isDark ? 'bg-blue-500/15 text-blue-200' : 'bg-blue-50 text-blue-700'
+                    )}
+                  >
+                    {voicePresenceLabel}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={toggleLiveVoice}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-[0.08em] uppercase transition-colors",
+                    isLiveVoiceEnabled
+                      ? (isDark ? 'bg-cyan-500/15 text-cyan-200' : 'bg-cyan-50 text-cyan-700')
+                      : (isDark ? 'bg-slate-700/70 text-slate-300 hover:text-slate-100' : 'bg-gray-100 text-gray-600 hover:text-gray-800')
+                  )}
+                  aria-label={t.chat.liveVoice}
+                  title={t.chat.liveVoice}
+                >
+                  <span
+                    className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      isLiveVoiceEnabled ? 'bg-cyan-400' : (isDark ? 'bg-slate-500' : 'bg-gray-400')
+                    )}
+                  />
+                  <span>{isLiveVoiceEnabled ? t.chat.voiceAutoOn : t.chat.voiceAutoOff}</span>
+                </button>
+                {isSending && <span className="animate-pulse">{t.chat.drafting}</span>}
+              </div>
             </div>
           </div>
         </form>

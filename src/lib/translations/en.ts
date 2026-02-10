@@ -481,6 +481,12 @@ const en = {
     stopListening: 'Stop listening',
     generatingAudio: 'Generating audio...',
     voiceError: 'Voice generation failed',
+    liveVoice: 'Live voice',
+    voiceAutoOn: 'Voice auto on',
+    voiceAutoOff: 'Voice auto off',
+    voiceSpeaking: 'Kingsley speaking',
+    voiceTurnReady: 'Your turn',
+    voiceSpeakingPlaceholder: 'Kingsley is speaking... draft your next message',
   },
 
   // Uploads Page

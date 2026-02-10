@@ -4,22 +4,53 @@ const router = express.Router();
 
 const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
 const MAX_TEXT_LENGTH = 5000;
-
-const VOICE_CONFIG = {
-  en: {
-    voiceId: 'onwK4e9ZLuTAKqWW03F9',
-    languageCode: 'en',
-    modelId: 'eleven_flash_v2_5',
-  },
-  fr: {
-    voiceId: 'nbiTBaMRdSobTQJDzIWm',
-    languageCode: 'fr',
-    modelId: 'eleven_multilingual_v2',
-  },
-};
+const DEFAULT_EN_VOICE_ID = 'onwK4e9ZLuTAKqWW03F9';
+const DEFAULT_FR_LIBRARY_VOICE_ID = 'nbiTBaMRdSobTQJDzIWm';
 
 function normalizeLanguage(language) {
   return language === 'fr' ? 'fr' : 'en';
+}
+
+function buildVoiceAttempts(languageCode) {
+  if (languageCode === 'fr') {
+    const attempts = [
+      {
+        id: process.env.ELEVENLABS_FRENCH_VOICE_ID || DEFAULT_FR_LIBRARY_VOICE_ID,
+        modelId: 'eleven_multilingual_v2',
+        languageCode: 'fr',
+        label: 'fr-primary',
+      },
+      {
+        id: process.env.ELEVENLABS_FRENCH_FALLBACK_VOICE_ID || DEFAULT_EN_VOICE_ID,
+        modelId: 'eleven_multilingual_v2',
+        languageCode: 'fr',
+        label: 'fr-fallback',
+      },
+      {
+        id: DEFAULT_EN_VOICE_ID,
+        modelId: 'eleven_flash_v2_5',
+        languageCode: 'fr',
+        label: 'fr-last-resort',
+      },
+    ];
+
+    const unique = new Set();
+    return attempts.filter((attempt) => {
+      const key = `${attempt.id}|${attempt.modelId}|${attempt.languageCode}`;
+      if (unique.has(key)) return false;
+      unique.add(key);
+      return true;
+    });
+  }
+
+  return [
+    {
+      id: process.env.ELEVENLABS_ENGLISH_VOICE_ID || DEFAULT_EN_VOICE_ID,
+      modelId: 'eleven_flash_v2_5',
+      languageCode: 'en',
+      label: 'en-primary',
+    },
+  ];
 }
 
 function toSpeakableText(text) {
@@ -58,62 +89,92 @@ router.post('/generate', async (req, res) => {
   }
 
   const languageCode = normalizeLanguage(language);
-  const voiceConfig = VOICE_CONFIG[languageCode];
+  const voiceAttempts = buildVoiceAttempts(languageCode);
+  let lastFailure = {
+    status: 500,
+    detail: 'Voice generation failed',
+    label: 'unknown',
+  };
 
   try {
-    const response = await fetch(
-      `${ELEVENLABS_API_URL}/${voiceConfig.voiceId}/stream?optimize_streaming_latency=2&output_format=mp3_44100_128`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          text: cleanText,
-          model_id: voiceConfig.modelId,
-          language_code: voiceConfig.languageCode,
-          voice_settings: {
-            stability: 0.65,
-            similarity_boost: 0.78,
+    for (const attempt of voiceAttempts) {
+      const response = await fetch(
+        `${ELEVENLABS_API_URL}/${attempt.id}/stream?optimize_streaming_latency=2&output_format=mp3_44100_128`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': apiKey,
           },
-        }),
-      }
-    );
+          body: JSON.stringify({
+            text: cleanText,
+            model_id: attempt.modelId,
+            language_code: attempt.languageCode,
+            voice_settings: {
+              stability: 0.65,
+              similarity_boost: 0.78,
+            },
+          }),
+        }
+      );
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('[Voice] ElevenLabs error:', response.status, errorBody);
-      return res.status(response.status).json({
-        error: `ElevenLabs API error: ${response.status}`,
+      if (!response.ok) {
+        const errorBody = await response.text();
+        lastFailure = {
+          status: response.status,
+          detail: errorBody || `ElevenLabs API error: ${response.status}`,
+          label: attempt.label,
+        };
+
+        // If auth is broken, fallback attempts won't help.
+        if (response.status === 401 || response.status === 403) {
+          break;
+        }
+        continue;
+      }
+
+      if (!response.body) {
+        lastFailure = {
+          status: 502,
+          detail: 'No audio stream returned from ElevenLabs',
+          label: attempt.label,
+        };
+        continue;
+      }
+
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Transfer-Encoding', 'chunked');
+      res.setHeader('Cache-Control', 'no-cache');
+
+      const reader = response.body.getReader();
+      let closed = false;
+      req.on('close', () => {
+        closed = true;
       });
-    }
 
-    if (!response.body) {
-      return res.status(502).json({ error: 'No audio stream returned from ElevenLabs' });
-    }
-
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Transfer-Encoding', 'chunked');
-    res.setHeader('Cache-Control', 'no-cache');
-
-    const reader = response.body.getReader();
-    let closed = false;
-    req.on('close', () => {
-      closed = true;
-    });
-
-    while (!closed) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) {
-        res.write(Buffer.from(value));
+      while (!closed) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          res.write(Buffer.from(value));
+        }
       }
+
+      if (!res.writableEnded) {
+        res.end();
+      }
+
+      return;
     }
 
-    if (!res.writableEnded) {
-      res.end();
-    }
+    console.error(
+      '[Voice] ElevenLabs fallback chain exhausted:',
+      `${lastFailure.label} -> ${lastFailure.status}`,
+      lastFailure.detail
+    );
+    return res.status(lastFailure.status).json({
+      error: `ElevenLabs API error: ${lastFailure.status}`,
+    });
   } catch (error) {
     console.error('[Voice] Generation failed:', error);
     if (!res.headersSent) {
