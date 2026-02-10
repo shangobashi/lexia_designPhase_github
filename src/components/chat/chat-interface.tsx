@@ -389,7 +389,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 : 'bg-white/95 border-gray-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)]'
             )}
           >
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-end">
+            <div className="flex flex-col gap-2.5 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-2">
               <div className="flex-1 relative">
                 <textarea
                   ref={textareaRef}
@@ -398,10 +398,11 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   onKeyDown={handleKeyDown}
                   placeholder={t.chat.inputPlaceholder}
                   className={cn(
-                    "w-full h-[60px] min-h-[60px] px-4 py-3 pr-12 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm transition-[height]",
+                    "w-full h-[60px] min-h-[60px] px-4 py-3 pr-12 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-5 transition-[height]",
+                    "[scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-corner]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full",
                     isDark
-                      ? 'bg-slate-800/95 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-blue-500/35 focus:border-blue-500/50'
-                      : 'bg-slate-50 border border-slate-200 text-gray-800 placeholder-gray-400 focus:ring-blue-500/25 focus:border-blue-400/60'
+                      ? 'bg-slate-800/95 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-blue-500/35 focus:border-blue-500/50 [scrollbar-color:rgba(148,163,184,0.45)_transparent] [&::-webkit-scrollbar-thumb]:bg-slate-500/45 [&::-webkit-scrollbar-thumb:hover]:bg-slate-400/60'
+                      : 'bg-slate-50 border border-slate-200 text-gray-800 placeholder-gray-400 focus:ring-blue-500/25 focus:border-blue-400/60 [scrollbar-color:rgba(100,116,139,0.45)_transparent] [&::-webkit-scrollbar-thumb]:bg-slate-400/55 [&::-webkit-scrollbar-thumb:hover]:bg-slate-500/65'
                   )}
                   rows={2}
                   disabled={isSending}
@@ -429,7 +430,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 />
               </div>
 
-              <div className="flex items-center gap-2 sm:self-end">
+              <div className="flex items-center gap-2 sm:items-end">
                 <button
                   type="button"
                   onClick={handleFileClick}
