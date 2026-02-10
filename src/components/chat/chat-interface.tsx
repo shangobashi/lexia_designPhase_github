@@ -18,7 +18,7 @@ import {
   MAX_FILES,
 } from '@/lib/file-reader';
 
-const TEXTAREA_MIN_HEIGHT = 60;
+const TEXTAREA_MIN_HEIGHT = 44;
 const TEXTAREA_MAX_HEIGHT = 220;
 
 interface ChatInterfaceProps {
@@ -398,13 +398,13 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   onKeyDown={handleKeyDown}
                   placeholder={t.chat.inputPlaceholder}
                   className={cn(
-                    "w-full h-[60px] min-h-[60px] px-4 py-3 pr-12 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-5 transition-[height]",
+                    "w-full h-11 min-h-11 px-4 py-2.5 pr-12 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-5 transition-[height]",
                     "[scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-corner]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full",
                     isDark
                       ? 'bg-slate-800/95 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-blue-500/35 focus:border-blue-500/50 [scrollbar-color:rgba(148,163,184,0.45)_transparent] [&::-webkit-scrollbar-thumb]:bg-slate-500/45 [&::-webkit-scrollbar-thumb:hover]:bg-slate-400/60'
                       : 'bg-slate-50 border border-slate-200 text-gray-800 placeholder-gray-400 focus:ring-blue-500/25 focus:border-blue-400/60 [scrollbar-color:rgba(100,116,139,0.45)_transparent] [&::-webkit-scrollbar-thumb]:bg-slate-400/55 [&::-webkit-scrollbar-thumb:hover]:bg-slate-500/65'
                   )}
-                  rows={2}
+                  rows={1}
                   disabled={isSending}
                 />
                 <button
