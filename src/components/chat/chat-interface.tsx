@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { PaperclipIcon, Send, X, FileText, Image, Loader2 } from 'lucide-react';
+import { PaperclipIcon, Plus, Send, X, FileText, Image, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { gsap } from 'gsap';
 import { useTheme } from '@/contexts/theme-context';
@@ -319,13 +319,15 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 <div
                   ref={emptyIconRef}
                   className={cn(
-                    "w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-[0.875rem] flex items-center justify-center",
-                    isDark ? 'bg-blue-600/20' : 'bg-blue-50'
+                    "w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-[0.875rem] p-1.5 sm:p-2 flex items-center justify-center border",
+                    isDark ? 'bg-slate-900/35 border-slate-600/35' : 'bg-white/80 border-gray-200/80'
                   )}
                 >
-                  <svg className={cn("w-5 h-5 sm:w-6 sm:h-6", isDark ? 'text-blue-400' : 'text-blue-600')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  </svg>
+                  <img
+                    src={`${import.meta.env.BASE_URL}kingsley-logo.png`}
+                    alt="Kingsley app icon"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
               <p ref={emptyTitleRef} className="text-base sm:text-lg font-clash font-medium mb-2">{t.chat.emptyState.title}</p>
@@ -479,7 +481,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   onKeyDown={handleKeyDown}
                   placeholder={t.chat.inputPlaceholder}
                   className={cn(
-                    "w-full h-11 min-h-11 px-4 py-2.5 pr-12 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-5 transition-[height]",
+                    "w-full h-11 min-h-11 pl-12 pr-4 py-2.5 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-5 transition-[height]",
                     "[scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-corner]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full",
                     isDark
                       ? 'bg-slate-800/95 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-blue-500/35 focus:border-blue-500/50 [scrollbar-color:rgba(148,163,184,0.45)_transparent] [&::-webkit-scrollbar-thumb]:bg-slate-500/45 [&::-webkit-scrollbar-thumb:hover]:bg-slate-400/60'
@@ -491,15 +493,22 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 <button
                   type="button"
                   onClick={handleFileClick}
+                  disabled={isSending || isReadingFile}
                   className={cn(
-                    "absolute right-2.5 bottom-2.5 p-1.5 rounded-md transition-colors",
+                    "absolute left-2.5 bottom-2.5 inline-flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-200",
+                    "disabled:opacity-45 disabled:cursor-not-allowed",
                     isDark
-                      ? 'text-slate-500 hover:text-slate-300 hover:bg-slate-700/60'
-                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200/70'
+                      ? 'bg-slate-700/75 border-slate-500/65 text-slate-100 hover:bg-slate-600/90 hover:border-slate-400/80'
+                      : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-slate-400'
                   )}
                   title={t.chat.loadFile}
+                  aria-label={t.chat.loadFile}
                 >
-                  <PaperclipIcon className="h-4 w-4" />
+                  {isReadingFile ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5" strokeWidth={2.4} />
+                  )}
                 </button>
                 <input
                   ref={fileInputRef}
@@ -511,29 +520,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 />
               </div>
 
-              <div className="flex items-center gap-2 sm:items-end sm:self-end">
-                <button
-                  type="button"
-                  onClick={handleFileClick}
-                  disabled={isSending || isReadingFile}
-                  className={cn(
-                    "h-11 px-4 rounded-xl font-clash font-medium text-sm transition-colors",
-                    "inline-flex items-center justify-center gap-2",
-                    "border disabled:opacity-45 disabled:cursor-not-allowed",
-                    "flex-1 sm:flex-none",
-                    isDark
-                      ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-200 border-slate-600/70'
-                      : 'bg-slate-100 hover:bg-slate-200/90 text-gray-700 border-slate-200'
-                  )}
-                >
-                  {isReadingFile ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <PaperclipIcon className="h-4 w-4" />
-                  )}
-                  {t.chat.loadFile}
-                </button>
-
+              <div className="sm:self-end">
                 <button
                   type="submit"
                   disabled={isSending || (!input.trim() && loadedFiles.length === 0)}
@@ -542,7 +529,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                     "inline-flex items-center justify-center gap-2",
                     "disabled:opacity-45 disabled:cursor-not-allowed",
                     "bg-blue-600 hover:bg-blue-700 text-white border border-blue-500/90",
-                    "flex-1 sm:flex-none"
+                    "w-full sm:w-auto sm:min-w-[7.5rem]"
                   )}
                 >
                   <Send className="h-4 w-4" />
