@@ -364,117 +364,114 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
           : 'border-gray-200/60 bg-white/80'
       )}>
         <form onSubmit={handleSubmit}>
-          <div className="flex items-end gap-3">
-            <div className="flex-1 relative">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={t.chat.inputPlaceholder}
-                className={cn(
-                  "w-full px-4 py-3 pr-12 rounded-[1rem] resize-none focus:outline-none focus:ring-2 transition-all text-sm",
-                  isDark
-                    ? 'bg-slate-800 border border-slate-600/50 text-slate-100 placeholder-slate-500 focus:ring-blue-500/40 focus:border-blue-500/40'
-                    : 'bg-gray-50 border border-gray-200 text-gray-800 placeholder-gray-400 focus:ring-blue-500/30 focus:border-blue-400'
-                )}
-                rows={2}
-                disabled={isSending}
-              />
-              <button
-                type="button"
-                onClick={handleFileClick}
-                className={cn(
-                  "absolute right-3 bottom-3 p-1.5 rounded-[0.5rem] transition-colors",
-                  isDark
-                    ? 'text-slate-500 hover:text-slate-300 hover:bg-slate-700/50'
-                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                )}
-                title={t.chat.loadFile}
-              >
-                <PaperclipIcon className="h-4 w-4" />
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept={ACCEPT_STRING}
-                className="hidden"
-                onChange={handleFileChange}
-              />
-            </div>
-
-            {/* Load File button */}
-            <button
-              type="button"
-              onClick={handleFileClick}
-              disabled={isSending || isReadingFile}
-              className={cn(
-                "flex items-center gap-2 px-4 py-3 rounded-[0.875rem] font-clash font-medium text-sm transition-all",
-                "disabled:opacity-40 disabled:cursor-not-allowed",
-                isDark
-                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600/50'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200'
-              )}
-            >
-              {isReadingFile ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <PaperclipIcon className="h-4 w-4" />
-              )}
-              {t.chat.loadFile}
-            </button>
-
-            <button
-              type="submit"
-              disabled={isSending || (!input.trim() && loadedFiles.length === 0)}
-              className={cn(
-                "flex items-center gap-2 px-5 py-3 rounded-[0.875rem] font-clash font-medium text-sm transition-all",
-                "disabled:opacity-40 disabled:cursor-not-allowed",
-                "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md"
-              )}
-            >
-              <Send className="h-4 w-4" />
-              {t.chat.send}
-            </button>
-          </div>
-
-          {/* File chips */}
-          <AnimatePresence>
-            {loadedFiles.length > 0 && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  whileHover={{ y: -1, scale: 1.003 }}
-                  transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+          <div
+            className={cn(
+              "rounded-2xl border p-2.5 sm:p-3",
+              isDark
+                ? 'bg-slate-900/55 border-slate-700/60 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.08)]'
+                : 'bg-white/95 border-gray-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)]'
+            )}
+          >
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-end">
+              <div className="flex-1 relative">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t.chat.inputPlaceholder}
                   className={cn(
-                    "mt-2 rounded-xl border px-3 py-2.5 relative overflow-hidden",
+                    "w-full min-h-[60px] max-h-40 px-4 py-3 pr-12 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm",
                     isDark
-                      ? 'bg-slate-800/70 border-slate-600/60'
-                      : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200/70'
+                      ? 'bg-slate-800/95 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-blue-500/35 focus:border-blue-500/50'
+                      : 'bg-slate-50 border border-slate-200 text-gray-800 placeholder-gray-400 focus:ring-blue-500/25 focus:border-blue-400/60'
+                  )}
+                  rows={2}
+                  disabled={isSending}
+                />
+                <button
+                  type="button"
+                  onClick={handleFileClick}
+                  className={cn(
+                    "absolute right-2.5 bottom-2.5 p-1.5 rounded-md transition-colors",
+                    isDark
+                      ? 'text-slate-500 hover:text-slate-300 hover:bg-slate-700/60'
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200/70'
+                  )}
+                  title={t.chat.loadFile}
+                >
+                  <PaperclipIcon className="h-4 w-4" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept={ACCEPT_STRING}
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              <div className="flex items-center gap-2 sm:pb-0.5">
+                <button
+                  type="button"
+                  onClick={handleFileClick}
+                  disabled={isSending || isReadingFile}
+                  className={cn(
+                    "h-10 px-4 rounded-xl font-clash font-medium text-sm transition-colors",
+                    "inline-flex items-center justify-center gap-2",
+                    "border disabled:opacity-45 disabled:cursor-not-allowed",
+                    "flex-1 sm:flex-none",
+                    isDark
+                      ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-200 border-slate-600/70'
+                      : 'bg-slate-100 hover:bg-slate-200/90 text-gray-700 border-slate-200'
                   )}
                 >
-                  <motion.div
-                    aria-hidden
-                    className={cn(
-                      "absolute inset-y-0 -left-20 w-20 skew-x-[-18deg] pointer-events-none",
-                      isDark ? 'bg-white/5' : 'bg-white/50'
-                    )}
-                    animate={{ x: ['0%', '620%'] }}
-                    transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 2.4, ease: 'easeInOut' }}
-                  />
-                  <div className="flex items-center justify-between gap-3">
+                  {isReadingFile ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <PaperclipIcon className="h-4 w-4" />
+                  )}
+                  {t.chat.loadFile}
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isSending || (!input.trim() && loadedFiles.length === 0)}
+                  className={cn(
+                    "h-10 px-4 rounded-xl font-clash font-medium text-sm transition-colors",
+                    "inline-flex items-center justify-center gap-2",
+                    "disabled:opacity-45 disabled:cursor-not-allowed",
+                    "bg-blue-600 hover:bg-blue-700 text-white shadow-sm",
+                    "flex-1 sm:flex-none"
+                  )}
+                >
+                  <Send className="h-4 w-4" />
+                  {t.chat.send}
+                </button>
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {loadedFiles.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className={cn(
+                    "mt-2.5 rounded-xl border px-3 py-2.5",
+                    isDark ? 'bg-slate-800/65 border-slate-600/70' : 'bg-blue-50/60 border-blue-200/70'
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
                     <div className={cn("inline-flex items-center gap-2", isDark ? 'text-blue-200' : 'text-blue-700')}>
-                      <motion.span
-                        animate={{ scale: [1, 1.04, 1] }}
-                        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                      <span
                         className={cn(
-                        "inline-flex items-center justify-center w-6 h-6 rounded-full",
-                        isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-700'
-                      )}>
+                          "inline-flex items-center justify-center w-6 h-6 rounded-full",
+                          isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-700'
+                        )}
+                      >
                         <PaperclipIcon className="w-3.5 h-3.5" />
-                      </motion.span>
+                      </span>
                       <span className="text-sm font-clash font-medium">
                         {loadedFiles.length} {getAttachmentLabel(loadedFiles.length)}
                       </span>
@@ -483,72 +480,59 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                       {formatFileSize(totalLoadedSize)}
                     </span>
                   </div>
-                  <p className={cn("mt-1 text-[11px]", isDark ? 'text-slate-400' : 'text-blue-700/70')}>
-                    {t.chat.attachmentsReady}
-                  </p>
-                </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  layout
-                  className="flex flex-wrap gap-2 mt-2"
-                >
-                  {loadedFiles.map((file, index) => (
-                    <motion.div
-                      key={`${file.name}-${index}`}
-                      layout
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      whileHover={{ y: -1, scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      transition={{ type: 'spring', stiffness: 420, damping: 26, mass: 0.55 }}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-full text-xs font-medium transition-colors",
-                        isDark
-                          ? 'bg-slate-700/80 text-slate-200 border border-slate-600/50'
-                          : 'bg-gray-100 text-gray-700 border border-gray-200/80'
-                      )}
-                    >
-                      {fileTypeIcon(file.type)}
-                      <span>{truncateFileName(file.name)}</span>
-                      <span className={cn("text-[10px]", isDark ? 'text-slate-400' : 'text-gray-400')}>
-                        {formatFileSize(file.size)}
-                      </span>
-                      <motion.button
-                        type="button"
-                        onClick={() => removeFile(index)}
-                        whileHover={{ rotate: 90, scale: 1.12 }}
-                        whileTap={{ scale: 0.88 }}
-                        transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {loadedFiles.map((file, index) => (
+                      <motion.div
+                        key={`${file.name}-${index}`}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
                         className={cn(
-                          "ml-0.5 p-0.5 rounded-full transition-colors",
+                          "inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-full text-xs font-medium",
                           isDark
-                            ? 'hover:bg-slate-600 text-slate-400 hover:text-slate-200'
-                            : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
+                            ? 'bg-slate-700/80 text-slate-200 border border-slate-600/60'
+                            : 'bg-white text-gray-700 border border-gray-200/90'
                         )}
-                        title={t.chat.removeFile}
                       >
-                        <X className="w-3 h-3" />
-                      </motion.button>
-                    </motion.div>
-                  ))}
+                        {fileTypeIcon(file.type)}
+                        <span>{truncateFileName(file.name)}</span>
+                        <span className={cn("text-[10px]", isDark ? 'text-slate-400' : 'text-gray-400')}>
+                          {formatFileSize(file.size)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className={cn(
+                            "ml-0.5 p-0.5 rounded-full transition-colors",
+                            isDark
+                              ? 'hover:bg-slate-600 text-slate-400 hover:text-slate-200'
+                              : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
+                          )}
+                          title={t.chat.removeFile}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </div>
                 </motion.div>
-              </>
-            )}
-          </AnimatePresence>
+              )}
+            </AnimatePresence>
 
-          <div className={cn("flex items-center justify-between mt-2 text-xs", isDark ? 'text-slate-500' : 'text-gray-400')}>
-            <div className="flex items-center gap-2">
-              <div className={cn(
-                "w-2 h-2 rounded-full",
-                isReadingFile ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'
-              )} />
-              <span>{isReadingFile ? t.chat.fileProcessing : t.chat.ready}</span>
+            <div className={cn(
+              "mt-2.5 flex items-center justify-between border-t pt-2 text-xs",
+              isDark ? 'border-slate-700/60 text-slate-400' : 'border-gray-200/80 text-gray-500'
+            )}>
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  "w-2 h-2 rounded-full",
+                  isReadingFile ? 'bg-yellow-500 animate-pulse' : 'bg-emerald-500'
+                )} />
+                <span>{isReadingFile ? t.chat.fileProcessing : t.chat.ready}</span>
+              </div>
+              {isSending && <span className="animate-pulse">{t.chat.drafting}</span>}
             </div>
-            {isSending && <span className="animate-pulse">{t.chat.drafting}</span>}
           </div>
         </form>
       </div>
