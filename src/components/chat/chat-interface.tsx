@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { PaperclipIcon, Send, X, FileText, Image, Loader2 } from 'lucide-react';
+import { PaperclipIcon, Send, X, FileText, Image, Loader2, ArrowDownCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { gsap } from 'gsap';
 import { useTheme } from '@/contexts/theme-context';
@@ -112,6 +112,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
   const emptyStateRef = useRef<HTMLDivElement>(null);
   const emptyGlowOneRef = useRef<HTMLDivElement>(null);
   const emptyGlowTwoRef = useRef<HTMLDivElement>(null);
@@ -193,6 +194,13 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
     const container = messagesContainerRef.current;
     if (!container) return;
     container.scrollTop = container.scrollHeight;
+  };
+
+  const jumpToComposer = () => {
+    composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    window.setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 220);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -287,8 +295,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       {/* Messages area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4"
-        style={{ minHeight: '400px', maxHeight: '60vh' }}
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 min-h-[220px] sm:min-h-[400px] max-h-[50dvh] sm:max-h-[60vh]"
       >
         {messages.length === 0 ? (
           <div className={cn(
@@ -330,6 +337,19 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
               </div>
               <p ref={emptyTitleRef} className="text-lg font-clash font-medium mb-2">{t.chat.emptyState.title}</p>
               <p ref={emptySubtitleRef} className="text-sm opacity-75">{t.chat.emptyState.subtitle}</p>
+              <button
+                type="button"
+                onClick={jumpToComposer}
+                className={cn(
+                  "mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-clash font-medium transition-colors",
+                  isDark
+                    ? "bg-slate-700/70 text-slate-100 hover:bg-slate-600"
+                    : "bg-white text-gray-800 border border-gray-200 hover:bg-gray-50"
+                )}
+              >
+                <ArrowDownCircle className="h-4 w-4" />
+                {t.chat.jumpToInput}
+              </button>
             </div>
           </div>
         ) : (
@@ -455,8 +475,8 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       </div>
 
       {/* Input area */}
-      <div className={cn(
-        "border-t p-4",
+      <div ref={composerRef} className={cn(
+        "border-t p-3 sm:p-4",
         isDark
           ? 'border-slate-700/50 bg-slate-900/40'
           : 'border-gray-200/60 bg-white/80'

@@ -476,6 +476,7 @@ const en = {
     attachedFilesLabel: 'attached files',
     attachmentsReady: 'Ready to send with your next message',
     attachmentsInMessage: 'attached to this message',
+    jumpToInput: 'Start typing now',
   },
 
   // Uploads Page

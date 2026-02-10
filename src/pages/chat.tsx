@@ -195,16 +195,16 @@ export default function ChatPage() {
 
   return (
     <div className={`min-h-screen ${isDark ? 'dark-bg' : 'sophisticated-bg'} pb-10`}>
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-10">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-10">
+        <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <p
               ref={subtitleRef}
-              className={`text-sm font-clash tracking-[0.08em] ${isDark ? 'text-slate-400' : 'text-gray-500'}`}
+              className={`text-xs sm:text-sm font-clash tracking-[0.08em] ${isDark ? 'text-slate-400' : 'text-gray-500'}`}
             >
               {t.chat.pageSubtitle}
             </p>
-            <h1 className={`text-3xl sm:text-4xl font-clash font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+            <h1 className={`text-[2.1rem] leading-[1.05] sm:text-4xl font-clash font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
               {t.chat.pageTitle.split(' ').map((word, index) => (
                 <span
                   key={`${word}-${index}`}
@@ -219,7 +219,7 @@ export default function ChatPage() {
             </h1>
             <div
               ref={accentLineRef}
-              className={`mt-2 h-px w-44 ${isDark ? 'bg-slate-600/80' : 'bg-slate-300/90'}`}
+              className={`mt-2 h-px w-32 sm:w-44 ${isDark ? 'bg-slate-600/80' : 'bg-slate-300/90'}`}
             />
           </div>
           <div className="flex w-full flex-nowrap items-center gap-1.5 sm:gap-2 lg:w-auto lg:justify-end">

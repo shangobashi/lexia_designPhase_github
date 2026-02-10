@@ -476,6 +476,7 @@ const fr = {
     attachedFilesLabel: 'fichiers joints',
     attachmentsReady: 'Pr\u00eat \u00e0 envoyer avec votre prochain message',
     attachmentsInMessage: 'joints \u00e0 ce message',
+    jumpToInput: 'Commencer \u00e0 \u00e9crire',
   },
 
   // Uploads Page
