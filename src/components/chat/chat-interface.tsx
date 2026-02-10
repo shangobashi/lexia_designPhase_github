@@ -295,11 +295,11 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       {/* Messages area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 min-h-[220px] sm:min-h-[400px] max-h-[50dvh] sm:max-h-[60vh]"
+        className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 min-h-[200px] sm:min-h-[400px] max-h-[50dvh] sm:max-h-[60vh]"
       >
         {messages.length === 0 ? (
           <div className={cn(
-            "relative overflow-hidden text-center py-16 rounded-[1.25rem] border",
+            "relative overflow-hidden text-center px-4 sm:px-6 py-8 sm:py-16 rounded-[1.25rem] border min-h-[220px] sm:min-h-[320px] flex items-center justify-center",
             isDark
               ? 'border-slate-700/50 bg-slate-800/40 text-slate-300'
               : 'border-gray-200/80 bg-gray-50/50 text-gray-500'
@@ -326,22 +326,22 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 <div
                   ref={emptyIconRef}
                   className={cn(
-                    "w-12 h-12 mx-auto rounded-[0.875rem] flex items-center justify-center",
+                    "w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-[0.875rem] flex items-center justify-center",
                     isDark ? 'bg-blue-600/20' : 'bg-blue-50'
                   )}
                 >
-                  <svg className={cn("w-6 h-6", isDark ? 'text-blue-400' : 'text-blue-600')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={cn("w-5 h-5 sm:w-6 sm:h-6", isDark ? 'text-blue-400' : 'text-blue-600')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
                 </div>
               </div>
-              <p ref={emptyTitleRef} className="text-lg font-clash font-medium mb-2">{t.chat.emptyState.title}</p>
-              <p ref={emptySubtitleRef} className="text-sm opacity-75">{t.chat.emptyState.subtitle}</p>
+              <p ref={emptyTitleRef} className="text-base sm:text-lg font-clash font-medium mb-2">{t.chat.emptyState.title}</p>
+              <p ref={emptySubtitleRef} className="mx-auto max-w-[20rem] text-sm opacity-75">{t.chat.emptyState.subtitle}</p>
               <button
                 type="button"
                 onClick={jumpToComposer}
                 className={cn(
-                  "mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-clash font-medium transition-colors",
+                  "mt-4 sm:mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-clash font-medium transition-colors",
                   isDark
                     ? "bg-slate-700/70 text-slate-100 hover:bg-slate-600"
                     : "bg-white text-gray-800 border border-gray-200 hover:bg-gray-50"
