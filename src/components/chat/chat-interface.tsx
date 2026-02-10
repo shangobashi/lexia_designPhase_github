@@ -18,6 +18,9 @@ import {
   MAX_FILES,
 } from '@/lib/file-reader';
 
+const TEXTAREA_MIN_HEIGHT = 60;
+const TEXTAREA_MAX_HEIGHT = 220;
+
 interface ChatInterfaceProps {
   messages: Message[];
   onSend: (message: string, files?: LoadedFile[]) => void;
@@ -106,10 +109,24 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const { toast } = useToast();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingText]);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = '0px';
+    const nextHeight = Math.max(
+      TEXTAREA_MIN_HEIGHT,
+      Math.min(textarea.scrollHeight, TEXTAREA_MAX_HEIGHT)
+    );
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY = textarea.scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
+  }, [input]);
 
   const scrollToBottom = () => {
     const container = messagesContainerRef.current;
@@ -372,15 +389,16 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 : 'bg-white/95 border-gray-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)]'
             )}
           >
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-stretch">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-end">
               <div className="flex-1 relative">
                 <textarea
+                  ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={t.chat.inputPlaceholder}
                   className={cn(
-                    "w-full min-h-[60px] max-h-40 px-4 py-3 pr-12 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm",
+                    "w-full h-[60px] min-h-[60px] px-4 py-3 pr-12 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm transition-[height]",
                     isDark
                       ? 'bg-slate-800/95 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-blue-500/35 focus:border-blue-500/50'
                       : 'bg-slate-50 border border-slate-200 text-gray-800 placeholder-gray-400 focus:ring-blue-500/25 focus:border-blue-400/60'
@@ -411,13 +429,13 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 />
               </div>
 
-              <div className="flex items-stretch gap-2">
+              <div className="flex items-center gap-2 sm:self-end">
                 <button
                   type="button"
                   onClick={handleFileClick}
                   disabled={isSending || isReadingFile}
                   className={cn(
-                    "h-[60px] px-4 rounded-xl font-clash font-medium text-sm transition-colors",
+                    "h-11 px-4 rounded-xl font-clash font-medium text-sm transition-colors",
                     "inline-flex items-center justify-center gap-2",
                     "border disabled:opacity-45 disabled:cursor-not-allowed",
                     "flex-1 sm:flex-none",
@@ -438,7 +456,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   type="submit"
                   disabled={isSending || (!input.trim() && loadedFiles.length === 0)}
                   className={cn(
-                    "h-[60px] px-4 rounded-xl font-clash font-medium text-sm transition-colors",
+                    "h-11 px-4 rounded-xl font-clash font-medium text-sm transition-colors",
                     "inline-flex items-center justify-center gap-2",
                     "disabled:opacity-45 disabled:cursor-not-allowed",
                     "bg-blue-600 hover:bg-blue-700 text-white shadow-sm",
