@@ -372,7 +372,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 : 'bg-white/95 border-gray-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)]'
             )}
           >
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-end">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-stretch">
               <div className="flex-1 relative">
                 <textarea
                   value={input}
@@ -411,13 +411,13 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 />
               </div>
 
-              <div className="flex items-center gap-2 sm:pb-0.5">
+              <div className="flex items-stretch gap-2">
                 <button
                   type="button"
                   onClick={handleFileClick}
                   disabled={isSending || isReadingFile}
                   className={cn(
-                    "h-10 px-4 rounded-xl font-clash font-medium text-sm transition-colors",
+                    "h-[60px] px-4 rounded-xl font-clash font-medium text-sm transition-colors",
                     "inline-flex items-center justify-center gap-2",
                     "border disabled:opacity-45 disabled:cursor-not-allowed",
                     "flex-1 sm:flex-none",
@@ -438,7 +438,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   type="submit"
                   disabled={isSending || (!input.trim() && loadedFiles.length === 0)}
                   className={cn(
-                    "h-10 px-4 rounded-xl font-clash font-medium text-sm transition-colors",
+                    "h-[60px] px-4 rounded-xl font-clash font-medium text-sm transition-colors",
                     "inline-flex items-center justify-center gap-2",
                     "disabled:opacity-45 disabled:cursor-not-allowed",
                     "bg-blue-600 hover:bg-blue-700 text-white shadow-sm",
