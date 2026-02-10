@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { v4 as uuid } from 'uuid';
+import { gsap } from 'gsap';
 import ChatInterface from '@/components/chat/chat-interface';
 import { AIProviderSwitch } from '@/components/ai-provider-switch';
 import { SaveChatButton } from '@/components/chat/save-chat-button';
@@ -34,6 +35,9 @@ export default function ChatPage() {
   const [streamingText, setStreamingText] = useState('');
   const [mode, setMode] = useState<KingsleyMode>('fast');
   const messagesRef = useRef(messages);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const titleWordRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const accentLineRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -44,6 +48,43 @@ export default function ChatPage() {
       continueAsGuest();
     }
   }, [user, continueAsGuest]);
+
+  useEffect(() => {
+    const titleWords = titleWordRefs.current.filter(Boolean) as HTMLSpanElement[];
+    const timeline = gsap.timeline({
+      defaults: { ease: 'power3.out' },
+    });
+
+    if (subtitleRef.current) {
+      timeline.fromTo(
+        subtitleRef.current,
+        { opacity: 0, y: 10, filter: 'blur(6px)' },
+        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.65 }
+      );
+    }
+
+    if (titleWords.length > 0) {
+      timeline.fromTo(
+        titleWords,
+        { opacity: 0, y: 18, rotateX: 24, transformOrigin: '50% 100%' },
+        { opacity: 1, y: 0, rotateX: 0, duration: 0.7, stagger: 0.06 },
+        '-=0.3'
+      );
+    }
+
+    if (accentLineRef.current) {
+      timeline.fromTo(
+        accentLineRef.current,
+        { scaleX: 0, opacity: 0.5, transformOrigin: '0% 50%' },
+        { scaleX: 1, opacity: 1, duration: 0.75 },
+        '-=0.45'
+      );
+    }
+
+    return () => {
+      timeline.kill();
+    };
+  }, [t.chat.pageSubtitle, t.chat.pageTitle]);
 
   const handleModeChange = useCallback((newMode: KingsleyMode) => {
     setMode(newMode);
@@ -157,8 +198,29 @@ export default function ChatPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <p className={`text-sm font-clash ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>{t.chat.pageSubtitle}</p>
-            <h1 className={`text-3xl font-clash font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{t.chat.pageTitle}</h1>
+            <p
+              ref={subtitleRef}
+              className={`text-sm font-clash tracking-[0.08em] ${isDark ? 'text-slate-400' : 'text-gray-500'}`}
+            >
+              {t.chat.pageSubtitle}
+            </p>
+            <h1 className={`text-3xl font-clash font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+              {t.chat.pageTitle.split(' ').map((word, index) => (
+                <span
+                  key={`${word}-${index}`}
+                  ref={(el) => {
+                    titleWordRefs.current[index] = el;
+                  }}
+                  className="inline-block will-change-transform mr-[0.32ch] last:mr-0"
+                >
+                  {word}
+                </span>
+              ))}
+            </h1>
+            <div
+              ref={accentLineRef}
+              className={`mt-2 h-px w-44 ${isDark ? 'bg-slate-600/80' : 'bg-slate-300/90'}`}
+            />
           </div>
           <div className="flex items-center gap-3">
             <AIProviderSwitch
