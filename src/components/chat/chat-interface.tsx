@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { PaperclipIcon, Send, X, FileText, Image, Loader2, ArrowDownCircle } from 'lucide-react';
+import { PaperclipIcon, Send, X, FileText, Image, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { gsap } from 'gsap';
 import { useTheme } from '@/contexts/theme-context';
@@ -112,7 +112,6 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const composerRef = useRef<HTMLDivElement>(null);
   const emptyStateRef = useRef<HTMLDivElement>(null);
   const emptyGlowOneRef = useRef<HTMLDivElement>(null);
   const emptyGlowTwoRef = useRef<HTMLDivElement>(null);
@@ -194,13 +193,6 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
     const container = messagesContainerRef.current;
     if (!container) return;
     container.scrollTop = container.scrollHeight;
-  };
-
-  const jumpToComposer = () => {
-    composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    window.setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 220);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -289,17 +281,21 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
 
   const getAttachmentLabel = (count: number) => (count === 1 ? t.chat.attachedFile : t.chat.attachedFilesLabel);
   const totalLoadedSize = loadedFiles.reduce((sum, file) => sum + file.size, 0);
+  const isEmptyState = messages.length === 0;
 
   return (
     <main className="flex-1 flex flex-col h-full overflow-hidden rounded-[1.25rem]">
       {/* Messages area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 min-h-[200px] sm:min-h-[400px] max-h-[50dvh] sm:max-h-[60vh]"
+        className={cn(
+          "flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 min-h-[180px] sm:min-h-[400px] sm:max-h-[60vh]",
+          isEmptyState ? "max-h-[44dvh]" : "max-h-[50dvh]"
+        )}
       >
-        {messages.length === 0 ? (
+        {isEmptyState ? (
           <div className={cn(
-            "relative overflow-hidden text-center px-4 sm:px-6 py-8 sm:py-16 rounded-[1.25rem] border min-h-[220px] sm:min-h-[320px] flex items-center justify-center",
+            "relative overflow-hidden text-center px-4 sm:px-6 py-7 sm:py-16 rounded-[1.25rem] border min-h-[190px] sm:min-h-[320px] flex items-center justify-center",
             isDark
               ? 'border-slate-700/50 bg-slate-800/40 text-slate-300'
               : 'border-gray-200/80 bg-gray-50/50 text-gray-500'
@@ -337,19 +333,6 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
               </div>
               <p ref={emptyTitleRef} className="text-base sm:text-lg font-clash font-medium mb-2">{t.chat.emptyState.title}</p>
               <p ref={emptySubtitleRef} className="mx-auto max-w-[20rem] text-sm opacity-75">{t.chat.emptyState.subtitle}</p>
-              <button
-                type="button"
-                onClick={jumpToComposer}
-                className={cn(
-                  "mt-4 sm:mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-clash font-medium transition-colors",
-                  isDark
-                    ? "bg-slate-700/70 text-slate-100 hover:bg-slate-600"
-                    : "bg-white text-gray-800 border border-gray-200 hover:bg-gray-50"
-                )}
-              >
-                <ArrowDownCircle className="h-4 w-4" />
-                {t.chat.jumpToInput}
-              </button>
             </div>
           </div>
         ) : (
@@ -475,7 +458,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       </div>
 
       {/* Input area */}
-      <div ref={composerRef} className={cn(
+      <div className={cn(
         "border-t p-3 sm:p-4",
         isDark
           ? 'border-slate-700/50 bg-slate-900/40'
