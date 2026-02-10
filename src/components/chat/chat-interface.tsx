@@ -109,6 +109,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const isDark = theme === 'dark';
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -296,8 +297,6 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const removeFile = (index: number) => {
     setLoadedFiles(prev => prev.filter((_, i) => i !== index));
   };
-
-  const isDark = theme === 'dark';
 
   const userInitials = userName
     ? userName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
