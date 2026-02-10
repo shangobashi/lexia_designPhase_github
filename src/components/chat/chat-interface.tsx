@@ -288,10 +288,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       {/* Messages area */}
       <div
         ref={messagesContainerRef}
-        className={cn(
-          "flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 min-h-[180px] sm:min-h-[400px] sm:max-h-[60vh]",
-          isEmptyState ? "max-h-[44dvh]" : "max-h-[50dvh]"
-        )}
+        className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 space-y-4"
       >
         {isEmptyState ? (
           <div className={cn(

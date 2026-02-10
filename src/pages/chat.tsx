@@ -194,9 +194,9 @@ export default function ChatPage() {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`min-h-screen ${isDark ? 'dark-bg' : 'sophisticated-bg'} pb-10`}>
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-10">
-        <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className={`h-full min-h-0 ${isDark ? 'dark-bg' : 'sophisticated-bg'} flex flex-col`}>
+      <div className="max-w-6xl mx-auto w-full h-full min-h-0 px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 flex flex-col">
+        <div className="mb-3 sm:mb-6 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <p
               ref={subtitleRef}
@@ -243,7 +243,7 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <div className={`${isDark ? 'dark-executive-card' : 'executive-card'} rounded-2xl shadow-lg border border-transparent`}>
+        <div className={`${isDark ? 'dark-executive-card' : 'executive-card'} rounded-2xl shadow-lg border border-transparent flex-1 min-h-0`}>
           <ChatInterface
             messages={messages}
             onSend={handleSend}
