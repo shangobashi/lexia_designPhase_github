@@ -8,7 +8,7 @@ const MAX_TEXT_LENGTH = 5000;
 const MAX_AUDIO_BYTES = 8 * 1024 * 1024; // 8MB
 const DEFAULT_STT_MODEL_ID = 'scribe_v1';
 const DEFAULT_EN_VOICE_ID = 'onwK4e9ZLuTAKqWW03F9';
-const DEFAULT_FR_LIBRARY_VOICE_ID = 'hPgPa4mzYEnywnj9FS3r';
+const DEFAULT_FR_FREE_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb'; // George (premade, warm)
 
 function normalizeLanguage(language) {
   return language === 'fr' ? 'fr' : 'en';
@@ -18,7 +18,7 @@ function buildVoiceAttempts(languageCode) {
   if (languageCode === 'fr') {
     const attempts = [
       {
-        id: process.env.ELEVENLABS_FRENCH_VOICE_ID || DEFAULT_FR_LIBRARY_VOICE_ID,
+        id: process.env.ELEVENLABS_FRENCH_VOICE_ID || DEFAULT_FR_FREE_VOICE_ID,
         modelId: 'eleven_multilingual_v2',
         languageCode: 'fr',
         label: 'fr-primary',

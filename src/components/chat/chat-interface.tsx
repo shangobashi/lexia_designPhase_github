@@ -155,16 +155,25 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       const composedMessage = [input.trim(), transcript.trim()].filter(Boolean).join(' ');
       if (!composedMessage) return;
 
-      const sent = submitOutgoingMessage(composedMessage);
+      const sent = submitOutgoingMessage(composedMessage, loadedFiles, { allowDuringSpeechCapture: true });
       if (!sent) {
         setInput(composedMessage);
       }
     },
   });
 
-  const submitOutgoingMessage = useCallback((messageText: string, filesToSend: LoadedFile[] = loadedFiles) => {
+  const submitOutgoingMessage = useCallback((
+    messageText: string,
+    filesToSend: LoadedFile[] = loadedFiles,
+    options?: { allowDuringSpeechCapture?: boolean },
+  ) => {
     const trimmedMessage = messageText.trim();
-    if ((!trimmedMessage && filesToSend.length === 0) || isSending || isSpeechInputListening || isSpeechInputTranscribing) {
+    const isSpeechBusy = isSpeechInputListening || isSpeechInputTranscribing;
+    if (
+      (!trimmedMessage && filesToSend.length === 0)
+      || isSending
+      || (isSpeechBusy && !options?.allowDuringSpeechCapture)
+    ) {
       return false;
     }
 

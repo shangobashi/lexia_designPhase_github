@@ -1,7 +1,7 @@
 const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
 const MAX_TEXT_LENGTH = 5000;
 const DEFAULT_EN_VOICE_ID = 'onwK4e9ZLuTAKqWW03F9';
-const DEFAULT_FR_LIBRARY_VOICE_ID = 'hPgPa4mzYEnywnj9FS3r';
+const DEFAULT_FR_FREE_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb'; // George (premade, warm)
 
 function normalizeLanguage(language) {
   return language === 'fr' ? 'fr' : 'en';
@@ -11,7 +11,7 @@ function buildVoiceAttempts(languageCode) {
   if (languageCode === 'fr') {
     const attempts = [
       {
-        id: process.env.ELEVENLABS_FRENCH_VOICE_ID || DEFAULT_FR_LIBRARY_VOICE_ID,
+        id: process.env.ELEVENLABS_FRENCH_VOICE_ID || DEFAULT_FR_FREE_VOICE_ID,
         modelId: 'eleven_multilingual_v2',
         languageCode: 'fr',
         label: 'fr-primary',
