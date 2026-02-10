@@ -104,7 +104,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { toast } = useToast();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -112,7 +112,9 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   }, [messages, streamingText]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -207,7 +209,11 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   return (
     <main className="flex-1 flex flex-col h-full overflow-hidden rounded-[1.25rem]">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4" style={{ minHeight: '400px', maxHeight: '60vh' }}>
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-6 space-y-4"
+        style={{ minHeight: '400px', maxHeight: '60vh' }}
+      >
         {messages.length === 0 ? (
           <div className={cn(
             "text-center py-16 rounded-[1.25rem] border",
@@ -346,7 +352,6 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 </div>
               </motion.div>
             )}
-            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
