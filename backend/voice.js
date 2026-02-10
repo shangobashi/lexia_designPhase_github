@@ -3,7 +3,10 @@ import express from 'express';
 const router = express.Router();
 
 const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
+const ELEVENLABS_STT_API_URL = 'https://api.elevenlabs.io/v1/speech-to-text';
 const MAX_TEXT_LENGTH = 5000;
+const MAX_AUDIO_BYTES = 8 * 1024 * 1024; // 8MB
+const DEFAULT_STT_MODEL_ID = 'scribe_v1';
 const DEFAULT_EN_VOICE_ID = 'onwK4e9ZLuTAKqWW03F9';
 const DEFAULT_FR_LIBRARY_VOICE_ID = 'hPgPa4mzYEnywnj9FS3r';
 
@@ -70,6 +73,30 @@ function toSpeakableText(text) {
     .replace(/\n/g, ' ')
     .replace(/\s{2,}/g, ' ')
     .trim();
+}
+
+function sanitizeMimeType(mimeType) {
+  const allowedTypes = new Set([
+    'audio/webm',
+    'audio/webm;codecs=opus',
+    'audio/mp4',
+    'audio/mpeg',
+    'audio/ogg',
+    'audio/ogg;codecs=opus',
+    'audio/wav',
+    'audio/x-wav',
+  ]);
+
+  if (typeof mimeType !== 'string') return 'audio/webm';
+  return allowedTypes.has(mimeType) ? mimeType : 'audio/webm';
+}
+
+function extensionForMimeType(mimeType) {
+  if (mimeType.includes('mp4')) return 'mp4';
+  if (mimeType.includes('mpeg')) return 'mp3';
+  if (mimeType.includes('ogg')) return 'ogg';
+  if (mimeType.includes('wav')) return 'wav';
+  return 'webm';
 }
 
 router.post('/generate', async (req, res) => {
@@ -184,6 +211,73 @@ router.post('/generate', async (req, res) => {
     if (!res.writableEnded) {
       res.end();
     }
+  }
+});
+
+router.post('/transcribe', async (req, res) => {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'ElevenLabs API key not configured' });
+  }
+
+  const { audioBase64, mimeType, language = 'en' } = req.body ?? {};
+  if (!audioBase64 || typeof audioBase64 !== 'string') {
+    return res.status(400).json({ error: 'Audio payload is required' });
+  }
+
+  let audioBuffer;
+  try {
+    audioBuffer = Buffer.from(audioBase64, 'base64');
+  } catch {
+    return res.status(400).json({ error: 'Invalid audio payload' });
+  }
+
+  if (!audioBuffer.length) {
+    return res.status(400).json({ error: 'Empty audio payload' });
+  }
+
+  if (audioBuffer.length > MAX_AUDIO_BYTES) {
+    return res.status(413).json({ error: 'Audio payload too large' });
+  }
+
+  const safeMimeType = sanitizeMimeType(mimeType);
+  const elevenLabsForm = new FormData();
+  elevenLabsForm.append(
+    'file',
+    new Blob([audioBuffer], { type: safeMimeType }),
+    `speech.${extensionForMimeType(safeMimeType)}`
+  );
+  elevenLabsForm.append('model_id', process.env.ELEVENLABS_STT_MODEL_ID || DEFAULT_STT_MODEL_ID);
+  elevenLabsForm.append('language_code', normalizeLanguage(language));
+
+  try {
+    const response = await fetch(ELEVENLABS_STT_API_URL, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+      },
+      body: elevenLabsForm,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('[Voice STT] ElevenLabs error:', response.status, errorBody);
+      return res.status(response.status).json({
+        error: `ElevenLabs STT API error: ${response.status}`,
+      });
+    }
+
+    const data = await response.json();
+    const transcript = (data?.text || data?.transcript || '').trim();
+
+    if (!transcript) {
+      return res.status(422).json({ error: 'No speech detected' });
+    }
+
+    return res.status(200).json({ text: transcript });
+  } catch (error) {
+    console.error('[Voice STT] Transcription failed:', error);
+    return res.status(500).json({ error: 'Transcription failed' });
   }
 });
 
