@@ -17,7 +17,7 @@ export interface AIResponse {
 /**
  * Orchestrates AI provider chains based on mode.
  *
- * Fast mode:     Mistral Small → Gemini 3 Flash Preview → OpenRouter (Mistral 3.1 → GPT OSS 20B → Step 3.5 Flash) → error
+ * Fast mode:     Mistral Small → OpenRouter (Mistral 3.1 → GPT OSS 20B → Step 3.5 Flash) → Gemini 3 Flash Preview → error
  * Thinking mode: OpenRouter (GLM 4.7 → GLM 4.5 Air free → Kimi K2.5 → GPT OSS 120B) → Gemini → Mistral → error
  */
 export const generateStreamingChat = async (
@@ -29,7 +29,7 @@ export const generateStreamingChat = async (
   const errors: string[] = [];
 
   if (mode === 'fast') {
-    // Fast chain: Mistral → Gemini → OpenRouter
+    // Fast chain: Mistral → OpenRouter → Gemini
     try {
       const mistral = getMistralProvider();
       const result = await mistral.generateStreamingResponse(messages, systemPrompt, onChunk);
@@ -41,16 +41,6 @@ export const generateStreamingChat = async (
     }
 
     try {
-      const gemini = getGeminiProvider();
-      const result = await gemini.generateStreamingResponse(messages, systemPrompt, onChunk);
-      if (result.message) return result;
-    } catch (error: any) {
-      console.warn('[Kingsley] Gemini failed:', error.message);
-      errors.push(`Gemini: ${error.message}`);
-      onChunk('');
-    }
-
-    try {
       const orProvider = getOpenRouterProvider();
       orProvider.setMode('fast');
       const result = await orProvider.generateStreamingResponse(messages, systemPrompt, onChunk);
@@ -58,6 +48,16 @@ export const generateStreamingChat = async (
     } catch (error: any) {
       console.warn('[Kingsley] OpenRouter fast fallback failed:', error.message);
       errors.push(`OpenRouter: ${error.message}`);
+      onChunk('');
+    }
+
+    try {
+      const gemini = getGeminiProvider();
+      const result = await gemini.generateStreamingResponse(messages, systemPrompt, onChunk);
+      if (result.message) return result;
+    } catch (error: any) {
+      console.warn('[Kingsley] Gemini failed:', error.message);
+      errors.push(`Gemini: ${error.message}`);
       onChunk('');
     }
   } else {
