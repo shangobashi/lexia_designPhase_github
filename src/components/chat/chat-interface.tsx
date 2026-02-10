@@ -215,11 +215,13 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    textarea.style.height = '0px';
-    let nextHeight = Math.max(
-      TEXTAREA_MIN_HEIGHT,
-      Math.min(textarea.scrollHeight, TEXTAREA_MAX_HEIGHT)
-    );
+    // Keep the single-line composer at an exact baseline height so Send aligns perfectly.
+    textarea.style.height = `${TEXTAREA_MIN_HEIGHT}px`;
+    const measured = textarea.scrollHeight;
+    const needsGrowth = measured > TEXTAREA_MIN_HEIGHT + 1;
+    const nextHeight = needsGrowth
+      ? Math.min(measured, TEXTAREA_MAX_HEIGHT)
+      : TEXTAREA_MIN_HEIGHT;
     textarea.style.height = `${nextHeight}px`;
     textarea.style.overflowY = textarea.scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
   }, [input]);
@@ -658,7 +660,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   onClick={handleFileClick}
                   disabled={isSending || isReadingFile}
                   className={cn(
-                    "absolute left-3 top-1/2 -translate-y-1/2 -mt-px z-10 inline-flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-200",
+                    "absolute left-3 inset-y-0 my-auto z-10 inline-flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-200",
                     "disabled:opacity-45 disabled:cursor-not-allowed",
                     isDark
                       ? 'bg-slate-700/75 border-slate-500/65 text-slate-100 hover:bg-slate-600/90 hover:border-slate-400/80'
@@ -668,9 +670,9 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   aria-label={t.chat.loadFile}
                 >
                   {isReadingFile ? (
-                    <Loader2 className="h-3.5 w-3.5 -translate-y-px animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Plus className="h-3.5 w-3.5 -translate-y-px" strokeWidth={2.4} />
+                    <Plus className="h-3.5 w-3.5" strokeWidth={2.4} />
                   )}
                 </button>
                 <input
