@@ -20,6 +20,7 @@ import {
 
 const TEXTAREA_MIN_HEIGHT = 44;
 const TEXTAREA_MAX_HEIGHT = 220;
+const TEXTAREA_BASELINE_SNAP_THRESHOLD = 2;
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -120,10 +121,14 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
     if (!textarea) return;
 
     textarea.style.height = '0px';
-    const nextHeight = Math.max(
+    let nextHeight = Math.max(
       TEXTAREA_MIN_HEIGHT,
       Math.min(textarea.scrollHeight, TEXTAREA_MAX_HEIGHT)
     );
+    // Prevent 1-2px browser metric drift so textarea baseline matches action buttons exactly.
+    if (nextHeight <= TEXTAREA_MIN_HEIGHT + TEXTAREA_BASELINE_SNAP_THRESHOLD) {
+      nextHeight = TEXTAREA_MIN_HEIGHT;
+    }
     textarea.style.height = `${nextHeight}px`;
     textarea.style.overflowY = textarea.scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
   }, [input]);
@@ -430,7 +435,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 />
               </div>
 
-              <div className="flex items-center gap-2 sm:items-end">
+              <div className="flex items-center gap-2 sm:items-end sm:self-end">
                 <button
                   type="button"
                   onClick={handleFileClick}
@@ -460,7 +465,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                     "h-11 px-4 rounded-xl font-clash font-medium text-sm transition-colors",
                     "inline-flex items-center justify-center gap-2",
                     "disabled:opacity-45 disabled:cursor-not-allowed",
-                    "bg-blue-600 hover:bg-blue-700 text-white shadow-sm",
+                    "bg-blue-600 hover:bg-blue-700 text-white border border-blue-500/90",
                     "flex-1 sm:flex-none"
                   )}
                 >
