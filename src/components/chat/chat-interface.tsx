@@ -209,7 +209,9 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
 
     const textareaBottom = textarea.getBoundingClientRect().bottom;
     const actionsBottom = actions.getBoundingClientRect().bottom;
-    const delta = Math.round(textareaBottom - actionsBottom);
+    // Compensate current transform so we measure against the unshifted baseline.
+    const unshiftedActionsBottom = actionsBottom - actionsOffsetY;
+    const delta = Math.round(textareaBottom - unshiftedActionsBottom);
     const nextOffset = Math.abs(delta) <= 1 ? 0 : delta;
 
     if (nextOffset !== actionsOffsetY) {
