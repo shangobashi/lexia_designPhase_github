@@ -251,7 +251,7 @@ export function SaveChatButton({ messages }: SaveChatButtonProps) {
         onClick={() => !isEmpty && !isBusy && setOpen(!open)}
         disabled={isEmpty || isBusy}
         className={cn(
-          'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-clash transition-colors',
+          'inline-flex h-10 items-center gap-2 px-4 rounded-xl text-sm font-clash transition-colors',
           isEmpty || isBusy
             ? isDark
               ? 'bg-slate-800 text-slate-600 cursor-not-allowed'

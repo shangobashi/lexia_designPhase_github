@@ -48,7 +48,7 @@ export function AIProviderSwitch({ mode, onModeChange }: AIProviderSwitchProps) 
         type="button"
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer",
+          "inline-flex h-10 items-center gap-2 px-4 rounded-xl text-sm font-clash font-medium transition-colors cursor-pointer",
           isDark
             ? 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
