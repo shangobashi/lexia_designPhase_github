@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { buildApiUrl } from '@/lib/api-base-url';
 
 interface VoiceState {
   activeMessageId: string | null;
@@ -7,7 +8,15 @@ interface VoiceState {
   error: string | null;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+function getVoiceErrorMessage(error: any): string {
+  const rawMessage = error?.message || 'Voice generation failed';
+
+  if (rawMessage === 'Failed to fetch' || /NetworkError/i.test(rawMessage)) {
+    return 'Unable to reach voice service. Check network/ad-blocker settings and try again.';
+  }
+
+  return rawMessage;
+}
 
 export function useVoice() {
   const [state, setState] = useState<VoiceState>({
@@ -146,7 +155,7 @@ export function useVoice() {
     abortRef.current = controller;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/voice/generate`, {
+      const response = await fetch(buildApiUrl('/api/voice/generate'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,7 +182,7 @@ export function useVoice() {
         activeMessageId: null,
         isLoading: false,
         isPlaying: false,
-        error: error?.message || 'Voice generation failed',
+        error: getVoiceErrorMessage(error),
       });
     }
   }, [startFromSource, stop]);

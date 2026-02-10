@@ -1,6 +1,5 @@
 import { isSupabaseConfigured, supabase } from './supabase';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { buildApiUrl } from './api-base-url';
 
 // Helper to get auth token
 const getAuthToken = async (): Promise<string | null> => {
@@ -23,7 +22,7 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     throw new Error('User not authenticated');
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const response = await fetch(buildApiUrl(endpoint), {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -52,7 +51,7 @@ export const aiApi = {
       headers['X-Guest'] = 'true';
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/ai/chat`, {
+    const response = await fetch(buildApiUrl('/api/ai/chat'), {
       method: 'POST',
       headers,
       body: JSON.stringify({ messages, caseId, provider }),
@@ -141,7 +140,7 @@ export const profileApi = {
 // Health check
 export const healthApi = {
   async check() {
-    const response = await fetch(`${API_BASE_URL}/api/health`);
+    const response = await fetch(buildApiUrl('/api/health'));
     return response.json();
   },
 };
