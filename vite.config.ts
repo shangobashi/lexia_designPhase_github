@@ -35,6 +35,9 @@ export default defineConfig({
             if (id.includes('@anthropic-ai') || id.includes('@google/generative-ai') || id.includes('openai')) {
               return 'ai';
             }
+            if (id.includes('docx') || id.includes('jspdf')) {
+              return 'exporters';
+            }
             return 'vendor';
           }
         },
