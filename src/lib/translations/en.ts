@@ -445,6 +445,15 @@ const en = {
     modeFastDesc: 'Instant responses',
     modeThinking: 'Thinking',
     modeThinkingDesc: 'In-depth analysis',
+    saveChat: 'Save',
+    saveFormats: {
+      txt: 'Plain Text (.txt)',
+      txtDesc: 'Simple readable format',
+      md: 'Markdown (.md)',
+      mdDesc: 'Formatted with headings',
+      json: 'JSON (.json)',
+      jsonDesc: 'Structured data export',
+    },
   },
 
   // Uploads Page

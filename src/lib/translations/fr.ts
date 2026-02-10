@@ -445,6 +445,15 @@ const fr = {
     modeFastDesc: 'R\u00e9ponses instantan\u00e9es',
     modeThinking: 'R\u00e9flexion',
     modeThinkingDesc: 'Analyse approfondie',
+    saveChat: 'Sauver',
+    saveFormats: {
+      txt: 'Texte brut (.txt)',
+      txtDesc: 'Format lisible simple',
+      md: 'Markdown (.md)',
+      mdDesc: 'Format\u00e9 avec titres',
+      json: 'JSON (.json)',
+      jsonDesc: 'Export de donn\u00e9es structur\u00e9',
+    },
   },
 
   // Uploads Page

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { v4 as uuid } from 'uuid';
 import ChatInterface from '@/components/chat/chat-interface';
 import { AIProviderSwitch } from '@/components/ai-provider-switch';
+import { SaveChatButton } from '@/components/chat/save-chat-button';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
@@ -151,6 +152,7 @@ export default function ChatPage() {
               mode={mode}
               onModeChange={handleModeChange}
             />
+            <SaveChatButton messages={messages} />
             <button
               onClick={handleClear}
               className={`${isDark ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} px-3 py-2 rounded-lg text-sm font-clash transition-colors`}
