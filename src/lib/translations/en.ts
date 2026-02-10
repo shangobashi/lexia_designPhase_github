@@ -477,6 +477,10 @@ const en = {
     attachmentsReady: 'Ready to send with your next message',
     attachmentsInMessage: 'attached to this message',
     jumpToInput: 'Start typing now',
+    listenToResponse: 'Listen to response',
+    stopListening: 'Stop listening',
+    generatingAudio: 'Generating audio...',
+    voiceError: 'Voice generation failed',
   },
 
   // Uploads Page

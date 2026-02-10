@@ -477,6 +477,10 @@ const fr = {
     attachmentsReady: 'Pr\u00eat \u00e0 envoyer avec votre prochain message',
     attachmentsInMessage: 'joints \u00e0 ce message',
     jumpToInput: 'Commencer \u00e0 \u00e9crire',
+    listenToResponse: '\u00c9couter la r\u00e9ponse',
+    stopListening: 'Arr\u00eater l\'\u00e9coute',
+    generatingAudio: 'G\u00e9n\u00e9ration audio...',
+    voiceError: '\u00c9chec de la g\u00e9n\u00e9ration vocale',
   },
 
   // Uploads Page

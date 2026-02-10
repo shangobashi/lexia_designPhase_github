@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { createClient } from '@supabase/supabase-js';
 import { chatWithAI, analyzeDocuments, providerHealth } from './ai/providers.js';
+import voiceRoutes from './voice.js';
 import { 
   PRICING_PLANS, 
   createCheckoutSession, 
@@ -40,6 +41,7 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);
+app.use('/api/voice', voiceRoutes);
 
 // Supabase setup
 const supabaseUrl = process.env.SUPABASE_URL;

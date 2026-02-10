@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { PaperclipIcon, Plus, Send, X, FileText, Image, Loader2 } from 'lucide-react';
+import { PaperclipIcon, Plus, Send, X, FileText, Image, Loader2, Volume2, VolumeX } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { gsap } from 'gsap';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
 import { useToast } from '@/hooks/use-toast';
+import { useVoice } from '@/hooks/use-voice';
 import { Message } from '@/types/message';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -109,8 +110,16 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const [isReadingFile, setIsReadingFile] = useState(false);
   const [emptyGlyph, setEmptyGlyph] = useState(EMPTY_STATE_GLYPH_SEQUENCE[0]);
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { toast } = useToast();
+  const {
+    activeMessageId,
+    isLoading: isVoiceLoading,
+    isPlaying: isVoicePlaying,
+    error: voiceError,
+    play: playVoice,
+    stop: stopVoice,
+  } = useVoice();
   const isDark = theme === 'dark';
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -125,6 +134,15 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingText]);
+
+  useEffect(() => {
+    if (!voiceError) return;
+    toast({
+      title: t.chat.voiceError,
+      description: voiceError,
+      variant: 'destructive',
+    });
+  }, [voiceError, toast, t.chat.voiceError]);
 
   useEffect(() => {
     if (messages.length !== 0) return;
@@ -300,6 +318,119 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const totalLoadedSize = loadedFiles.reduce((sum, file) => sum + file.size, 0);
   const isEmptyState = messages.length === 0;
 
+  const VoiceOrb = ({ message }: { message: Message }) => {
+    if (message.sender !== 'assistant') return null;
+
+    const isActive = activeMessageId === message.id;
+    const isThisLoading = isActive && isVoiceLoading;
+    const isThisPlaying = isActive && isVoicePlaying;
+
+    const label = isThisPlaying
+      ? t.chat.stopListening
+      : isThisLoading
+        ? t.chat.generatingAudio
+        : t.chat.listenToResponse;
+
+    return (
+      <div className="mt-2 flex items-center gap-2">
+        <motion.button
+          type="button"
+          onClick={() => {
+            if (isThisPlaying || isThisLoading) {
+              stopVoice();
+              return;
+            }
+            playVoice(message.id, message.content, language);
+          }}
+          disabled={isVoiceLoading && !isActive}
+          className={cn(
+            "relative inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-300",
+            isDark
+              ? 'bg-slate-700/50 text-slate-400 hover:text-white'
+              : 'bg-gray-100/80 text-gray-400 hover:text-gray-700',
+            isThisPlaying && (isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-50 text-blue-500'),
+            (isVoiceLoading && !isActive) && 'opacity-30 cursor-not-allowed'
+          )}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          title={label}
+          aria-label={label}
+        >
+          <AnimatePresence>
+            {isThisPlaying && (
+              <motion.span
+                className={cn(
+                  "absolute inset-0 rounded-full",
+                  isDark ? 'border border-blue-400/40' : 'border border-blue-300/50'
+                )}
+                initial={{ scale: 1, opacity: 0.6 }}
+                animate={{ scale: [1, 1.45, 1], opacity: [0.6, 0, 0.6] }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            )}
+          </AnimatePresence>
+
+          {isThisLoading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : isThisPlaying ? (
+            <VolumeX className="h-3.5 w-3.5" />
+          ) : (
+            <Volume2 className="h-3.5 w-3.5" />
+          )}
+        </motion.button>
+
+        <AnimatePresence>
+          {isThisPlaying && (
+            <motion.div
+              className="flex h-4 items-center gap-[3px]"
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {[0, 1, 2, 3, 4].map((i) => (
+                <motion.div
+                  key={i}
+                  className={cn(
+                    "w-[3px] rounded-full",
+                    isDark ? 'bg-blue-400/70' : 'bg-blue-400/60'
+                  )}
+                  animate={{
+                    height: i % 2 === 0 ? ['4px', '14px', '5px'] : ['4px', '10px', '4px'],
+                  }}
+                  transition={{
+                    duration: i % 2 === 0 ? 0.75 : 0.58,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: i * 0.08,
+                  }}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isThisLoading && (
+            <motion.span
+              className={cn(
+                "text-xs font-clash tracking-wide",
+                isDark ? 'text-slate-500' : 'text-gray-400'
+              )}
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              {t.chat.generatingAudio}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
   return (
     <main className="flex-1 flex flex-col h-full overflow-hidden rounded-[1.25rem]">
       {/* Messages area */}
@@ -362,6 +493,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
               {messages.map((message) => {
                 const isUser = message.sender === 'user';
                 const { badges, text } = isUser ? parseFileBadges(message.content) : { badges: [], text: message.content };
+                const isActiveVoiceMessage = !isUser && activeMessageId === message.id && isVoicePlaying;
 
                 return (
                   <motion.div
@@ -387,7 +519,13 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                         ? 'bg-blue-600 text-white rounded-[1.25rem] rounded-br-[0.375rem]'
                         : isDark
                           ? 'bg-slate-700/60 text-slate-100 rounded-[1.25rem] rounded-bl-[0.375rem] border border-slate-600/30'
-                          : 'bg-white text-gray-800 rounded-[1.25rem] rounded-bl-[0.375rem] border border-gray-200/80 shadow-sm'
+                          : 'bg-white text-gray-800 rounded-[1.25rem] rounded-bl-[0.375rem] border border-gray-200/80 shadow-sm',
+                      !isUser && "transition-shadow duration-500",
+                      isActiveVoiceMessage && (
+                        isDark
+                          ? 'ring-1 ring-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.08)]'
+                          : 'ring-1 ring-blue-200/50 shadow-[0_0_15px_rgba(59,130,246,0.06)]'
+                      )
                     )}>
                       {/* File badges for user messages */}
                       {isUser && badges.length > 0 && (
@@ -425,7 +563,10 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                         </motion.div>
                       )}
                       {message.sender === 'assistant' ? (
-                        <MarkdownContent content={message.content} isDark={isDark} />
+                        <>
+                          <MarkdownContent content={message.content} isDark={isDark} />
+                          <VoiceOrb message={message} />
+                        </>
                       ) : (
                         <div className="whitespace-pre-wrap">{text}</div>
                       )}
