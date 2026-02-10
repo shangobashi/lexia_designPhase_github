@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { PaperclipIcon, Send } from 'lucide-react';
+import { PaperclipIcon, Send, X, FileText, Image, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
@@ -7,12 +7,21 @@ import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types/message';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  LoadedFile,
+  readFileContent,
+  isSupported,
+  formatFileSize,
+  truncateFileName,
+  ACCEPT_STRING,
+  MAX_FILE_SIZE,
+  MAX_FILES,
+} from '@/lib/file-reader';
 
 interface ChatInterfaceProps {
   messages: Message[];
-  onSend: (message: string) => void;
+  onSend: (message: string, files?: LoadedFile[]) => void;
   onClearChat: () => void;
-  onFileUpload: (files: File[]) => void;
   isSending?: boolean;
   streamingText?: string;
   userName?: string;
@@ -73,8 +82,25 @@ function MarkdownContent({ content, isDark }: { content: string; isDark: boolean
   );
 }
 
-export default function ChatInterface({ messages, onSend, onClearChat, onFileUpload, isSending = false, streamingText = '', userName = '' }: ChatInterfaceProps) {
+/** Extract file badges from a user message that was sent with files */
+function parseFileBadges(content: string): { badges: { name: string; size: string }[]; text: string } {
+  const regex = /^\[FILES: (.+?)\]\n?/;
+  const match = content.match(regex);
+  if (!match) return { badges: [], text: content };
+
+  const badgeStr = match[1];
+  const badges = badgeStr.split(' | ').map(b => {
+    const parts = b.split(' (');
+    return { name: parts[0], size: parts[1]?.replace(')', '') || '' };
+  });
+  const text = content.slice(match[0].length);
+  return { badges, text };
+}
+
+export default function ChatInterface({ messages, onSend, onClearChat, isSending = false, streamingText = '', userName = '' }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
+  const [loadedFiles, setLoadedFiles] = useState<LoadedFile[]>([]);
+  const [isReadingFile, setIsReadingFile] = useState(false);
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -91,31 +117,77 @@ export default function ChatInterface({ messages, onSend, onClearChat, onFileUpl
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && !isSending) {
-      onSend(input);
+    if ((input.trim() || loadedFiles.length > 0) && !isSending) {
+      onSend(input, loadedFiles.length > 0 ? loadedFiles : undefined);
       setInput('');
+      setLoadedFiles([]);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (input.trim() && !isSending) {
-        onSend(input);
+      if ((input.trim() || loadedFiles.length > 0) && !isSending) {
+        onSend(input, loadedFiles.length > 0 ? loadedFiles : undefined);
         setInput('');
+        setLoadedFiles([]);
       }
     }
   };
 
   const handleFileClick = () => fileInputRef.current?.click();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const files = Array.from(e.target.files);
-      onFileUpload(files);
-      e.target.value = '';
-      toast({ title: `${files.length} ${t.chat.filesAdded}`, description: files.map(f => f.name).join(', ') });
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const files = Array.from(e.target.files);
+    e.target.value = '';
+
+    // Check total file count
+    if (loadedFiles.length + files.length > MAX_FILES) {
+      toast({ title: t.chat.tooManyFiles, description: t.chat.tooManyFilesDesc, variant: 'destructive' });
+      return;
     }
+
+    setIsReadingFile(true);
+    const nextLoadedFiles: LoadedFile[] = [];
+
+    try {
+      for (const file of files) {
+        // Validate size
+        if (file.size > MAX_FILE_SIZE) {
+          toast({ title: t.chat.fileTooLarge, description: t.chat.fileTooLargeDesc, variant: 'destructive' });
+          continue;
+        }
+
+        // Validate format
+        if (!isSupported(file)) {
+          toast({ title: t.chat.unsupportedFormat, description: file.name, variant: 'destructive' });
+          continue;
+        }
+
+        try {
+          const loaded = await readFileContent(file);
+          nextLoadedFiles.push(loaded);
+        } catch {
+          toast({ title: t.chat.fileReadError, description: file.name, variant: 'destructive' });
+        }
+      }
+    } finally {
+      setIsReadingFile(false);
+    }
+
+    if (nextLoadedFiles.length > 0) {
+      setLoadedFiles(prev => [...prev, ...nextLoadedFiles]);
+      toast({
+        title: t.chat.fileLoaded,
+        description: nextLoadedFiles.map(file => file.name).join(', '),
+      });
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setLoadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const isDark = theme === 'dark';
@@ -123,6 +195,14 @@ export default function ChatInterface({ messages, onSend, onClearChat, onFileUpl
   const userInitials = userName
     ? userName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
     : '?';
+
+  const fileTypeIcon = (type: LoadedFile['type']) => {
+    if (type === 'image') return <Image className="w-3.5 h-3.5 flex-shrink-0" />;
+    return <FileText className="w-3.5 h-3.5 flex-shrink-0" />;
+  };
+
+  const getAttachmentLabel = (count: number) => (count === 1 ? t.chat.attachedFile : t.chat.attachedFilesLabel);
+  const totalLoadedSize = loadedFiles.reduce((sum, file) => sum + file.size, 0);
 
   return (
     <main className="flex-1 flex flex-col h-full overflow-hidden rounded-[1.25rem]">
@@ -151,48 +231,88 @@ export default function ChatInterface({ messages, onSend, onClearChat, onFileUpl
         ) : (
           <div className="space-y-4">
             <AnimatePresence>
-              {messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className={cn(
-                    "flex items-start gap-3",
-                    message.sender === 'user' ? "justify-end" : "justify-start"
-                  )}
-                >
-                  {message.sender === 'assistant' && (
-                    <div className="w-8 h-8 bg-blue-600 rounded-[0.625rem] flex items-center justify-center flex-shrink-0 mt-1">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                      </svg>
-                    </div>
-                  )}
-                  <div className={cn(
-                    "px-4 py-3 leading-relaxed text-sm max-w-[75%]",
-                    message.sender === 'user'
-                      ? 'bg-blue-600 text-white rounded-[1.25rem] rounded-br-[0.375rem]'
-                      : isDark
-                        ? 'bg-slate-700/60 text-slate-100 rounded-[1.25rem] rounded-bl-[0.375rem] border border-slate-600/30'
-                        : 'bg-white text-gray-800 rounded-[1.25rem] rounded-bl-[0.375rem] border border-gray-200/80 shadow-sm'
-                  )}>
-                    {message.sender === 'assistant' ? (
-                      <MarkdownContent content={message.content} isDark={isDark} />
-                    ) : (
-                      <div className="whitespace-pre-wrap">{message.content}</div>
+              {messages.map((message) => {
+                const isUser = message.sender === 'user';
+                const { badges, text } = isUser ? parseFileBadges(message.content) : { badges: [], text: message.content };
+
+                return (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className={cn(
+                      "flex items-start gap-3",
+                      isUser ? "justify-end" : "justify-start"
                     )}
-                  </div>
-                  {message.sender === 'user' && (
+                  >
+                    {message.sender === 'assistant' && (
+                      <div className="w-8 h-8 bg-blue-600 rounded-[0.625rem] flex items-center justify-center flex-shrink-0 mt-1">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                      </div>
+                    )}
                     <div className={cn(
-                      "w-8 h-8 rounded-[0.625rem] flex items-center justify-center flex-shrink-0 mt-1",
-                      isDark ? 'bg-slate-600' : 'bg-gray-200'
+                      "px-4 py-3 leading-relaxed text-sm max-w-[75%]",
+                      isUser
+                        ? 'bg-blue-600 text-white rounded-[1.25rem] rounded-br-[0.375rem]'
+                        : isDark
+                          ? 'bg-slate-700/60 text-slate-100 rounded-[1.25rem] rounded-bl-[0.375rem] border border-slate-600/30'
+                          : 'bg-white text-gray-800 rounded-[1.25rem] rounded-bl-[0.375rem] border border-gray-200/80 shadow-sm'
                     )}>
-                      <span className={cn("font-clash font-semibold text-xs", isDark ? 'text-slate-200' : 'text-gray-600')}>{userInitials}</span>
+                      {/* File badges for user messages */}
+                      {isUser && badges.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.22, ease: 'easeOut' }}
+                          className={cn(
+                            "mb-2.5 rounded-xl border px-2.5 py-2",
+                            "backdrop-blur-[2px]",
+                            "bg-white/10 border-white/25 text-white/95"
+                          )}
+                        >
+                          <div className="flex items-center justify-between gap-3 text-[10px] font-semibold tracking-[0.12em] uppercase">
+                            <span className="inline-flex items-center gap-1.5">
+                              <PaperclipIcon className="w-3 h-3" />
+                              {badges.length} {getAttachmentLabel(badges.length)}
+                            </span>
+                            <span className="text-white/70">{t.chat.attachmentsInMessage}</span>
+                          </div>
+                          <div className="mt-1.5 flex flex-wrap gap-1.5">
+                            {badges.map((badge, i) => (
+                              <motion.span
+                                key={i}
+                                whileHover={{ y: -1, scale: 1.015 }}
+                                transition={{ type: 'spring', stiffness: 380, damping: 24 }}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs bg-white/20 text-white/90"
+                              >
+                                <FileText className="w-3 h-3" />
+                                {badge.name}
+                                {badge.size && <span className="opacity-70">({badge.size})</span>}
+                              </motion.span>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                      {message.sender === 'assistant' ? (
+                        <MarkdownContent content={message.content} isDark={isDark} />
+                      ) : (
+                        <div className="whitespace-pre-wrap">{text}</div>
+                      )}
                     </div>
-                  )}
-                </motion.div>
-              ))}
+                    {isUser && (
+                      <div className={cn(
+                        "w-8 h-8 rounded-[0.625rem] flex items-center justify-center flex-shrink-0 mt-1",
+                        isDark ? 'bg-slate-600' : 'bg-gray-200'
+                      )}>
+                        <span className={cn("font-clash font-semibold text-xs", isDark ? 'text-slate-200' : 'text-gray-600')}>{userInitials}</span>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
             {isSending && (
               <motion.div
@@ -264,6 +384,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, onFileUpl
                     ? 'text-slate-500 hover:text-slate-300 hover:bg-slate-700/50'
                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
                 )}
+                title={t.chat.loadFile}
               >
                 <PaperclipIcon className="h-4 w-4" />
               </button>
@@ -271,13 +392,36 @@ export default function ChatInterface({ messages, onSend, onClearChat, onFileUpl
                 ref={fileInputRef}
                 type="file"
                 multiple
+                accept={ACCEPT_STRING}
                 className="hidden"
                 onChange={handleFileChange}
               />
             </div>
+
+            {/* Load File button */}
+            <button
+              type="button"
+              onClick={handleFileClick}
+              disabled={isSending || isReadingFile}
+              className={cn(
+                "flex items-center gap-2 px-4 py-3 rounded-[0.875rem] font-clash font-medium text-sm transition-all",
+                "disabled:opacity-40 disabled:cursor-not-allowed",
+                isDark
+                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600/50'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200'
+              )}
+            >
+              {isReadingFile ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <PaperclipIcon className="h-4 w-4" />
+              )}
+              {t.chat.loadFile}
+            </button>
+
             <button
               type="submit"
-              disabled={isSending || !input.trim()}
+              disabled={isSending || (!input.trim() && loadedFiles.length === 0)}
               className={cn(
                 "flex items-center gap-2 px-5 py-3 rounded-[0.875rem] font-clash font-medium text-sm transition-all",
                 "disabled:opacity-40 disabled:cursor-not-allowed",
@@ -288,10 +432,116 @@ export default function ChatInterface({ messages, onSend, onClearChat, onFileUpl
               {t.chat.send}
             </button>
           </div>
+
+          {/* File chips */}
+          <AnimatePresence>
+            {loadedFiles.length > 0 && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  whileHover={{ y: -1, scale: 1.003 }}
+                  transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+                  className={cn(
+                    "mt-2 rounded-xl border px-3 py-2.5 relative overflow-hidden",
+                    isDark
+                      ? 'bg-slate-800/70 border-slate-600/60'
+                      : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200/70'
+                  )}
+                >
+                  <motion.div
+                    aria-hidden
+                    className={cn(
+                      "absolute inset-y-0 -left-20 w-20 skew-x-[-18deg] pointer-events-none",
+                      isDark ? 'bg-white/5' : 'bg-white/50'
+                    )}
+                    animate={{ x: ['0%', '620%'] }}
+                    transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 2.4, ease: 'easeInOut' }}
+                  />
+                  <div className="flex items-center justify-between gap-3">
+                    <div className={cn("inline-flex items-center gap-2", isDark ? 'text-blue-200' : 'text-blue-700')}>
+                      <motion.span
+                        animate={{ scale: [1, 1.04, 1] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                        className={cn(
+                        "inline-flex items-center justify-center w-6 h-6 rounded-full",
+                        isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-700'
+                      )}>
+                        <PaperclipIcon className="w-3.5 h-3.5" />
+                      </motion.span>
+                      <span className="text-sm font-clash font-medium">
+                        {loadedFiles.length} {getAttachmentLabel(loadedFiles.length)}
+                      </span>
+                    </div>
+                    <span className={cn("text-xs font-medium", isDark ? 'text-slate-300' : 'text-blue-700/80')}>
+                      {formatFileSize(totalLoadedSize)}
+                    </span>
+                  </div>
+                  <p className={cn("mt-1 text-[11px]", isDark ? 'text-slate-400' : 'text-blue-700/70')}>
+                    {t.chat.attachmentsReady}
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  layout
+                  className="flex flex-wrap gap-2 mt-2"
+                >
+                  {loadedFiles.map((file, index) => (
+                    <motion.div
+                      key={`${file.name}-${index}`}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      whileHover={{ y: -1, scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 26, mass: 0.55 }}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-full text-xs font-medium transition-colors",
+                        isDark
+                          ? 'bg-slate-700/80 text-slate-200 border border-slate-600/50'
+                          : 'bg-gray-100 text-gray-700 border border-gray-200/80'
+                      )}
+                    >
+                      {fileTypeIcon(file.type)}
+                      <span>{truncateFileName(file.name)}</span>
+                      <span className={cn("text-[10px]", isDark ? 'text-slate-400' : 'text-gray-400')}>
+                        {formatFileSize(file.size)}
+                      </span>
+                      <motion.button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        whileHover={{ rotate: 90, scale: 1.12 }}
+                        whileTap={{ scale: 0.88 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                        className={cn(
+                          "ml-0.5 p-0.5 rounded-full transition-colors",
+                          isDark
+                            ? 'hover:bg-slate-600 text-slate-400 hover:text-slate-200'
+                            : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
+                        )}
+                        title={t.chat.removeFile}
+                      >
+                        <X className="w-3 h-3" />
+                      </motion.button>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
           <div className={cn("flex items-center justify-between mt-2 text-xs", isDark ? 'text-slate-500' : 'text-gray-400')}>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span>{t.chat.ready}</span>
+              <div className={cn(
+                "w-2 h-2 rounded-full",
+                isReadingFile ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'
+              )} />
+              <span>{isReadingFile ? t.chat.fileProcessing : t.chat.ready}</span>
             </div>
             {isSending && <span className="animate-pulse">{t.chat.drafting}</span>}
           </div>

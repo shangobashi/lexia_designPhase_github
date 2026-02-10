@@ -10,6 +10,7 @@ import { generateStreamingChat, KingsleyMode } from '@/lib/ai-service';
 import { config } from '@/lib/config';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types/message';
+import { LoadedFile, buildFileContext, formatFileSize } from '@/lib/file-reader';
 
 const ERROR_MESSAGES = [
   "Objection! All my neural pathways are currently in recess. Even AI lawyers need a break sometimes. Please try again in a moment.",
@@ -48,12 +49,22 @@ export default function ChatPage() {
     setMode(newMode);
   }, []);
 
-  const handleSend = useCallback(async (text: string) => {
-    if (!text.trim() || isSending) return;
+  const handleSend = useCallback(async (text: string, files?: LoadedFile[]) => {
+    if (!text.trim() && (!files || files.length === 0)) return;
+    if (isSending) return;
+
+    // Build display content with file badges prefix
+    let displayContent = '';
+    if (files && files.length > 0) {
+      const fileBadges = files.map(f => `${f.name} (${formatFileSize(f.size)})`).join(' | ');
+      displayContent = `[FILES: ${fileBadges}]\n${text}`;
+    } else {
+      displayContent = text;
+    }
 
     const userMessage: Message = {
       id: uuid(),
-      content: text,
+      content: displayContent,
       sender: 'user',
       timestamp: new Date().toISOString(),
       caseId: 'ad-hoc',
@@ -64,7 +75,14 @@ export default function ChatPage() {
     setStreamingText('');
 
     try {
-      const currentMessages = [...messagesRef.current, userMessage];
+      // Build AI payload with file context prepended
+      let aiUserContent = text;
+      if (files && files.length > 0) {
+        const fileContext = buildFileContext(files);
+        aiUserContent = `${fileContext}\n\nUser message: ${text}`;
+      }
+
+      const currentMessages = [...messagesRef.current, { ...userMessage, content: aiUserContent }];
       const payloadMessages = currentMessages.map(m => ({
         role: m.sender === 'user' ? ('user' as const) : ('assistant' as const),
         content: m.content,
@@ -83,7 +101,6 @@ export default function ChatPage() {
       );
 
       if (result.error || !result.message) {
-        // All providers failed — show a beautiful, funny error in the chat
         const aiErrorMessage: Message = {
           id: uuid(),
           content: getRandomErrorMessage(),
@@ -111,7 +128,6 @@ export default function ChatPage() {
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error: any) {
-      // Unexpected error — still show something in the chat
       const aiErrorMessage: Message = {
         id: uuid(),
         content: getRandomErrorMessage(),
@@ -130,13 +146,9 @@ export default function ChatPage() {
       setIsSending(false);
       setStreamingText('');
     }
-  }, [isSending, toast, mode, t]);
+  }, [isSending, toast, mode, t, language]);
 
   const handleClear = () => setMessages([]);
-
-  const handleFileUpload = (_files: File[]) => {
-    toast({ title: t.chat.fileUploadSoon, description: t.chat.fileUploadSoonDesc });
-  };
 
   const isDark = theme === 'dark';
 
@@ -170,7 +182,6 @@ export default function ChatPage() {
             messages={messages}
             onSend={handleSend}
             onClearChat={handleClear}
-            onFileUpload={handleFileUpload}
             isSending={isSending}
             streamingText={streamingText}
             userName={user?.displayName || user?.email?.split('@')[0] || t.chat.defaultUser}
