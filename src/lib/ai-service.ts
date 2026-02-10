@@ -17,7 +17,7 @@ export interface AIResponse {
 /**
  * Orchestrates AI provider chains based on mode.
  *
- * Fast mode:     Gemini 3 Flash Preview → Mistral Small → OpenRouter (Mistral 3.1 → GPT OSS 20B → Step 3.5 Flash) → error
+ * Fast mode:     Mistral Small → Gemini 3 Flash Preview → OpenRouter (Mistral 3.1 → GPT OSS 20B → Step 3.5 Flash) → error
  * Thinking mode: OpenRouter (GLM 4.7 → GLM 4.5 Air free → Kimi K2.5 → GPT OSS 120B) → Gemini → Mistral → error
  */
 export const generateStreamingChat = async (
@@ -29,17 +29,7 @@ export const generateStreamingChat = async (
   const errors: string[] = [];
 
   if (mode === 'fast') {
-    // Fast chain: Gemini → Mistral → OpenRouter (Dolphin, GPT OSS, DeepSeek)
-    try {
-      const gemini = getGeminiProvider();
-      const result = await gemini.generateStreamingResponse(messages, systemPrompt, onChunk);
-      if (result.message) return result;
-    } catch (error: any) {
-      console.warn('[Kingsley] Gemini failed:', error.message);
-      errors.push(`Gemini: ${error.message}`);
-      onChunk('');
-    }
-
+    // Fast chain: Mistral → Gemini → OpenRouter
     try {
       const mistral = getMistralProvider();
       const result = await mistral.generateStreamingResponse(messages, systemPrompt, onChunk);
@@ -47,6 +37,16 @@ export const generateStreamingChat = async (
     } catch (error: any) {
       console.warn('[Kingsley] Mistral failed:', error.message);
       errors.push(`Mistral: ${error.message}`);
+      onChunk('');
+    }
+
+    try {
+      const gemini = getGeminiProvider();
+      const result = await gemini.generateStreamingResponse(messages, systemPrompt, onChunk);
+      if (result.message) return result;
+    } catch (error: any) {
+      console.warn('[Kingsley] Gemini failed:', error.message);
+      errors.push(`Gemini: ${error.message}`);
       onChunk('');
     }
 
