@@ -487,6 +487,17 @@ const en = {
     voiceSpeaking: 'Kingsley speaking',
     voiceTurnReady: 'Your turn',
     voiceSpeakingPlaceholder: 'Kingsley is speaking... draft your next message',
+    voiceInput: 'Speak',
+    voiceInputListening: 'Listening',
+    voiceInputPrompt: 'Speak your request...',
+    voiceInputListeningPlaceholder: 'Listening... speak to Kingsley',
+    voiceInputUnsupported: 'Voice input is not supported in this browser',
+    voiceInputPermissionDenied: 'Microphone access was denied',
+    voiceInputNoSpeech: 'No voice was detected. Please try again.',
+    voiceInputCaptureError: 'No microphone was found or accessible',
+    voiceInputNetworkError: 'Network error while capturing speech',
+    voiceInputUnexpectedError: 'Unexpected voice input error',
+    voiceInputErrorTitle: 'Voice input failed',
   },
 
   // Uploads Page

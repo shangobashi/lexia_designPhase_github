@@ -487,6 +487,17 @@ const fr = {
     voiceSpeaking: 'Kingsley parle',
     voiceTurnReady: '\u00c0 vous',
     voiceSpeakingPlaceholder: 'Kingsley parle... pr\u00e9parez votre prochain message',
+    voiceInput: 'Parler',
+    voiceInputListening: 'J\u2019\u00e9coute',
+    voiceInputPrompt: 'Exprimez votre demande...',
+    voiceInputListeningPlaceholder: 'J\u2019\u00e9coute... parlez \u00e0 Kingsley',
+    voiceInputUnsupported: 'La saisie vocale n\u2019est pas prise en charge par ce navigateur',
+    voiceInputPermissionDenied: 'L\u2019acc\u00e8s au microphone a \u00e9t\u00e9 refus\u00e9',
+    voiceInputNoSpeech: 'Aucune voix d\u00e9tect\u00e9e. Veuillez r\u00e9essayer.',
+    voiceInputCaptureError: 'Aucun microphone disponible ou accessible',
+    voiceInputNetworkError: 'Erreur r\u00e9seau pendant la capture vocale',
+    voiceInputUnexpectedError: 'Erreur inattendue de saisie vocale',
+    voiceInputErrorTitle: '\u00c9chec de la saisie vocale',
   },
 
   // Uploads Page

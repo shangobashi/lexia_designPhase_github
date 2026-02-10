@@ -1,7 +1,7 @@
 const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
 const MAX_TEXT_LENGTH = 5000;
 const DEFAULT_EN_VOICE_ID = 'onwK4e9ZLuTAKqWW03F9';
-const DEFAULT_FR_LIBRARY_VOICE_ID = 'nbiTBaMRdSobTQJDzIWm';
+const DEFAULT_FR_LIBRARY_VOICE_ID = 'hPgPa4mzYEnywnj9FS3r';
 
 function normalizeLanguage(language) {
   return language === 'fr' ? 'fr' : 'en';

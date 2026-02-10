@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { PaperclipIcon, Plus, Send, X, FileText, Image, Loader2, Volume2, VolumeX } from 'lucide-react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import { PaperclipIcon, Plus, Send, X, FileText, Image, Loader2, Volume2, VolumeX, Mic, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { gsap } from 'gsap';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
 import { useToast } from '@/hooks/use-toast';
 import { useVoice } from '@/hooks/use-voice';
+import { useSpeechInput } from '@/hooks/use-speech-input';
 import { Message } from '@/types/message';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -110,6 +111,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const [loadedFiles, setLoadedFiles] = useState<LoadedFile[]>([]);
   const [isReadingFile, setIsReadingFile] = useState(false);
   const [emptyGlyph, setEmptyGlyph] = useState(EMPTY_STATE_GLYPH_SEQUENCE[0]);
+  const [interimVoiceTranscript, setInterimVoiceTranscript] = useState('');
   const [isLiveVoiceEnabled, setIsLiveVoiceEnabled] = useState(() => {
     if (typeof window === 'undefined') return true;
     const storedValue = window.localStorage.getItem(LIVE_VOICE_STORAGE_KEY);
@@ -139,6 +141,36 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const autoPlayedMessageIdsRef = useRef<Set<string>>(new Set());
   const voiceWasPlayingRef = useRef(false);
 
+  const submitOutgoingMessage = useCallback((messageText: string, filesToSend: LoadedFile[] = loadedFiles) => {
+    const trimmedMessage = messageText.trim();
+    if ((!trimmedMessage && filesToSend.length === 0) || isSending) return false;
+
+    onSend(trimmedMessage, filesToSend.length > 0 ? filesToSend : undefined);
+    setInput('');
+    setLoadedFiles([]);
+    return true;
+  }, [isSending, loadedFiles, onSend]);
+
+  const {
+    isSupported: isSpeechInputSupported,
+    isListening: isSpeechInputListening,
+    errorCode: speechInputError,
+    startListening: startSpeechInput,
+    stopListening: stopSpeechInput,
+  } = useSpeechInput({
+    language,
+    onInterimTranscript: setInterimVoiceTranscript,
+    onFinalTranscript: (transcript) => {
+      const composedMessage = [input.trim(), transcript.trim()].filter(Boolean).join(' ');
+      if (!composedMessage) return;
+
+      const sent = submitOutgoingMessage(composedMessage);
+      if (!sent) {
+        setInput(composedMessage);
+      }
+    },
+  });
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingText]);
@@ -151,6 +183,44 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       variant: 'destructive',
     });
   }, [voiceError, toast, t.chat.voiceError]);
+
+  useEffect(() => {
+    if (!speechInputError || speechInputError === 'aborted') return;
+
+    const speechErrorDescription = (() => {
+      switch (speechInputError) {
+        case 'not-supported':
+          return t.chat.voiceInputUnsupported;
+        case 'not-allowed':
+        case 'service-not-allowed':
+          return t.chat.voiceInputPermissionDenied;
+        case 'audio-capture':
+          return t.chat.voiceInputCaptureError;
+        case 'no-speech':
+          return t.chat.voiceInputNoSpeech;
+        case 'network':
+          return t.chat.voiceInputNetworkError;
+        default:
+          return t.chat.voiceInputUnexpectedError;
+      }
+    })();
+
+    toast({
+      title: t.chat.voiceInputErrorTitle,
+      description: speechErrorDescription,
+      variant: 'destructive',
+    });
+  }, [
+    speechInputError,
+    toast,
+    t.chat.voiceInputCaptureError,
+    t.chat.voiceInputErrorTitle,
+    t.chat.voiceInputNetworkError,
+    t.chat.voiceInputNoSpeech,
+    t.chat.voiceInputPermissionDenied,
+    t.chat.voiceInputUnexpectedError,
+    t.chat.voiceInputUnsupported,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -276,21 +346,13 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if ((input.trim() || loadedFiles.length > 0) && !isSending) {
-      onSend(input, loadedFiles.length > 0 ? loadedFiles : undefined);
-      setInput('');
-      setLoadedFiles([]);
-    }
+    submitOutgoingMessage(input);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if ((input.trim() || loadedFiles.length > 0) && !isSending) {
-        onSend(input, loadedFiles.length > 0 ? loadedFiles : undefined);
-        setInput('');
-        setLoadedFiles([]);
-      }
+      submitOutgoingMessage(input);
     }
   };
 
@@ -361,7 +423,9 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const getAttachmentLabel = (count: number) => (count === 1 ? t.chat.attachedFile : t.chat.attachedFilesLabel);
   const totalLoadedSize = loadedFiles.reduce((sum, file) => sum + file.size, 0);
   const isEmptyState = messages.length === 0;
-  const composerPlaceholder = isVoicePlaying ? t.chat.voiceSpeakingPlaceholder : t.chat.inputPlaceholder;
+  const composerPlaceholder = isSpeechInputListening
+    ? t.chat.voiceInputListeningPlaceholder
+    : (isVoicePlaying ? t.chat.voiceSpeakingPlaceholder : t.chat.inputPlaceholder);
   const voicePresenceLabel = isVoiceLoading
     ? t.chat.generatingAudio
     : isVoicePlaying
@@ -376,6 +440,18 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       }
       return nextValue;
     });
+  };
+
+  const handleSpeechInputToggle = () => {
+    if (isSpeechInputListening) {
+      stopSpeechInput();
+      return;
+    }
+
+    if (isVoiceLoading || isVoicePlaying) {
+      stopVoice();
+    }
+    startSpeechInput();
   };
 
   const VoiceOrb = ({ message }: { message: Message }) => {
@@ -744,20 +820,47 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
               </div>
 
               <div className="sm:self-end">
-                <button
-                  type="submit"
-                  disabled={isSending || (!input.trim() && loadedFiles.length === 0)}
-                  className={cn(
-                    "h-11 px-4 rounded-xl font-clash font-medium text-sm transition-colors",
-                    "inline-flex items-center justify-center gap-2",
-                    "disabled:opacity-45 disabled:cursor-not-allowed",
-                    "bg-blue-600 hover:bg-blue-700 text-white border border-blue-500/90",
-                    "w-full sm:w-auto sm:min-w-[7.5rem]"
-                  )}
-                >
-                  <Send className="h-4 w-4" />
-                  {t.chat.send}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSpeechInputToggle}
+                    disabled={isSending}
+                    className={cn(
+                      "h-11 px-3.5 rounded-xl font-clash font-medium text-sm transition-colors",
+                      "inline-flex items-center justify-center gap-2",
+                      "disabled:opacity-45 disabled:cursor-not-allowed",
+                      isSpeechInputListening
+                        ? (isDark ? 'bg-rose-500/20 text-rose-200 border border-rose-400/40' : 'bg-rose-50 text-rose-600 border border-rose-200')
+                        : (isDark ? 'bg-slate-700/80 hover:bg-slate-600 text-slate-100 border border-slate-500/70' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300')
+                    )}
+                    aria-label={t.chat.voiceInput}
+                    title={isSpeechInputSupported ? t.chat.voiceInput : t.chat.voiceInputUnsupported}
+                  >
+                    {isSpeechInputListening ? (
+                      <Square className="h-3.5 w-3.5" />
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
+                    <span className="hidden sm:inline">
+                      {isSpeechInputListening ? t.chat.voiceInputListening : t.chat.voiceInput}
+                    </span>
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isSending || (!input.trim() && loadedFiles.length === 0)}
+                    className={cn(
+                      "h-11 px-4 rounded-xl font-clash font-medium text-sm transition-colors",
+                      "inline-flex items-center justify-center gap-2",
+                      "disabled:opacity-45 disabled:cursor-not-allowed",
+                      "bg-blue-600 hover:bg-blue-700 text-white border border-blue-500/90",
+                      "w-full sm:w-auto sm:min-w-[7.5rem]"
+                    )}
+                  >
+                    <Send className="h-4 w-4" />
+                    {t.chat.send}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -834,12 +937,32 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
               "mt-2.5 flex items-center justify-between border-t pt-2 text-xs",
               isDark ? 'border-slate-700/60 text-slate-400' : 'border-gray-200/80 text-gray-500'
             )}>
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <div className={cn(
                   "w-2 h-2 rounded-full",
-                  isReadingFile ? 'bg-yellow-500 animate-pulse' : 'bg-emerald-500'
+                  isReadingFile
+                    ? 'bg-yellow-500 animate-pulse'
+                    : isSpeechInputListening
+                      ? 'bg-rose-400 animate-pulse'
+                      : 'bg-emerald-500'
                 )} />
-                <span>{isReadingFile ? t.chat.fileProcessing : t.chat.ready}</span>
+                <span>
+                  {isReadingFile
+                    ? t.chat.fileProcessing
+                    : isSpeechInputListening
+                      ? t.chat.voiceInputListening
+                      : t.chat.ready}
+                </span>
+                {isSpeechInputListening && (
+                  <span
+                    className={cn(
+                      "hidden max-w-[14rem] truncate rounded-full px-2 py-0.5 text-[10px] font-medium sm:inline-flex",
+                      isDark ? 'bg-rose-500/15 text-rose-200' : 'bg-rose-50 text-rose-700'
+                    )}
+                  >
+                    {interimVoiceTranscript || t.chat.voiceInputPrompt}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {(isVoiceLoading || isVoicePlaying) && (
