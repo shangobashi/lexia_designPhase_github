@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { PaperclipIcon, Send, X, FileText, Image, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { gsap } from 'gsap';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
 import { useToast } from '@/hooks/use-toast';
@@ -111,12 +112,73 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const emptyStateRef = useRef<HTMLDivElement>(null);
+  const emptyGlowOneRef = useRef<HTMLDivElement>(null);
+  const emptyGlowTwoRef = useRef<HTMLDivElement>(null);
+  const emptyIconRef = useRef<HTMLDivElement>(null);
+  const emptyTitleRef = useRef<HTMLParagraphElement>(null);
+  const emptySubtitleRef = useRef<HTMLParagraphElement>(null);
+  const [actionsOffsetY, setActionsOffsetY] = useState(0);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingText]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (messages.length !== 0) return;
+    const container = emptyStateRef.current;
+    const glowOne = emptyGlowOneRef.current;
+    const glowTwo = emptyGlowTwoRef.current;
+    const icon = emptyIconRef.current;
+    const title = emptyTitleRef.current;
+    const subtitle = emptySubtitleRef.current;
+    if (!container || !glowOne || !glowTwo || !icon || !title || !subtitle) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        [icon, title, subtitle],
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, duration: 0.7, stagger: 0.08, ease: 'power2.out' }
+      );
+
+      gsap.to(glowOne, {
+        x: 18,
+        y: 12,
+        scale: 1.08,
+        opacity: isDark ? 0.28 : 0.22,
+        duration: 8.5,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+
+      gsap.to(glowTwo, {
+        x: -16,
+        y: -10,
+        scale: 0.92,
+        opacity: isDark ? 0.2 : 0.16,
+        duration: 9.5,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+
+      gsap.to(icon, {
+        y: -3,
+        duration: 2.4,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+    }, container);
+
+    return () => {
+      ctx.revert();
+    };
+  }, [messages.length, isDark]);
+
+  useLayoutEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -132,6 +194,27 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
     textarea.style.height = `${nextHeight}px`;
     textarea.style.overflowY = textarea.scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
   }, [input]);
+
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    const actions = actionsRef.current;
+    if (!textarea || !actions) return;
+
+    // Desktop only: on mobile controls are stacked and should not be offset.
+    if (window.innerWidth < 640) {
+      if (actionsOffsetY !== 0) setActionsOffsetY(0);
+      return;
+    }
+
+    const textareaBottom = textarea.getBoundingClientRect().bottom;
+    const actionsBottom = actions.getBoundingClientRect().bottom;
+    const delta = Math.round(textareaBottom - actionsBottom);
+    const nextOffset = Math.abs(delta) <= 1 ? 0 : delta;
+
+    if (nextOffset !== actionsOffsetY) {
+      setActionsOffsetY(nextOffset);
+    }
+  }, [input, isSending, isReadingFile, theme, actionsOffsetY]);
 
   const scrollToBottom = () => {
     const container = messagesContainerRef.current;
@@ -238,23 +321,45 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       >
         {messages.length === 0 ? (
           <div className={cn(
-            "text-center py-16 rounded-[1.25rem] border",
+            "relative overflow-hidden text-center py-16 rounded-[1.25rem] border",
             isDark
               ? 'border-slate-700/50 bg-slate-800/40 text-slate-300'
               : 'border-gray-200/80 bg-gray-50/50 text-gray-500'
-          )}>
-            <div className="mb-4">
-              <div className={cn(
-                "w-12 h-12 mx-auto rounded-[0.875rem] flex items-center justify-center",
-                isDark ? 'bg-blue-600/20' : 'bg-blue-50'
-              )}>
-                <svg className={cn("w-6 h-6", isDark ? 'text-blue-400' : 'text-blue-600')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
+          )}
+          ref={emptyStateRef}
+          >
+            <div
+              ref={emptyGlowOneRef}
+              className={cn(
+                "pointer-events-none absolute -left-12 -top-14 h-52 w-52 rounded-full blur-3xl",
+                isDark ? 'bg-blue-500/20' : 'bg-blue-200/45'
+              )}
+            />
+            <div
+              ref={emptyGlowTwoRef}
+              className={cn(
+                "pointer-events-none absolute -right-10 -bottom-16 h-56 w-56 rounded-full blur-3xl",
+                isDark ? 'bg-cyan-500/12' : 'bg-cyan-200/35'
+              )}
+            />
+
+            <div className="relative z-10">
+              <div className="mb-4">
+                <div
+                  ref={emptyIconRef}
+                  className={cn(
+                    "w-12 h-12 mx-auto rounded-[0.875rem] flex items-center justify-center",
+                    isDark ? 'bg-blue-600/20' : 'bg-blue-50'
+                  )}
+                >
+                  <svg className={cn("w-6 h-6", isDark ? 'text-blue-400' : 'text-blue-600')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                </div>
               </div>
+              <p ref={emptyTitleRef} className="text-lg font-clash font-medium mb-2">{t.chat.emptyState.title}</p>
+              <p ref={emptySubtitleRef} className="text-sm opacity-75">{t.chat.emptyState.subtitle}</p>
             </div>
-            <p className="text-lg font-clash font-medium mb-2">{t.chat.emptyState.title}</p>
-            <p className="text-sm opacity-75">{t.chat.emptyState.subtitle}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -435,7 +540,11 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 />
               </div>
 
-              <div className="flex items-center gap-2 sm:items-end sm:self-end">
+              <div
+                ref={actionsRef}
+                style={actionsOffsetY === 0 ? undefined : { transform: `translateY(${actionsOffsetY}px)` }}
+                className="flex items-center gap-2 sm:items-end sm:self-end"
+              >
                 <button
                   type="button"
                   onClick={handleFileClick}

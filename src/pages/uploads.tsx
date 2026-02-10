@@ -24,7 +24,7 @@ export default function UploadsPage() {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -249,9 +249,9 @@ export default function UploadsPage() {
   };
   
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Octets';
+    if (bytes === 0) return language === 'fr' ? '0 Octets' : '0 Bytes';
     const k = 1024;
-    const sizes = ['Octets', 'Ko', 'Mo', 'Go'];
+    const sizes = language === 'fr' ? ['Octets', 'Ko', 'Mo', 'Go'] : ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
@@ -259,7 +259,8 @@ export default function UploadsPage() {
   // Helper function to format date
   const formatDisplayDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
+    const locale = language === 'fr' ? 'fr-FR' : 'en-US';
+    return date.toLocaleDateString(locale, {
       day: 'numeric', 
       month: 'long', 
       year: 'numeric' 

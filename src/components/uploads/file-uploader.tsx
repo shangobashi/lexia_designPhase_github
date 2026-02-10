@@ -1,7 +1,7 @@
-import { useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/language-context';
 import { Upload, File, X, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,6 +15,12 @@ interface FileUploaderProps {
   disabled?: boolean;
 }
 
+function interpolate(template: string, values: Record<string, string>): string {
+  return Object.entries(values).reduce((acc, [key, value]) => {
+    return acc.replace(`{${key}}`, value);
+  }, template);
+}
+
 export function FileUploader({
   onFilesAdded,
   onFileRemove,
@@ -25,27 +31,38 @@ export function FileUploader({
   disabled = false,
 }: FileUploaderProps) {
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t, language } = useLanguage();
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return language === 'fr' ? '0 Octets' : '0 Bytes';
+    const k = 1024;
+    const sizes = language === 'fr' ? ['Octets', 'Ko', 'Mo', 'Go'] : ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
       if (disabled) return;
-      
+
       if (files.length + acceptedFiles.length > maxFiles) {
         toast({
-          title: 'Trop de fichiers',
-          description: `Vous pouvez télécharger un maximum de ${maxFiles} fichiers`,
+          title: t.fileUploader.tooManyFiles,
+          description: interpolate(t.fileUploader.tooManyFilesDesc, { max: String(maxFiles) }),
           variant: 'destructive',
         });
         return;
       }
 
       // Filter out files that are too large
-      const validFiles = acceptedFiles.filter(file => {
+      const validFiles = acceptedFiles.filter((file) => {
         if (file.size > maxSizeInBytes) {
           toast({
-            title: 'Fichier trop volumineux',
-            description: `${file.name} dépasse la taille maximale de ${formatFileSize(maxSizeInBytes)}`,
+            title: t.fileUploader.fileTooLarge,
+            description: interpolate(t.fileUploader.fileTooLargeDesc, {
+              name: file.name,
+              max: formatFileSize(maxSizeInBytes),
+            }),
             variant: 'destructive',
           });
           return false;
@@ -63,17 +80,9 @@ export function FileUploader({
     disabled,
   });
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Octets';
-    const k = 1024;
-    const sizes = ['Octets', 'Ko', 'Mo', 'Go'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   const getFileIcon = (fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase() || '';
-    
+
     switch (extension) {
       case 'pdf':
         return <div className="w-8 h-8 rounded bg-red-500/20 text-red-500 flex items-center justify-center">PDF</div>;
@@ -97,22 +106,20 @@ export function FileUploader({
       <div
         {...getRootProps()}
         className={`border-2 border-dashed border-border rounded-lg p-6 text-center transition-colors ${
-          disabled 
-            ? 'cursor-not-allowed opacity-50 bg-muted' 
-            : isDragActive 
-              ? 'bg-primary/5 border-primary cursor-pointer' 
+          disabled
+            ? 'cursor-not-allowed opacity-50 bg-muted'
+            : isDragActive
+              ? 'bg-primary/5 border-primary cursor-pointer'
               : 'hover:bg-background cursor-pointer'
         }`}
       >
         <input {...getInputProps()} />
         <div className="flex flex-col items-center">
           <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-          <p className="text-base font-medium">Glissez-déposez vos fichiers ici</p>
-          <p className="text-sm text-muted-foreground mt-1 mb-2">
-            ou cliquez pour parcourir vos fichiers
-          </p>
+          <p className="text-base font-medium">{t.fileUploader.dragDrop}</p>
+          <p className="text-sm text-muted-foreground mt-1 mb-2">{t.fileUploader.orBrowse}</p>
           <p className="text-xs text-muted-foreground">
-            Types de fichiers acceptés : PDF, DOC, DOCX, TXT, JPG, PNG (max {formatFileSize(maxSizeInBytes)})
+            {t.fileUploader.acceptedTypes} {formatFileSize(maxSizeInBytes)})
           </p>
         </div>
       </div>
@@ -120,7 +127,7 @@ export function FileUploader({
       {/* File List */}
       {files.length > 0 && (
         <div className="mt-4">
-          <p className="text-sm font-medium mb-2">Fichiers téléchargés ({files.length}/{maxFiles})</p>
+          <p className="text-sm font-medium mb-2">{t.fileUploader.uploadedFiles} ({files.length}/{maxFiles})</p>
           <div className="space-y-2">
             <AnimatePresence initial={false}>
               {files.map((file, index) => (
@@ -157,7 +164,7 @@ export function FileUploader({
       {files.length === maxFiles && (
         <div className="flex items-center p-2 text-xs text-muted-foreground bg-background rounded-md">
           <AlertCircle className="h-4 w-4 mr-2 text-warning" />
-          Limite de fichiers atteinte. Supprimez des fichiers pour en ajouter d'autres.
+          {t.fileUploader.fileLimitReached}
         </div>
       )}
     </div>
