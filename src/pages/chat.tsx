@@ -25,7 +25,7 @@ const getRandomErrorMessage = () =>
 export default function ChatPage() {
   const { user, continueAsGuest } = useAuth();
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { toast } = useToast();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -70,9 +70,12 @@ export default function ChatPage() {
         content: m.content,
       }));
 
+      const langName = language === 'fr' ? 'French' : 'English';
+      const langPrompt = `[LANGUAGE DIRECTIVE: The user's interface is set to ${langName}. You MUST respond entirely in ${langName}. Do not mix languages.]\n\n${config.defaultSystemPrompt}`;
+
       const result = await generateStreamingChat(
         payloadMessages,
-        config.defaultSystemPrompt,
+        langPrompt,
         mode,
         (partialText) => {
           setStreamingText(partialText);
