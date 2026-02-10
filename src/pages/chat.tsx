@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types/message';
 import { LoadedFile, buildFileContext, formatFileSize } from '@/lib/file-reader';
 
+const INTRO_STORAGE_PREFIX = 'kingsley-intro-shown:';
 const ERROR_MESSAGES = [
   "Objection! All my neural pathways are currently in recess. Even AI lawyers need a break sometimes. Please try again in a moment.",
   "Court is temporarily adjourned. My legal circuits are experiencing a brief intermission. I'll be back faster than a Belgian court ruling.",
@@ -24,6 +25,45 @@ const ERROR_MESSAGES = [
 const getRandomErrorMessage = () =>
   ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)];
 
+const INTRO_PROMPT_ALLOW = `
+[SESSION INTRO POLICY]
+- This is first contact in this account/session.
+- You may introduce yourself ONCE in one short sentence at most, then continue normally.
+- Do not repeat that introduction in any later reply.
+`;
+
+const INTRO_PROMPT_BLOCK = `
+[SESSION INTRO POLICY]
+- Do NOT introduce yourself again.
+- Do NOT open with "I am Kingsley" / "Je suis Kingsley" or equivalent.
+- Continue directly with the user's request context.
+`;
+
+function stripRepeatedIntro(content: string): string {
+  const sentencePatterns = [
+    /\bje\s+suis\s+kingsley[^.!?\n]*[.!?]?/gi,
+    /\bi\s+am\s+kingsley[^.!?\n]*[.!?]?/gi,
+    /\bik\s+ben\s+kingsley[^.!?\n]*[.!?]?/gi,
+  ];
+
+  let result = content;
+  for (const sentencePattern of sentencePatterns) {
+    result = result.replace(sentencePattern, ' ');
+  }
+
+  result = result
+    .replace(/\(\s*\)/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^[\s,.;:!?-]+/, '')
+    .trim();
+
+  return result || content;
+}
+
+function introStorageKeyForUser(userId: string | undefined): string {
+  return `${INTRO_STORAGE_PREFIX}${userId || 'guest-user'}`;
+}
+
 export default function ChatPage() {
   const { user, continueAsGuest } = useAuth();
   const { theme } = useTheme();
@@ -34,7 +74,9 @@ export default function ChatPage() {
   const [isSending, setIsSending] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [mode, setMode] = useState<KingsleyMode>('fast');
+  const [introAllowed, setIntroAllowed] = useState(false);
   const messagesRef = useRef(messages);
+  const introAllowedRef = useRef(introAllowed);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const titleWordRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const accentLineRef = useRef<HTMLDivElement>(null);
@@ -44,10 +86,21 @@ export default function ChatPage() {
   }, [messages]);
 
   useEffect(() => {
+    introAllowedRef.current = introAllowed;
+  }, [introAllowed]);
+
+  useEffect(() => {
     if (!user) {
       continueAsGuest();
     }
   }, [user, continueAsGuest]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storageKey = introStorageKeyForUser(user?.id);
+    const hasSeenIntro = window.localStorage.getItem(storageKey) === '1';
+    setIntroAllowed(!hasSeenIntro);
+  }, [user?.id]);
 
   useEffect(() => {
     const titleWords = titleWordRefs.current.filter(Boolean) as HTMLSpanElement[];
@@ -130,7 +183,8 @@ export default function ChatPage() {
       }));
 
       const langName = language === 'fr' ? 'French' : 'English';
-      const langPrompt = `[LANGUAGE DIRECTIVE: The user's interface is set to ${langName}. You MUST respond entirely in ${langName}. Do not mix languages.]\n\n${config.defaultSystemPrompt}`;
+      const introPolicy = introAllowedRef.current ? INTRO_PROMPT_ALLOW : INTRO_PROMPT_BLOCK;
+      const langPrompt = `[LANGUAGE DIRECTIVE: The user's interface is set to ${langName}. You MUST respond entirely in ${langName}. Do not mix languages.]\n${introPolicy}\n${config.defaultSystemPrompt}`;
 
       const result = await generateStreamingChat(
         payloadMessages,
@@ -159,15 +213,25 @@ export default function ChatPage() {
         return;
       }
 
+      const finalAssistantMessage = introAllowedRef.current
+        ? result.message
+        : stripRepeatedIntro(result.message);
+
       const aiMessage: Message = {
         id: uuid(),
-        content: result.message,
+        content: finalAssistantMessage,
         sender: 'assistant',
         timestamp: new Date().toISOString(),
         caseId: 'ad-hoc',
       };
 
       setMessages(prev => [...prev, aiMessage]);
+
+      if (introAllowedRef.current && typeof window !== 'undefined') {
+        const storageKey = introStorageKeyForUser(user?.id);
+        window.localStorage.setItem(storageKey, '1');
+        setIntroAllowed(false);
+      }
     } catch (error: any) {
       const aiErrorMessage: Message = {
         id: uuid(),
@@ -187,7 +251,7 @@ export default function ChatPage() {
       setIsSending(false);
       setStreamingText('');
     }
-  }, [isSending, toast, mode, t, language]);
+  }, [isSending, toast, mode, t, language, user?.id]);
 
   const handleClear = () => setMessages([]);
 
