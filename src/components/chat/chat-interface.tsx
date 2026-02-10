@@ -377,7 +377,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                             "bg-white/10 border-white/25 text-white/95"
                           )}
                         >
-                          <div className="flex items-center justify-between gap-3 text-[10px] font-semibold tracking-[0.12em] uppercase">
+                          <div className="flex flex-col items-start gap-1.5 text-[10px] font-semibold tracking-[0.12em] uppercase sm:flex-row sm:items-center sm:justify-between">
                             <span className="inline-flex items-center gap-1.5">
                               <PaperclipIcon className="w-3 h-3" />
                               {badges.length} {getAttachmentLabel(badges.length)}
@@ -390,11 +390,11 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                                 key={i}
                                 whileHover={{ y: -1, scale: 1.015 }}
                                 transition={{ type: 'spring', stiffness: 380, damping: 24 }}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs bg-white/20 text-white/90"
+                                className="inline-flex max-w-full min-w-0 items-center gap-1 px-2 py-0.5 rounded-md text-xs bg-white/20 text-white/90"
                               >
-                                <FileText className="w-3 h-3" />
-                                {badge.name}
-                                {badge.size && <span className="opacity-70">({badge.size})</span>}
+                                <FileText className="w-3 h-3 flex-shrink-0" />
+                                <span className="max-w-[9rem] truncate sm:max-w-[13rem]">{badge.name}</span>
+                                {badge.size && <span className="opacity-70 shrink-0">({badge.size})</span>}
                               </motion.span>
                             ))}
                           </div>

@@ -21,6 +21,7 @@ export default function DashboardLayout() {
 
   // Check if we're on the case detail page
   const isCaseDetailPage = location.pathname.startsWith('/cases/') && location.pathname !== '/cases';
+  const isChatPage = location.pathname === '/chat';
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -80,7 +81,7 @@ export default function DashboardLayout() {
             }
           }}
           isCollapsed={sidebarCollapsed}
-          hideAIButton={isCaseDetailPage}
+          hideAIButton={isCaseDetailPage || isChatPage}
         />
 
         <div className="flex-1 overflow-x-hidden overflow-y-auto">

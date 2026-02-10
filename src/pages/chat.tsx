@@ -222,8 +222,8 @@ export default function ChatPage() {
               className={`mt-2 h-px w-44 ${isDark ? 'bg-slate-600/80' : 'bg-slate-300/90'}`}
             />
           </div>
-          <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3 lg:w-auto lg:justify-end">
-            <div className="w-full sm:w-auto sm:min-w-[12rem]">
+          <div className="flex w-full flex-nowrap items-center gap-1.5 sm:gap-2 lg:w-auto lg:justify-end">
+            <div className="min-w-0 flex-1 sm:min-w-[12rem]">
               <AIProviderSwitch
                 currentProvider="openrouter"
                 onProviderChange={() => {}}
@@ -231,12 +231,12 @@ export default function ChatPage() {
                 onModeChange={handleModeChange}
               />
             </div>
-            <div className="w-full sm:w-auto">
+            <div className="shrink-0">
               <SaveChatButton messages={messages} />
             </div>
             <button
               onClick={handleClear}
-              className={`${isDark ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} inline-flex h-10 w-full sm:w-auto items-center justify-center px-3 sm:px-4 rounded-xl text-sm font-clash transition-colors`}
+              className={`${isDark ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} inline-flex h-10 shrink-0 items-center justify-center px-3 sm:px-4 rounded-xl text-sm font-clash transition-colors`}
             >
               {t.chat.reset}
             </button>
