@@ -6,9 +6,8 @@ export type KingsleyMode = 'fast' | 'thinking';
 
 const MODE_MODELS: Record<KingsleyMode, string[]> = {
   fast: [
-    'mistralai/mistral-small-3.1-24b-instruct:free',
-    'openai/gpt-oss-20b:free',
     'stepfun/step-3.5-flash:free',
+    'openai/gpt-oss-20b:free',
   ],
   thinking: [
     'z-ai/glm-4.7',

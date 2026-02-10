@@ -17,7 +17,7 @@ export interface AIResponse {
 /**
  * Orchestrates AI provider chains based on mode.
  *
- * Fast mode:     Mistral Small → OpenRouter (Mistral 3.1 → GPT OSS 20B → Step 3.5 Flash) → Gemini 3 Flash Preview → error
+ * Fast mode:     Mistral Small → OpenRouter (Step 3.5 Flash → GPT OSS 20B) → Gemini 3 Flash Preview → error
  * Thinking mode: OpenRouter (GLM 4.7 → GLM 4.5 Air free → Kimi K2.5 → GPT OSS 120B) → Gemini → Mistral → error
  */
 export const generateStreamingChat = async (
