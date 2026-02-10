@@ -21,6 +21,7 @@ import {
 
 const TEXTAREA_MIN_HEIGHT = 44;
 const TEXTAREA_MAX_HEIGHT = 220;
+const EMPTY_STATE_GLYPH_SEQUENCE = ['◴', '◷', '◶', '◵', '◐', '◓', '◑', '◒'];
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -105,6 +106,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const [input, setInput] = useState('');
   const [loadedFiles, setLoadedFiles] = useState<LoadedFile[]>([]);
   const [isReadingFile, setIsReadingFile] = useState(false);
+  const [emptyGlyph, setEmptyGlyph] = useState(EMPTY_STATE_GLYPH_SEQUENCE[0]);
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -122,6 +124,20 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingText]);
+
+  useEffect(() => {
+    if (messages.length !== 0) return;
+
+    let i = 0;
+    const tick = () => {
+      setEmptyGlyph(EMPTY_STATE_GLYPH_SEQUENCE[i]);
+      i = i === EMPTY_STATE_GLYPH_SEQUENCE.length - 1 ? 0 : i + 1;
+    };
+
+    tick();
+    const interval = window.setInterval(tick, 150);
+    return () => window.clearInterval(interval);
+  }, [messages.length]);
 
   useLayoutEffect(() => {
     if (messages.length !== 0) return;
@@ -320,14 +336,19 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   ref={emptyIconRef}
                   className={cn(
                     "w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-[0.875rem] p-1.5 sm:p-2 flex items-center justify-center border",
-                    isDark ? 'bg-slate-900/35 border-slate-600/35' : 'bg-white/80 border-gray-200/80'
+                    isDark ? 'bg-slate-900/35 border-slate-600/35 shadow-[0_0_16px_rgba(56,189,248,0.14)]' : 'bg-white/80 border-gray-200/80 shadow-[0_0_12px_rgba(59,130,246,0.12)]'
                   )}
                 >
-                  <img
-                    src={`${import.meta.env.BASE_URL}kingsley-logo.png`}
-                    alt="Kingsley app icon"
-                    className="w-full h-full object-contain"
-                  />
+                  <span
+                    role="progressbar"
+                    aria-label={t.chat.thinking}
+                    className={cn(
+                      "inline-flex h-full w-full items-center justify-center font-mono text-[1rem] sm:text-[1.15rem] leading-none",
+                      isDark ? "text-cyan-300" : "text-blue-600"
+                    )}
+                  >
+                    {emptyGlyph}
+                  </span>
                 </div>
               </div>
               <p ref={emptyTitleRef} className="text-base sm:text-lg font-clash font-medium mb-2">{t.chat.emptyState.title}</p>
@@ -481,7 +502,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   onKeyDown={handleKeyDown}
                   placeholder={t.chat.inputPlaceholder}
                   className={cn(
-                    "w-full h-11 min-h-11 pl-12 pr-4 py-2.5 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-5 transition-[height]",
+                    "w-full h-11 min-h-11 pl-14 pr-4 py-2.5 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-5 transition-[height]",
                     "[scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-corner]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full",
                     isDark
                       ? 'bg-slate-800/95 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-blue-500/35 focus:border-blue-500/50 [scrollbar-color:rgba(148,163,184,0.45)_transparent] [&::-webkit-scrollbar-thumb]:bg-slate-500/45 [&::-webkit-scrollbar-thumb:hover]:bg-slate-400/60'
@@ -495,7 +516,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   onClick={handleFileClick}
                   disabled={isSending || isReadingFile}
                   className={cn(
-                    "absolute left-2.5 bottom-2.5 inline-flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-200",
+                    "absolute left-3 top-1/2 -translate-y-1/2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-200",
                     "disabled:opacity-45 disabled:cursor-not-allowed",
                     isDark
                       ? 'bg-slate-700/75 border-slate-500/65 text-slate-100 hover:bg-slate-600/90 hover:border-slate-400/80'
