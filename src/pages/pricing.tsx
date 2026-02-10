@@ -7,27 +7,27 @@ export default function PricingPage() {
   const { t } = useLanguage();
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} py-16`}>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} py-10 sm:py-16`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section - Apple's calming breathing space */}
-        <div className="text-center mb-32">
+        <div className="text-center mb-16 sm:mb-24">
           {/* Main Title - Bold emphasis with perfect spacing */}
-          <h1 className={`font-clash text-6xl font-semibold mb-8 tracking-tight leading-none ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
+          <h1 className={`font-clash text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 sm:mb-8 tracking-tight leading-none ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
             {t.pricing.title}
           </h1>
           
           {/* Subtitle - Supporting information with generous breathing room */}
           <div className="max-w-3xl mx-auto">
-            <p className={`font-clash text-xl font-light leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
+            <p className={`font-clash text-base sm:text-xl font-light leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
               {t.pricing.subtitle}
             </p>
           </div>
         </div>
         
         {/* Pricing Grid - Perfect Alignment with Apple's serene spacing */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-24 max-w-7xl mx-auto scale-125">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-16 sm:mb-24 max-w-7xl mx-auto">
           {/* Free Plan */}
-          <div className={`relative flex flex-col p-8 rounded-3xl transition-all duration-500 hover:scale-[1.02] ${theme === 'dark' ? 'dark-executive-card' : 'executive-card'}`}>
+          <div className={`relative flex flex-col p-6 sm:p-8 rounded-3xl transition-all duration-500 hover:scale-[1.02] ${theme === 'dark' ? 'dark-executive-card' : 'executive-card'}`}>
             {/* Tier Badge - Consistent height */}
             <div className="flex justify-center mb-8 h-12">
               <div className={`font-clash px-6 py-3 rounded-2xl text-sm font-medium tracking-wide flex items-center ${
@@ -88,7 +88,7 @@ export default function PricingPage() {
           </div>
 
           {/* Professional Plan - Hero Element with perfect alignment */}
-          <div className={`relative flex flex-col p-8 rounded-3xl transition-all duration-500 hover:scale-[1.02] border-2 ${
+          <div className={`relative flex flex-col p-6 sm:p-8 rounded-3xl transition-all duration-500 hover:scale-[1.02] border-2 ${
             theme === 'dark' 
               ? 'dark-executive-card border-blue-400/60 shadow-blue-500/20 shadow-2xl' 
               : 'executive-card border-blue-400/60 shadow-blue-500/20 shadow-2xl'
@@ -153,7 +153,7 @@ export default function PricingPage() {
           </div>
 
           {/* Enterprise Plan */}
-          <div className={`relative flex flex-col p-8 rounded-3xl transition-all duration-500 hover:scale-[1.02] ${theme === 'dark' ? 'dark-executive-card' : 'executive-card'}`}>
+          <div className={`relative flex flex-col p-6 sm:p-8 rounded-3xl transition-all duration-500 hover:scale-[1.02] ${theme === 'dark' ? 'dark-executive-card' : 'executive-card'}`}>
             {/* Tier Badge - Consistent height */}
             <div className="flex justify-center mb-8 h-12">
               <div className={`font-clash px-6 py-3 rounded-2xl text-sm font-medium tracking-wide flex items-center ${
@@ -221,7 +221,7 @@ export default function PricingPage() {
         </div>
 
         {/* Navigation - Apple's generous breathing space */}
-        <div className="text-center mt-24">
+        <div className="text-center mt-12 sm:mt-24">
           <Link 
             to="/"
             className={`font-clash inline-flex items-center font-medium text-lg tracking-wide transition-all duration-300 hover:scale-105 ${

@@ -166,6 +166,8 @@ const fr = {
     security: {
       title: 'S\u00e9curit\u00e9',
       password: 'Mot de passe',
+      newPassword: 'Nouveau mot de passe',
+      confirmPassword: 'Confirmer le mot de passe',
       lastChanged: 'Derni\u00e8re modification le 15 juin 2024',
       twoFactor: 'Authentification \u00e0 deux facteurs',
       twoFactorDesc: 'S\u00e9curisez votre compte avec 2FA',

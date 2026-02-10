@@ -6,7 +6,7 @@ export default function AuthLayout() {
   const { theme } = useTheme();
   
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg document-flow' : 'sophisticated-bg book-flow'} flex`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg document-flow' : 'sophisticated-bg book-flow'} flex flex-col lg:flex-row`}>
       {/* Floating Icons Background - positioned away from logo area */}
       {theme === 'dark' ? (
         <>
@@ -39,14 +39,14 @@ export default function AuthLayout() {
       {/* Texture Overlay removed to prevent yellow tint */}
       
       {/* Theme Toggle */}
-      <div className="fixed top-6 right-6 z-50">
+      <div className="fixed right-3 top-3 z-50 sm:right-6 sm:top-6">
         <div className={`${theme === 'dark' ? 'refined-icon' : 'bg-gray-100'} p-3 rounded-full shimmer`}>
           <ThemeToggle />
         </div>
       </div>
       
       {/* Left Side - Branding and Features */}
-      <div className={`hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-16 relative z-10 ${theme === 'dark' ? 'dark-secondary-bg' : ''}`}>
+      <div className={`hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-10 xl:p-16 relative z-10 ${theme === 'dark' ? 'dark-secondary-bg' : ''}`}>
         <div className="max-w-sm mx-auto text-center flex flex-col items-center">
           {/* Logo - Perfectly Centered with Creative Inheritance */}
           <div className={`mb-12 w-24 h-24 flex items-center justify-center mx-auto`}>
@@ -113,13 +113,13 @@ export default function AuthLayout() {
       
       {/* Right Side - Login Form */}
       <div 
-        className={`w-full lg:w-1/2 flex flex-col items-center justify-center p-8 relative z-10 ${theme === 'dark' ? 'dark-secondary-bg' : ''}`}
+        className={`w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-8 relative z-10 ${theme === 'dark' ? 'dark-secondary-bg' : ''}`}
         style={theme === 'dark' 
           ? {} 
           : { background: 'linear-gradient(120deg, rgba(241, 243, 244, 0.9) 0%, rgba(248, 249, 250, 0.85) 50%, rgba(255, 255, 255, 0.9) 100%)' }
         }
       >
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md mt-10 sm:mt-0">
           <Outlet />
         </div>
       </div>

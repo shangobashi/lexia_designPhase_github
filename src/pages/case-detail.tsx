@@ -143,8 +143,8 @@ export default function CaseDetailPage() {
 
   if (!caseData) {
     return (
-      <div className={`${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} min-h-screen p-6`}>
-        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-12 text-center`}>
+      <div className={`${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} min-h-screen p-3 sm:p-6`}>
+        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6 sm:p-12 text-center`}>
           <h2 className={`font-clash text-2xl font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>Dossier introuvable</h2>
           <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>Le dossier demandé est introuvable</p>
           <button 
@@ -242,27 +242,27 @@ export default function CaseDetailPage() {
   ];
 
   return (
-    <div className={`${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} min-h-screen p-6`}>
+    <div className={`${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} min-h-screen p-3 sm:p-6`}>
       {/* Header */}
-      <div className={`${theme === 'dark' ? 'dark-header' : 'light-header'} px-6 py-4 rounded-2xl mb-6`}>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+      <div className={`${theme === 'dark' ? 'dark-header' : 'light-header'} px-4 sm:px-6 py-4 rounded-2xl mb-6`}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3 sm:items-center sm:space-x-4">
             <button 
               onClick={() => navigate('/cases')}
-              className={`${theme === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-800'}`}
+              className={`mt-0.5 sm:mt-0 ${theme === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-800'}`}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <div>
-              <h1 className={`text-2xl font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
+            <div className="min-w-0">
+              <h1 className={`text-xl sm:text-2xl font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
                 {caseData.title}
               </h1>
-              <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+              <p className={`text-sm sm:text-base ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
                 Dossier #{caseData.caseId} • Créé le {new Date(caseData.createdAt).toLocaleDateString()}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span className={`${theme === 'dark' ? 'dark-status-badge' : 'light-status-badge'} px-3 py-1 text-sm rounded-full font-medium`}>
               En cours
             </span>
@@ -281,7 +281,7 @@ export default function CaseDetailPage() {
       </div>
 
       {/* Case Overview */}
-      <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6 mb-8`}>
+      <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-4 sm:p-6 mb-8`}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>
@@ -291,7 +291,7 @@ export default function CaseDetailPage() {
               {caseData.description}
             </p>
             
-            <div className="grid grid-cols-2 gap-4 mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
               <div>
                 <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'} mb-1`}>
                   Client
@@ -378,23 +378,23 @@ export default function CaseDetailPage() {
       {/* Tabs */}
       <div className="mb-6">
         <div className="border-b border-slate-600/30">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex gap-2 overflow-x-auto pb-2">
             <button 
-              className={`${theme === 'dark' ? 'dark-tab-button' : 'light-tab-button'} ${activeTab === 'documents' ? 'active' : ''}`}
+              className={`${theme === 'dark' ? 'dark-tab-button' : 'light-tab-button'} whitespace-nowrap ${activeTab === 'documents' ? 'active' : ''}`}
               onClick={() => setActiveTab('documents')}
             >
               <FileText className="w-4 h-4 mr-2 inline" />
               Documents
             </button>
             <button 
-              className={`${theme === 'dark' ? 'dark-tab-button' : 'light-tab-button'} ${activeTab === 'history' ? 'active' : ''}`}
+              className={`${theme === 'dark' ? 'dark-tab-button' : 'light-tab-button'} whitespace-nowrap ${activeTab === 'history' ? 'active' : ''}`}
               onClick={() => setActiveTab('history')}
             >
               <Clock className="w-4 h-4 mr-2 inline" />
               Historique
             </button>
             <button 
-              className={`${theme === 'dark' ? 'dark-tab-button' : 'light-tab-button'} ${activeTab === 'consultations' ? 'active' : ''}`}
+              className={`${theme === 'dark' ? 'dark-tab-button' : 'light-tab-button'} whitespace-nowrap ${activeTab === 'consultations' ? 'active' : ''}`}
               onClick={() => setActiveTab('consultations')}
             >
               <svg className="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -403,7 +403,7 @@ export default function CaseDetailPage() {
               Consultations IA
             </button>
             <button 
-              className={`${theme === 'dark' ? 'dark-tab-button' : 'light-tab-button'} ${activeTab === 'contacts' ? 'active' : ''}`}
+              className={`${theme === 'dark' ? 'dark-tab-button' : 'light-tab-button'} whitespace-nowrap ${activeTab === 'contacts' ? 'active' : ''}`}
               onClick={() => setActiveTab('contacts')}
             >
               <svg className="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,8 +418,8 @@ export default function CaseDetailPage() {
       {/* Tab Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Documents List */}
-        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6`}>
-          <div className="flex justify-between items-center mb-6">
+        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-4 sm:p-6`}>
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
               Documents du dossier
             </h3>
@@ -432,7 +432,7 @@ export default function CaseDetailPage() {
           <div className="space-y-3">
             {caseData.documents.map((doc) => (
               <div key={doc.id} className={`${theme === 'dark' ? 'dark-document-card' : 'light-document-card'} rounded-lg p-4`}>
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start gap-3">
                   {getDocumentIcon(doc.type)}
                   <div className="flex-1 min-w-0">
                     <h4 className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} truncate`}>
@@ -441,7 +441,7 @@ export default function CaseDetailPage() {
                     <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'} mt-1`}>
                       Uploadé le {new Date(doc.uploadedAt).toLocaleDateString()} • {(doc.size / 1024 / 1024).toFixed(1)} MB
                     </p>
-                    <div className="flex items-center space-x-2 mt-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
                       {doc.tags.map((tag: string) => (
                         <span key={tag}>
                           {renderTag(tag)}
@@ -459,7 +459,7 @@ export default function CaseDetailPage() {
         </div>
 
         {/* Timeline */}
-        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6`}>
+        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-4 sm:p-6`}>
           <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-6`}>
             Historique récent
           </h3>

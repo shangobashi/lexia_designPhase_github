@@ -25,20 +25,20 @@ export default function LandingPage() {
       {/* Header */}
       <header className={`fixed top-0 w-full z-50 ${theme === 'dark' ? 'dark-header' : 'light-header'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-16 gap-2">
             <div className="flex items-center">
-              <div className="w-[60px] h-[60px] flex items-center justify-center">
+              <div className="w-11 h-11 sm:w-[60px] sm:h-[60px] flex items-center justify-center">
                 <img src={`${import.meta.env.BASE_URL}kingsley-logo.png`} alt="Kingsley Logo" className="w-full h-full object-contain" />
               </div>
-              <span className={`ml-3 text-2xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Kingsley</span>
+              <span className={`ml-2 sm:ml-3 text-lg sm:text-2xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Kingsley</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <a href="#features" className={`font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-slate-800'}`}>{t.landing.nav.features}</a>
-              <Link to="/pricing" className={`font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-slate-800'}`}>{t.landing.nav.pricing}</Link>
-              <Link to="/login" className={`font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-slate-800'}`}>{t.landing.nav.login}</Link>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <a href="#features" className={`hidden md:inline font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-slate-800'}`}>{t.landing.nav.features}</a>
+              <Link to="/pricing" className={`hidden md:inline font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-slate-800'}`}>{t.landing.nav.pricing}</Link>
+              <Link to="/login" className={`hidden sm:inline font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-slate-800'}`}>{t.landing.nav.login}</Link>
               <ThemeToggle />
               <LanguageToggle />
-              <button className={`font-clash text-white px-6 py-2 rounded-xl font-medium ${theme === 'dark' ? 'dark-primary-button' : 'primary-button'}`} onClick={handleGuestAccess}>
+              <button className={`hidden sm:inline-flex font-clash text-white px-4 sm:px-6 py-2 rounded-xl font-medium ${theme === 'dark' ? 'dark-primary-button' : 'primary-button'}`} onClick={handleGuestAccess}>
                 {t.landing.nav.getStarted}
               </button>
             </div>
@@ -51,11 +51,11 @@ export default function LandingPage() {
         <section className="pt-32 pb-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h1 className={`font-clash text-6xl font-extralight tracking-tight mb-8 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
+              <h1 className={`font-clash text-4xl sm:text-5xl lg:text-6xl font-extralight tracking-tight mb-8 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
                 {t.landing.hero.title}
                 <span className={`font-clash block font-light ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.landing.hero.titleSpan}</span>
               </h1>
-              <p className={`font-clash text-xl font-light mb-12 max-w-3xl mx-auto leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
+              <p className={`font-clash text-base sm:text-xl font-light mb-12 max-w-3xl mx-auto leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
                 {t.landing.hero.subtitle}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">

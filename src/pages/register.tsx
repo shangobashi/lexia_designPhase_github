@@ -48,7 +48,7 @@ export default function RegisterPage() {
   };
   
   return (
-    <div className="w-full max-w-md premium-shadow bg-white rounded-3xl p-12 shimmer">
+    <div className={`w-full max-w-md premium-shadow rounded-3xl p-6 sm:p-10 lg:p-12 shimmer ${theme === 'dark' ? 'dark-form-bg' : 'bg-white'}`}>
       {/* Mobile Logo (visible on smaller screens) */}
       <div className="flex flex-col items-center mb-8 lg:hidden">
         <div className="mb-4 w-16 h-16 flex items-center justify-center">
@@ -57,10 +57,10 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-clash font-light text-slate-800">Kingsley</h1>
       </div>
       
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         <div className="text-center">
-          <h2 className="text-3xl font-clash font-light text-slate-800 mb-3">{t.register.title}</h2>
-          <p className="text-gray-600 font-clash font-light">{t.register.subtitle}</p>
+          <h2 className={`text-2xl sm:text-3xl font-clash font-light mb-3 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.register.title}</h2>
+          <p className={`font-clash font-light ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.register.subtitle}</p>
         </div>
         
         <form onSubmit={handleRegister} className="space-y-6">
@@ -71,7 +71,11 @@ export default function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="parchment-input w-full px-6 py-4 rounded-2xl focus:outline-none font-clash font-light"
+              className={`w-full px-4 sm:px-6 py-3.5 sm:py-4 rounded-2xl focus:outline-none font-clash font-light ${
+                theme === 'dark'
+                  ? 'parchment-input'
+                  : 'border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+              }`}
             />
             
             <input
@@ -80,7 +84,11 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="parchment-input w-full px-6 py-4 rounded-2xl focus:outline-none font-clash font-light"
+              className={`w-full px-4 sm:px-6 py-3.5 sm:py-4 rounded-2xl focus:outline-none font-clash font-light ${
+                theme === 'dark'
+                  ? 'parchment-input'
+                  : 'border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+              }`}
             />
             
             <input
@@ -89,34 +97,38 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="parchment-input w-full px-6 py-4 rounded-2xl focus:outline-none font-clash font-light"
+              className={`w-full px-4 sm:px-6 py-3.5 sm:py-4 rounded-2xl focus:outline-none font-clash font-light ${
+                theme === 'dark'
+                  ? 'parchment-input'
+                  : 'border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+              }`}
             />
             
-            <p className="text-xs text-gray-500 font-clash font-light">
+            <p className={`text-xs font-clash font-light ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
               {t.register.passwordHint}
             </p>
           </div>
           
-          <button type="submit" className="executive-button w-full text-white py-4 rounded-2xl font-clash font-medium shimmer" disabled={isLoading}>
+          <button type="submit" className="executive-button w-full text-white py-3.5 sm:py-4 rounded-2xl font-clash font-medium shimmer" disabled={isLoading}>
             {isLoading ? t.register.submitting : t.register.submitButton}
           </button>
           
-          <div className="text-xs text-center text-gray-500 font-clash font-light">
+          <div className={`text-xs text-center font-clash font-light ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
             {t.register.termsPrefix}{' '}
-            <Link to="/terms" className="text-slate-800 hover:text-slate-600 transition-colors">
+            <Link to="/terms" className={`${theme === 'dark' ? 'text-slate-200 hover:text-slate-100' : 'text-slate-800 hover:text-slate-600'} transition-colors`}>
               {t.register.termsLink}
             </Link>{' '}
             {t.register.termsMiddle}{' '}
-            <Link to="/privacy" className="text-slate-800 hover:text-slate-600 transition-colors">
+            <Link to="/privacy" className={`${theme === 'dark' ? 'text-slate-200 hover:text-slate-100' : 'text-slate-800 hover:text-slate-600'} transition-colors`}>
               {t.register.privacyLink}
             </Link>
           </div>
         </form>
         
         <div className="text-center">
-          <p className="text-sm text-slate-600 font-clash font-light">
+          <p className={`text-sm font-clash font-light ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
             {t.register.hasAccount}{' '}
-            <Link to="/login" className="text-slate-800 hover:text-slate-600 font-clash font-medium ml-1 transition-colors">
+            <Link to="/login" className={`${theme === 'dark' ? 'text-slate-100 hover:text-slate-200' : 'text-slate-800 hover:text-slate-600'} font-clash font-medium ml-1 transition-colors`}>
               {t.register.signIn}
             </Link>
           </p>

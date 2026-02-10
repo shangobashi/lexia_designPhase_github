@@ -21,7 +21,6 @@ import {
 
 const TEXTAREA_MIN_HEIGHT = 44;
 const TEXTAREA_MAX_HEIGHT = 220;
-const TEXTAREA_BASELINE_SNAP_THRESHOLD = 2;
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -113,14 +112,12 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const actionsRef = useRef<HTMLDivElement>(null);
   const emptyStateRef = useRef<HTMLDivElement>(null);
   const emptyGlowOneRef = useRef<HTMLDivElement>(null);
   const emptyGlowTwoRef = useRef<HTMLDivElement>(null);
   const emptyIconRef = useRef<HTMLDivElement>(null);
   const emptyTitleRef = useRef<HTMLParagraphElement>(null);
   const emptySubtitleRef = useRef<HTMLParagraphElement>(null);
-  const [actionsOffsetY, setActionsOffsetY] = useState(0);
 
   useEffect(() => {
     scrollToBottom();
@@ -188,36 +185,9 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       TEXTAREA_MIN_HEIGHT,
       Math.min(textarea.scrollHeight, TEXTAREA_MAX_HEIGHT)
     );
-    // Prevent 1-2px browser metric drift so textarea baseline matches action buttons exactly.
-    if (nextHeight <= TEXTAREA_MIN_HEIGHT + TEXTAREA_BASELINE_SNAP_THRESHOLD) {
-      nextHeight = TEXTAREA_MIN_HEIGHT;
-    }
     textarea.style.height = `${nextHeight}px`;
     textarea.style.overflowY = textarea.scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
   }, [input]);
-
-  useLayoutEffect(() => {
-    const textarea = textareaRef.current;
-    const actions = actionsRef.current;
-    if (!textarea || !actions) return;
-
-    // Desktop only: on mobile controls are stacked and should not be offset.
-    if (window.innerWidth < 640) {
-      if (actionsOffsetY !== 0) setActionsOffsetY(0);
-      return;
-    }
-
-    const textareaBottom = textarea.getBoundingClientRect().bottom;
-    const actionsBottom = actions.getBoundingClientRect().bottom;
-    // Compensate current transform so we measure against the unshifted baseline.
-    const unshiftedActionsBottom = actionsBottom - actionsOffsetY;
-    const delta = Math.round(textareaBottom - unshiftedActionsBottom);
-    const nextOffset = Math.abs(delta) <= 1 ? 0 : delta;
-
-    if (nextOffset !== actionsOffsetY) {
-      setActionsOffsetY(nextOffset);
-    }
-  }, [input, isSending, isReadingFile, theme, actionsOffsetY]);
 
   const scrollToBottom = () => {
     const container = messagesContainerRef.current;
@@ -317,7 +287,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
       {/* Messages area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-6 space-y-4"
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4"
         style={{ minHeight: '400px', maxHeight: '60vh' }}
       >
         {messages.length === 0 ? (
@@ -388,7 +358,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                       </div>
                     )}
                     <div className={cn(
-                      "px-4 py-3 leading-relaxed text-sm max-w-[75%]",
+                      "px-4 py-3 leading-relaxed text-sm max-w-[88%] sm:max-w-[75%] break-words",
                       isUser
                         ? 'bg-blue-600 text-white rounded-[1.25rem] rounded-br-[0.375rem]'
                         : isDark
@@ -460,7 +430,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   </svg>
                 </div>
                 <div className={cn(
-                  "px-4 py-3 rounded-[1.25rem] rounded-bl-[0.375rem] text-sm max-w-[75%]",
+                  "px-4 py-3 rounded-[1.25rem] rounded-bl-[0.375rem] text-sm max-w-[88%] sm:max-w-[75%] break-words",
                   isDark
                     ? 'bg-slate-700/60 text-slate-100 border border-slate-600/30'
                     : 'bg-white text-gray-800 border border-gray-200/80 shadow-sm'
@@ -541,11 +511,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 />
               </div>
 
-              <div
-                ref={actionsRef}
-                style={actionsOffsetY === 0 ? undefined : { transform: `translateY(${actionsOffsetY}px)` }}
-                className="flex items-center gap-2 sm:items-end sm:self-end"
-              >
+              <div className="flex items-center gap-2 sm:items-end sm:self-end">
                 <button
                   type="button"
                   onClick={handleFileClick}

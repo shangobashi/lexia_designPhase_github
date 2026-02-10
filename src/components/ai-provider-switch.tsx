@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { Brain, Zap, ChevronDown } from 'lucide-react';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
@@ -48,14 +48,14 @@ export function AIProviderSwitch({ mode, onModeChange }: AIProviderSwitchProps) 
         type="button"
         onClick={() => setOpen(!open)}
         className={cn(
-          "inline-flex h-10 items-center gap-2 px-4 rounded-xl text-sm font-clash font-medium transition-colors cursor-pointer",
+          "inline-flex h-10 w-full sm:w-auto items-center justify-between gap-2 px-3 sm:px-4 rounded-xl text-sm font-clash font-medium transition-colors cursor-pointer max-w-none",
           isDark
             ? 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
         )}
       >
         <Icon className={cn("h-4 w-4", mode === 'fast' ? 'text-amber-500' : 'text-blue-600')} />
-        <span>Kingsley — {current.label}</span>
+        <span className="truncate">Kingsley — {current.label}</span>
         <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && 'rotate-180')} />
       </button>
 
@@ -101,3 +101,5 @@ export function AIProviderSwitch({ mode, onModeChange }: AIProviderSwitchProps) 
     </div>
   );
 }
+
+

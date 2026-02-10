@@ -349,8 +349,8 @@ export default function UploadsPage() {
   // Show loading state during authentication and initial data fetch
   if (authLoading || (isLoading && documents.length === 0)) {
     return (
-      <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-6`}>
-        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl mb-6`}>
+      <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-3 sm:p-6`}>
+        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-4 sm:p-6 rounded-xl mb-6`}>
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 dark:bg-slate-700 rounded mb-4"></div>
             <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-2/3"></div>
@@ -375,8 +375,8 @@ export default function UploadsPage() {
   // Show authentication required
   if (!user) {
     return (
-      <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-6`}>
-        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-12 text-center`}>
+      <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-3 sm:p-6`}>
+        <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6 sm:p-12 text-center`}>
           <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2`}>{t.uploads.loginRequired}</h3>
           <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>
             {t.uploads.loginRequiredDesc}
@@ -387,9 +387,9 @@ export default function UploadsPage() {
   }
   
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-6`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-3 sm:p-6`}>
       {/* Header */}
-      <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl mb-6`}>
+      <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-4 sm:p-6 rounded-xl mb-6`}>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <h1 className={`text-2xl font-clash font-bold tracking-tight ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.uploads.title}</h1>
@@ -409,7 +409,7 @@ export default function UploadsPage() {
 
       {/* Document Management Tabs */}
       <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-xl mb-6`}>
-        <div className="flex space-x-1 p-2">
+        <div className="flex flex-wrap gap-1 p-2">
           <button
             onClick={() => setActiveTab('all-documents')}
             className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${
@@ -448,7 +448,7 @@ export default function UploadsPage() {
         <div className="space-y-4">
           {/* Search and Filter */}
           <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-4 rounded-xl`}>
-            <div className="flex flex-col lg:flex-row gap-4 items-center">
+            <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
               <div className="flex-1">
                 <div className="relative">
                   <input 
@@ -464,7 +464,7 @@ export default function UploadsPage() {
                 </div>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button 
                   onClick={() => setTypeFilter('all')}
                   className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${typeFilter === 'all' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'all' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'all' ? 'text-gray-700' : 'text-gray-600')}`}
@@ -494,7 +494,7 @@ export default function UploadsPage() {
               <select 
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className={`rounded-lg px-3 py-2 text-sm ${theme === 'dark' ? 'dark-input text-slate-200' : 'border border-gray-300 text-gray-700 bg-white/90'}`}
+                className={`w-full lg:w-auto rounded-lg px-3 py-2 text-sm ${theme === 'dark' ? 'dark-input text-slate-200' : 'border border-gray-300 text-gray-700 bg-white/90'}`}
               >
                 <option value="newest">{t.uploads.sortNewest}</option>
                 <option value="oldest">{t.uploads.sortOldest}</option>
@@ -509,7 +509,7 @@ export default function UploadsPage() {
             <>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {paginatedDocuments.map((doc, index) => (
-                <div key={`${doc.id}-${index}`} className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-6 cursor-pointer h-64 flex flex-col`}>
+                <div key={`${doc.id}-${index}`} className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-5 sm:p-6 cursor-pointer min-h-[14rem] h-auto flex flex-col`}>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-3">
@@ -529,7 +529,7 @@ export default function UploadsPage() {
                   </div>
                   
                   <div className="mt-auto">
-                    <div className={`flex items-center justify-between text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'} mb-4`}>
+                    <div className={`mb-4 flex flex-wrap items-center justify-between gap-2 text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
                       <span>{t.uploads.uploadedOn} {formatDisplayDate(doc.uploadedAt)}</span>
                     </div>
                     
@@ -612,7 +612,7 @@ export default function UploadsPage() {
               )}
             </>
           ) : (
-            <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-12 text-center`}>
+            <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6 sm:p-12 text-center`}>
               {debouncedSearchTerm || typeFilter !== 'all' ? (
                 <>
                   <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
@@ -654,7 +654,7 @@ export default function UploadsPage() {
       {/* Upload Files Tab */}
       <div className={`${activeTab === 'upload' ? 'block' : 'hidden'}`}>
         <div className="space-y-6">
-          <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl`}>
+          <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-4 sm:p-6 rounded-xl`}>
             <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>{t.uploads.uploadTitle}</h3>
             <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>
               {t.uploads.uploadDesc}
@@ -689,7 +689,7 @@ export default function UploadsPage() {
                   </div>
                 </div>
                 
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30 border border-slate-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-300'} flex items-center space-x-2`}>
                     <FolderPlus className="h-4 w-4" />
                     <span>{t.uploads.addToCase}</span>
@@ -711,7 +711,7 @@ export default function UploadsPage() {
       {/* Organize Tab */}
       <div className={`${activeTab === 'organize' ? 'block' : 'hidden'}`}>
         <div className="space-y-6">
-          <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-6 rounded-xl`}>
+          <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-4 sm:p-6 rounded-xl`}>
             <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>{t.uploads.organizeTitle}</h3>
             <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-6`}>{t.uploads.organizeDesc}</p>
             

@@ -80,7 +80,7 @@ export default function LoginPage() {
   };
   
   return (
-    <div className={`w-full ${theme === 'dark' ? 'premium-shadow dark-form-bg' : 'premium-shadow bg-white'} rounded-3xl p-12 shimmer`}>
+    <div className={`w-full ${theme === 'dark' ? 'premium-shadow dark-form-bg' : 'premium-shadow bg-white'} rounded-3xl p-6 sm:p-10 lg:p-12 shimmer`}>
       {/* Mobile Logo */}
       <div className="flex items-center justify-center mb-8 lg:hidden">
         <div className={`w-16 h-16 flex items-center justify-center`}>
@@ -92,9 +92,9 @@ export default function LoginPage() {
         </div>
       </div>
       
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         <div className="text-center">
-          <h2 className={`text-3xl font-clash font-light mb-3 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.login.title}</h2>
+          <h2 className={`text-2xl sm:text-3xl font-clash font-light mb-3 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.login.title}</h2>
           <p className={`font-clash font-light ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.login.subtitle}</p>
         </div>
         
@@ -106,7 +106,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className={`w-full px-6 py-4 rounded-2xl focus:outline-none font-clash font-light ${
+              className={`w-full px-4 sm:px-6 py-3.5 sm:py-4 rounded-2xl focus:outline-none font-clash font-light ${
                 theme === 'dark' 
                   ? 'parchment-input' 
                   : 'border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
@@ -119,7 +119,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className={`w-full px-6 py-4 rounded-2xl focus:outline-none font-clash font-light ${
+              className={`w-full px-4 sm:px-6 py-3.5 sm:py-4 rounded-2xl focus:outline-none font-clash font-light ${
                 theme === 'dark' 
                   ? 'parchment-input' 
                   : 'border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
@@ -142,7 +142,7 @@ export default function LoginPage() {
         
           <button 
             type="submit" 
-            className="executive-button w-full text-white py-4 rounded-2xl font-clash font-medium shimmer" 
+            className="executive-button w-full text-white py-3.5 sm:py-4 rounded-2xl font-clash font-medium shimmer" 
             disabled={isLoading}
           >
             {isLoading ? t.login.submitting : t.login.submitButton}

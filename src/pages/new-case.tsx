@@ -63,12 +63,12 @@ export default function NewCasePage() {
   };
   
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Créer un nouveau dossier</h1>
+    <div className="mx-auto max-w-4xl p-3 sm:p-6">
+      <h1 className="mb-5 text-2xl sm:text-3xl font-bold">Créer un nouveau dossier</h1>
       
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Case Details Section */}
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
           <h2 className="text-xl font-semibold mb-4">Détails du dossier</h2>
           
           <div className="space-y-4">
@@ -102,7 +102,7 @@ export default function NewCasePage() {
         </div>
         
         {/* Document Upload Section */}
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
           <h2 className="text-xl font-semibold mb-4">Téléversement de documents</h2>
           <p className="text-sm text-muted-foreground mb-4">
             Téléversez des documents pertinents tels que des contrats, lettres, photos ou toute autre preuve pouvant aider votre dossier.
@@ -126,17 +126,19 @@ export default function NewCasePage() {
         </div>
         
         {/* Submit Buttons */}
-        <div className="flex justify-end space-x-4">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:space-x-0">
           <Button
             variant="outline"
             onClick={() => navigate('/cases')}
             disabled={isSubmitting}
+            className="w-full sm:w-auto"
           >
             Annuler
           </Button>
           <Button
             type="submit"
             disabled={isSubmitting || !title.trim() || !description.trim()}
+            className="w-full sm:w-auto"
           >
             {isSubmitting ? 'Création en cours...' : 'Créer le dossier'}
           </Button>

@@ -79,7 +79,7 @@ export default function DashboardPage() {
             
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
+              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-4 sm:p-6`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.activeCases}</p>
@@ -99,7 +99,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
+              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-4 sm:p-6`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.consultations}</p>
@@ -119,7 +119,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
+              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-4 sm:p-6`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.remainingCredits}</p>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-6`}>
+              <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-4 sm:p-6`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.status}</p>
@@ -155,8 +155,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Cases */}
-            <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6`}>
-              <div className="flex justify-between items-center mb-6">
+            <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-4 sm:p-6`}>
+              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.dashboard.recentCases.title}</h2>
                 <button className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-4 py-2 rounded-xl font-clash font-medium text-sm`}>
                   {t.dashboard.recentCases.newCase}

@@ -251,7 +251,7 @@ export function SaveChatButton({ messages }: SaveChatButtonProps) {
         onClick={() => !isEmpty && !isBusy && setOpen(!open)}
         disabled={isEmpty || isBusy}
         className={cn(
-          'inline-flex h-10 items-center gap-2 px-4 rounded-xl text-sm font-clash transition-colors',
+          'inline-flex h-10 w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 rounded-xl text-sm font-clash transition-colors',
           isEmpty || isBusy
             ? isDark
               ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
@@ -262,7 +262,7 @@ export function SaveChatButton({ messages }: SaveChatButtonProps) {
         )}
       >
         {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-        <span>{t.chat.saveChat}</span>
+        <span className="hidden sm:inline">{t.chat.saveChat}</span>
         <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', open && 'rotate-180')} />
       </button>
 

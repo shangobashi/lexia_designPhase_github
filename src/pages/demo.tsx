@@ -31,26 +31,26 @@ export default function DemoPage() {
       {/* Header */}
       <header className={`fixed top-0 w-full z-50 ${theme === 'dark' ? 'dark-header' : 'light-header'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
+          <div className="flex justify-between items-center h-16 gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <Link 
                 to="/" 
                 className={`flex items-center space-x-2 transition-colors ${theme === 'dark' ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-slate-800'}`}
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span className="font-clash font-medium">{t.demo.back}</span>
+                <span className="hidden sm:inline font-clash font-medium">{t.demo.back}</span>
               </Link>
-              <div className="flex items-center space-x-2">
-                <div className={`w-10 h-10 flex items-center justify-center`}>
+              <div className="flex items-center space-x-2 min-w-0">
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center`}>
                   <img src={`${import.meta.env.BASE_URL}kingsley-logo.png`} alt="Kingsley Logo" className="w-full h-full object-contain" />
                 </div>
-                <span className={`font-clash text-xl font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Kingsley</span>
+                <span className={`font-clash text-lg sm:text-xl font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Kingsley</span>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2 sm:gap-3">
               <ThemeToggle />
               <LanguageToggle />
-              <button className={`font-clash text-white px-6 py-2 rounded-xl font-medium ${theme === 'dark' ? 'dark-primary-button' : 'primary-button'}`} onClick={handleGuestAccess}>
+              <button className={`hidden sm:inline-flex font-clash text-white px-4 sm:px-6 py-2 rounded-xl font-medium ${theme === 'dark' ? 'dark-primary-button' : 'primary-button'}`} onClick={handleGuestAccess}>
                 {t.demo.getStarted}
               </button>
             </div>
@@ -63,10 +63,10 @@ export default function DemoPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="text-center mb-12">
-            <h1 className={`font-clash text-4xl font-light tracking-tight mb-6 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
+            <h1 className={`font-clash text-3xl sm:text-4xl font-light tracking-tight mb-6 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
               {t.demo.title}
             </h1>
-            <p className={`font-clash text-lg max-w-2xl mx-auto leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
+            <p className={`font-clash text-base sm:text-lg max-w-2xl mx-auto leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
               {t.demo.subtitle}
             </p>
           </div>

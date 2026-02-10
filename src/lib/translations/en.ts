@@ -166,6 +166,8 @@ const en = {
     security: {
       title: 'Security',
       password: 'Password',
+      newPassword: 'New password',
+      confirmPassword: 'Confirm password',
       lastChanged: 'Last changed on June 15, 2024',
       twoFactor: 'Two-factor authentication',
       twoFactorDesc: 'Secure your account with 2FA',

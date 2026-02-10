@@ -53,7 +53,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="flex h-screen min-h-screen sophisticated-bg overflow-hidden">
+    <div className="flex min-h-screen h-[100dvh] sophisticated-bg overflow-hidden">
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
@@ -83,7 +83,7 @@ export default function DashboardLayout() {
           hideAIButton={isCaseDetailPage}
         />
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-x-hidden overflow-y-auto">
           <AnimatePresence initial={false}>
             <motion.div
               key={location.pathname}

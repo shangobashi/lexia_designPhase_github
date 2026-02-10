@@ -30,8 +30,8 @@ export default function Header({ toggleSidebar, isCollapsed, hideAIButton = fals
   };
   
   return (
-    <header className={`${theme === 'dark' ? 'dark-header' : 'light-header'} px-6 py-4`}>
-      <div className="flex justify-between items-center">
+    <header className={`${theme === 'dark' ? 'dark-header' : 'light-header'} px-3 sm:px-6 py-3 sm:py-4`}>
+      <div className="flex items-center gap-2 sm:gap-4">
         {/* Mobile menu toggle (desktop collapse handled by sidebar's own toggle) */}
         <button
           onClick={toggleSidebar}
@@ -50,23 +50,23 @@ export default function Header({ toggleSidebar, isCollapsed, hideAIButton = fals
           />
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="ml-auto flex items-center gap-2 sm:gap-4">
           <ThemeToggle />
           <LanguageToggle />
           {!hideAIButton && (
             <button
               onClick={goToChat}
-              className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-4 py-2 rounded-xl font-clash font-medium flex items-center space-x-2 transition-all duration-300`}
+              className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-3 sm:px-4 py-2 rounded-xl font-clash font-medium flex items-center space-x-2 transition-all duration-300`}
             >
               <MessageCircle className="h-4 w-4" />
-              <span className="hidden lg:inline">{t.header.consultAI}</span>
+              <span className="hidden xl:inline">{t.header.consultAI}</span>
             </button>
           )}
           <button className={`${theme === 'dark' ? 'text-slate-200' : 'text-slate-600'} hover:text-slate-800 relative p-2`}>
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></span>
           </button>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="hidden md:block text-right">
               <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{displayName}</p>
               <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{t.common.free}</p>

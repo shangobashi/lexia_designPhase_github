@@ -680,7 +680,7 @@ export default function CasesPage() {
   // Show loading state during authentication
   if (authLoading) {
     return (
-      <div className="min-h-screen sophisticated-bg p-6">
+      <div className="min-h-screen sophisticated-bg p-3 sm:p-6">
         <div className="flex items-center justify-center h-32">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
@@ -691,8 +691,8 @@ export default function CasesPage() {
   // Show authentication required
   if (!user) {
     return (
-      <div className="min-h-screen sophisticated-bg p-6">
-        <div className="executive-card rounded-2xl p-12 text-center">
+      <div className="min-h-screen sophisticated-bg p-3 sm:p-6">
+        <div className="executive-card rounded-2xl p-6 sm:p-12 text-center">
           <h3 className="font-clash font-semibold text-slate-800 text-lg mb-2">{t.cases.loginRequired}</h3>
           <p className="text-gray-600 mb-6">
             {t.cases.loginRequiredDesc}
@@ -705,8 +705,8 @@ export default function CasesPage() {
   // Show error state
   if (error) {
     return (
-      <div className="min-h-screen sophisticated-bg p-6">
-        <div className="executive-card rounded-2xl p-12 text-center">
+      <div className="min-h-screen sophisticated-bg p-3 sm:p-6">
+        <div className="executive-card rounded-2xl p-6 sm:p-12 text-center">
           <h3 className="font-clash font-semibold text-slate-800 text-lg mb-2">{t.common.error}</h3>
           <p className="text-gray-600 mb-6">
             {error}
@@ -717,10 +717,10 @@ export default function CasesPage() {
   }
 
   return (
-    <main className="p-6">
+    <main className="p-3 sm:p-6">
       {/* Filters and Search */}
             <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-4 rounded-xl mb-6`}>
-              <div className="flex flex-col lg:flex-row gap-4 items-center">
+              <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
                 <div className="flex-1">
                   <div className="relative">
                     <input 
@@ -736,7 +736,7 @@ export default function CasesPage() {
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button 
                     onClick={() => setStatusFilter('all')}
                     className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${statusFilter === 'all' ? 'active' : ''} ${theme === 'dark' ? (statusFilter === 'all' ? 'text-slate-200' : 'text-slate-300') : (statusFilter === 'all' ? 'text-gray-700' : 'text-gray-600')}`}
@@ -766,7 +766,7 @@ export default function CasesPage() {
                 <select 
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className={`rounded-lg px-3 py-2 text-sm ${theme === 'dark' ? 'dark-input text-slate-200' : 'border border-gray-300 text-gray-700 bg-white/90'}`}
+                  className={`w-full lg:w-auto rounded-lg px-3 py-2 text-sm ${theme === 'dark' ? 'dark-input text-slate-200' : 'border border-gray-300 text-gray-700 bg-white/90'}`}
                 >
                   <option value="newest">{t.cases.sortByDate}</option>
                   <option value="title">{t.cases.sortByTitle}</option>
@@ -789,7 +789,7 @@ export default function CasesPage() {
                     const statusInfo = getStatusInfo(caseItem.status);
                     return (
                       <Link key={caseItem.id} to={`/cases/${caseItem.id}`}>
-                        <div className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-6 cursor-pointer h-64 flex flex-col`}>
+                        <div className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-5 sm:p-6 cursor-pointer min-h-[14rem] h-auto flex flex-col`}>
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex-1">
                               <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg mb-2 line-clamp-2`}>
@@ -805,7 +805,7 @@ export default function CasesPage() {
                           </div>
                           
                           <div className="mt-auto">
-                            <div className={`flex items-center justify-between text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'} mb-4`}>
+                            <div className={`mb-4 flex flex-wrap items-center justify-between gap-2 text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
                               <span>{t.cases.createdOn} {formatDisplayDate(caseItem.createdAt)}</span>
                               <span>{caseItem.documents?.length || 0} {t.common.documents}</span>
                             </div>
@@ -891,7 +891,7 @@ export default function CasesPage() {
                 )}
               </>
             ) : (
-              <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-12 text-center`}>
+              <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6 sm:p-12 text-center`}>
                 <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
                   <svg className={`h-8 w-8 ${theme === 'dark' ? 'text-slate-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>

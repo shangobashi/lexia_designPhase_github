@@ -195,16 +195,16 @@ export default function ChatPage() {
 
   return (
     <div className={`min-h-screen ${isDark ? 'dark-bg' : 'sophisticated-bg'} pb-10`}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-        <div className="flex items-center justify-between mb-6">
-          <div>
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-10">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
             <p
               ref={subtitleRef}
               className={`text-sm font-clash tracking-[0.08em] ${isDark ? 'text-slate-400' : 'text-gray-500'}`}
             >
               {t.chat.pageSubtitle}
             </p>
-            <h1 className={`text-3xl font-clash font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+            <h1 className={`text-3xl sm:text-4xl font-clash font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
               {t.chat.pageTitle.split(' ').map((word, index) => (
                 <span
                   key={`${word}-${index}`}
@@ -222,17 +222,21 @@ export default function ChatPage() {
               className={`mt-2 h-px w-44 ${isDark ? 'bg-slate-600/80' : 'bg-slate-300/90'}`}
             />
           </div>
-          <div className="flex items-center gap-3">
-            <AIProviderSwitch
-              currentProvider="openrouter"
-              onProviderChange={() => {}}
-              mode={mode}
-              onModeChange={handleModeChange}
-            />
-            <SaveChatButton messages={messages} />
+          <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3 lg:w-auto lg:justify-end">
+            <div className="w-full sm:w-auto sm:min-w-[12rem]">
+              <AIProviderSwitch
+                currentProvider="openrouter"
+                onProviderChange={() => {}}
+                mode={mode}
+                onModeChange={handleModeChange}
+              />
+            </div>
+            <div className="w-full sm:w-auto">
+              <SaveChatButton messages={messages} />
+            </div>
             <button
               onClick={handleClear}
-              className={`${isDark ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} inline-flex h-10 items-center justify-center px-4 rounded-xl text-sm font-clash transition-colors`}
+              className={`${isDark ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} inline-flex h-10 w-full sm:w-auto items-center justify-center px-3 sm:px-4 rounded-xl text-sm font-clash transition-colors`}
             >
               {t.chat.reset}
             </button>

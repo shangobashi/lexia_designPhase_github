@@ -109,7 +109,7 @@ function PaymentDialog({ isOpen, onClose, plan }: { isOpen: boolean; onClose: ()
               className={`w-full mt-1 px-3 py-2 rounded-lg border ${theme === 'dark' ? 'dark-input text-slate-200' : 'border-gray-300 text-gray-700 bg-white/90'} focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent`}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.payment.expiry}</label>
               <input
@@ -330,7 +330,7 @@ export default function BillingPage() {
         {/* Public Pricing Display */}
         <div className="grid gap-6 md:grid-cols-3 mb-12">
           {Object.entries(pricingPlans).map(([key, plan]) => (
-            <Card key={key} className={key === 'basic' ? 'border-primary shadow-lg scale-105' : ''}>
+            <Card key={key} className={key === 'basic' ? 'border-primary shadow-lg md:scale-105' : ''}>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
@@ -412,14 +412,14 @@ export default function BillingPage() {
   }
 
   return (
-    <main className="p-6">
+    <main className="p-3 sm:p-6">
             {/* Current Plan */}
             {userProfile && (
-              <div className={`rounded-2xl p-6 mb-8 ${theme === 'dark' ? 'dark-executive-card' : 'executive-card'}`}>
+              <div className={`rounded-2xl p-4 sm:p-6 mb-8 ${theme === 'dark' ? 'dark-executive-card' : 'executive-card'}`}>
           <h2 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.billing.currentPlan.title}</h2>
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1">
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.billing.currentPlan.freePlan}</h3>
                   <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.billing.currentPlan.freePlanDesc}</p>
@@ -484,7 +484,7 @@ export default function BillingPage() {
             </div>
           </div>
           
-          <div className="flex gap-3 mt-6">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <button 
               onClick={handleManageSubscription}
               className={`px-4 py-2 rounded-xl transition-all ${
@@ -511,7 +511,7 @@ export default function BillingPage() {
               <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-6`}>{t.billing.plans.title}</h2>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Free Plan */}
-                <div className={`${theme === 'dark' ? 'dark-pricing-card' : 'pricing-card'} rounded-2xl p-6 flex flex-col`}>
+                <div className={`${theme === 'dark' ? 'dark-pricing-card' : 'pricing-card'} rounded-2xl p-4 sm:p-6 flex flex-col`}>
                   <div className="text-center mb-6">
                     <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>{t.billing.plans.free.name}</h3>
                     <div className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-1`}>0€</div>
@@ -545,7 +545,7 @@ export default function BillingPage() {
                 </div>
 
                 {/* Basic Plan */}
-                <div className={`${theme === 'dark' ? 'dark-pricing-card featured' : 'pricing-card featured'} rounded-2xl p-6 relative flex flex-col`}>
+                <div className={`${theme === 'dark' ? 'dark-pricing-card featured' : 'pricing-card featured'} rounded-2xl p-4 sm:p-6 relative flex flex-col`}>
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <span className={`${theme === 'dark' ? 'bg-slate-600 text-slate-100' : 'bg-gray-700 text-white'} px-4 py-1 rounded-full text-xs font-clash font-medium`}>{t.billing.plans.basic.recommended}</span>
                   </div>
@@ -585,7 +585,7 @@ export default function BillingPage() {
                 </div>
 
                 {/* Premium Plan */}
-                <div className={`${theme === 'dark' ? 'dark-pricing-card' : 'pricing-card'} rounded-2xl p-6 flex flex-col`}>
+                <div className={`${theme === 'dark' ? 'dark-pricing-card' : 'pricing-card'} rounded-2xl p-4 sm:p-6 flex flex-col`}>
             
             <div className="text-center mb-6">
               <h3 className={`text-lg font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-2`}>{t.billing.plans.premium.name}</h3>
@@ -626,7 +626,7 @@ export default function BillingPage() {
             </div>
 
             {/* Billing History */}
-            <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6`}>
+            <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-4 sm:p-6`}>
               <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mb-4`}>{t.billing.history.title}</h2>
               <div className="text-center py-12">
                 <h3 className={`text-lg font-clash font-medium mb-2 ${theme === 'dark' ? 'text-slate-200' : 'text-gray-700'}`}>{t.billing.history.noHistory}</h3>
