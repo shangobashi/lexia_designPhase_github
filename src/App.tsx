@@ -46,7 +46,10 @@ function App() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/"
+            element={user && !user.isGuest ? <Navigate to="/dashboard" replace /> : <LandingPage />}
+          />
           
           {/* Public Pricing Page for unauthenticated users */}
           <Route path="/pricing" element={<PricingPage />} />

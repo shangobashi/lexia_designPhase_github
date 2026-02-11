@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
 import { FileUploader } from '@/components/uploads/file-uploader';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
@@ -10,10 +9,11 @@ import { Document } from '@/types/document';
 import { 
   getUserDocuments, 
   uploadFile, 
-  getFileUrl, 
+  downloadFile,
   deleteDocument,
   createDocument,
-  getUserStorageUsage
+  getUserStorageUsage,
+  getOrCreateUploadCaseId
 } from '@/lib/supabase';
 import { Search, FileText, Filter, Plus, File, Trash2, Download, ExternalLink, FileCog, FolderPlus } from 'lucide-react';
 
@@ -41,7 +41,7 @@ export default function UploadsPage() {
   const DOCS_PER_PAGE = 6;
   
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && !user.isGuest) {
       const fetchDocuments = async () => {
         setIsLoading(true);
         try {
@@ -56,7 +56,7 @@ export default function UploadsPage() {
             name: doc.name,
             size: doc.file_size,
             type: doc.mime_type,
-            url: doc.url || getFileUrl('documents', doc.storage_path),
+            url: doc.storage_path,
             uploadedAt: doc.uploaded_at,
             caseId: doc.case_id
           }));
@@ -76,7 +76,7 @@ export default function UploadsPage() {
       };
       
       fetchDocuments();
-    } else if (!authLoading && !user) {
+    } else if (!authLoading) {
       setIsLoading(false);
       setDocuments([]);
       setStorageUsage({ files: 0, totalSize: 0 });
@@ -84,7 +84,7 @@ export default function UploadsPage() {
   }, [authLoading, user]); // Removed toast from dependencies to prevent unnecessary re-renders
   
   const handleFilesAdded = async (files: File[]) => {
-    if (!user) {
+    if (!user || user.isGuest) {
       toast({
         title: t.uploads.toasts.error,
         description: t.uploads.toasts.loginRequired,
@@ -97,23 +97,21 @@ export default function UploadsPage() {
     const successfulUploads: any[] = [];
     
     try {
+      const uploadCaseId = await getOrCreateUploadCaseId();
+
       for (const file of files) {
         try {
           // Upload file to Supabase storage
           const uploadResult = await uploadFile(file);
-          
-          // Get public URL
-          const publicUrl = getFileUrl('documents', uploadResult.filePath);
-          
+
           // Create document record in database
           const document = await createDocument({
-            caseId: 'general', // Default case for uploads from this page
+            caseId: uploadCaseId,
             name: uploadResult.fileName,
             originalName: file.name,
             fileSize: file.size,
             mimeType: file.type,
-            storagePath: uploadResult.filePath,
-            url: publicUrl
+            storagePath: uploadResult.filePath
           });
           
           successfulUploads.push({
@@ -228,16 +226,20 @@ export default function UploadsPage() {
   
   const handleDownload = async (document: any) => {
     try {
-      const response = await fetch(document.url);
-      const blob = await response.blob();
+      const blob = await downloadFile(document.url);
+      if (!blob) {
+        throw new Error('Empty file data');
+      }
+
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.style.display = 'none';
       a.href = url;
       a.download = document.name;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
+      a.remove();
     } catch (error) {
       console.error('Download error:', error);
       toast({
@@ -373,7 +375,7 @@ export default function UploadsPage() {
   }
 
   // Show authentication required
-  if (!user) {
+  if (!user || user.isGuest) {
     return (
       <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-3 sm:p-6`}>
         <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-6 sm:p-12 text-center`}>

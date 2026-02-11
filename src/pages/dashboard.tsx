@@ -4,11 +4,24 @@ import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
 import { Case } from '@/types/case';
-import { getUserCases } from '@/lib/supabase';
+import { getUserCases, getUserStorageUsage } from '@/lib/supabase';
 
 // Simple date formatter
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('fr-FR');
+};
+
+const toCountArray = (value: unknown) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null && 'count' in value[0]) {
+    const countValue = Number((value[0] as { count?: number }).count ?? 0);
+    return new Array(Number.isFinite(countValue) ? countValue : 0).fill(null);
+  }
+
+  return value;
 };
 
 // Simple AI Setup Banner component
@@ -36,6 +49,7 @@ export default function DashboardPage() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [recentCases, setRecentCases] = useState<Case[]>([]);
+  const [storageUsage, setStorageUsage] = useState({ files: 0, totalSize: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -44,9 +58,21 @@ export default function DashboardPage() {
         setIsLoading(false);
         return;
       }
+
+      if (user.isGuest) {
+        setRecentCases([]);
+        setStorageUsage({ files: 0, totalSize: 0 });
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
-        const cases = await getUserCases();
+        const [cases, usage] = await Promise.all([
+          getUserCases(),
+          getUserStorageUsage()
+        ]);
+
         const convertedCases = cases.map(dbCase => ({
           id: dbCase.id,
           caseId: dbCase.case_id,
@@ -55,15 +81,17 @@ export default function DashboardPage() {
           status: dbCase.status as 'active' | 'pending' | 'closed',
           createdAt: dbCase.created_at,
           updatedAt: dbCase.updated_at,
-          messages: Array.isArray(dbCase.messages) ? dbCase.messages : [],
-          documents: Array.isArray(dbCase.documents) ? dbCase.documents : [],
+          messages: toCountArray(dbCase.messages),
+          documents: toCountArray(dbCase.documents),
           userId: dbCase.user_id
         })).slice(0, 3);
-        
+
         setRecentCases(convertedCases);
+        setStorageUsage(usage);
       } catch (error) {
         console.error('Error fetching cases', error);
         setRecentCases([]);
+        setStorageUsage({ files: 0, totalSize: 0 });
       } finally {
         setIsLoading(false);
       }
@@ -83,7 +111,9 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.activeCases}</p>
-                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{recentCases.filter(c => c.status === 'active').length || 12}</p>
+                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>
+                      {user?.isGuest ? (recentCases.filter(c => c.status === 'active').length || 12) : recentCases.filter(c => c.status === 'active').length}
+                    </p>
                   </div>
                   <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50'} rounded-xl flex items-center justify-center`}>
                     <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +133,9 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.consultations}</p>
-                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{recentCases.reduce((total, c) => total + c.messages.length, 0) || 89}</p>
+                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>
+                      {user?.isGuest ? (recentCases.reduce((total, c) => total + c.messages.length, 0) || 89) : recentCases.reduce((total, c) => total + c.messages.length, 0)}
+                    </p>
                   </div>
                   <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-green-900/30' : 'bg-green-50'} rounded-xl flex items-center justify-center`}>
                     <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,8 +171,10 @@ export default function DashboardPage() {
               <div className={`${theme === 'dark' ? 'dark-stat-card' : 'stat-card'} rounded-xl p-4 sm:p-6`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.dashboard.stats.status}</p>
-                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>{t.dashboard.stats.activeStatus}</p>
+                    <p className={`text-sm font-clash font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.common.documents}</p>
+                    <p className={`text-3xl font-clash font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} mt-1`}>
+                      {user?.isGuest ? 0 : storageUsage.files}
+                    </p>
                   </div>
                   <div className={`w-12 h-12 ${theme === 'dark' ? 'bg-green-900/30' : 'bg-green-50'} rounded-xl flex items-center justify-center`}>
                     <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +183,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className={`mt-4 flex items-center text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
-                  <span>{t.dashboard.stats.renewalDate}</span>
+                  <span>{user?.isGuest ? t.common.freePlan : `${(storageUsage.totalSize / (1024 * 1024)).toFixed(1)} MB`}</span>
                 </div>
               </div>
             </div>
@@ -158,9 +192,12 @@ export default function DashboardPage() {
             <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-4 sm:p-6`}>
               <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className={`text-xl font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.dashboard.recentCases.title}</h2>
-                <button className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-4 py-2 rounded-xl font-clash font-medium text-sm`}>
+                <Link
+                  to="/new-case"
+                  className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-4 py-2 rounded-xl font-clash font-medium text-sm`}
+                >
                   {t.dashboard.recentCases.newCase}
-                </button>
+                </Link>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -193,8 +230,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ))
-                ) : (
-                  // Static mockup cases when no real cases exist
+                ) : user?.isGuest ? (
                   <>
                     <div className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-4`}>
                       <div className="flex items-start justify-between mb-3">
@@ -238,6 +274,21 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   </>
+                ) : (
+                  <div className={`col-span-full ${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-6 text-center`}>
+                    <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-base mb-2`}>
+                      {t.cases.noCases}
+                    </h3>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'} mb-4`}>
+                      {t.cases.noCasesDesc}
+                    </p>
+                    <Link
+                      to="/new-case"
+                      className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} inline-flex text-white px-4 py-2 rounded-xl font-clash font-medium text-sm`}
+                    >
+                      {t.cases.createCase}
+                    </Link>
+                  </div>
                 )}
               </div>
             </div>

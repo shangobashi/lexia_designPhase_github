@@ -298,6 +298,45 @@ export const createCase = async (title: string, description: string) => {
   return data;
 };
 
+export const getOrCreateUploadCaseId = async () => {
+  ensureConfigured();
+  const user = await getCurrentUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { data: existingCases, error: existingError } = await supabase
+    .from('cases')
+    .select('id')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true })
+    .limit(1);
+
+  if (existingError) throw existingError;
+
+  if (existingCases && existingCases.length > 0) {
+    return existingCases[0].id;
+  }
+
+  const { data: caseId, error: caseIdError } = await supabase
+    .rpc('generate_case_id');
+
+  if (caseIdError) throw caseIdError;
+
+  const { data: createdCase, error: createError } = await supabase
+    .from('cases')
+    .insert({
+      case_id: caseId,
+      user_id: user.id,
+      title: 'Document Inbox',
+      description: 'Automatically created by Kingsley for uploaded documents.',
+      status: 'active',
+    })
+    .select('id')
+    .single();
+
+  if (createError) throw createError;
+  return createdCase.id;
+};
+
 export const getUserCases = async (userId?: string) => {
   ensureConfigured();
   const uid = userId || (await getCurrentUser())?.id;
@@ -433,6 +472,16 @@ export const deleteFile = async (bucket: string = 'documents', path: string) => 
     .remove([path]);
 
   if (error) throw error;
+};
+
+export const downloadFile = async (path: string, bucket: string = 'documents') => {
+  ensureConfigured();
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .download(path);
+
+  if (error) throw error;
+  return data;
 };
 
 export const getUserStorageUsage = async (userId?: string) => {

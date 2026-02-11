@@ -25,6 +25,19 @@ interface Case {
 
 type SortOption = 'newest' | 'oldest' | 'title' | 'status';
 
+const toCountArray = (value: unknown) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null && 'count' in value[0]) {
+    const countValue = Number((value[0] as { count?: number }).count ?? 0);
+    return new Array(Number.isFinite(countValue) ? countValue : 0).fill(null);
+  }
+
+  return value;
+};
+
 export default function CasesPage() {
   const [cases, setCases] = useState<Case[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,8 +65,8 @@ export default function CasesPage() {
       status: dbCase.status,
       createdAt: dbCase.created_at,
       updatedAt: dbCase.updated_at,
-      messages: dbCase.messages || [],
-      documents: dbCase.documents || [],
+      messages: toCountArray(dbCase.messages),
+      documents: toCountArray(dbCase.documents),
       userId: dbCase.user_id,
     }));
   };
@@ -293,234 +306,7 @@ export default function CasesPage() {
           try {
             const dbCases = await getUserCases();
             const convertedCases = convertDbCasesToCases(dbCases);
-            
-            // If no real cases exist, create 18 mockup cases for demonstration
-            if (convertedCases.length === 0) {
-              const mockupCases: Case[] = [
-                // Page 1 - Cases 1-6
-                {
-                  id: 'mock-1',
-                  caseId: 'CASE-001',
-                  title: 'Contrat de bail commercial',
-                  description: 'Révision des clauses de résiliation anticipée et négociation des conditions avec le propriétaire.',
-                  status: 'active' as CaseStatus,
-                  createdAt: '2024-07-10T10:00:00.000Z',
-                  updatedAt: '2024-07-10T10:00:00.000Z',
-                  messages: new Array(12).fill(null),
-                  documents: new Array(5).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-2',
-                  caseId: 'CASE-002',
-                  title: 'Succession familiale',
-                  description: 'Répartition des biens immobiliers et mobiliers suite au décès. Gestion des droits de succession.',
-                  status: 'pending' as CaseStatus,
-                  createdAt: '2024-07-08T10:00:00.000Z',
-                  updatedAt: '2024-07-08T10:00:00.000Z',
-                  messages: new Array(24).fill(null),
-                  documents: new Array(8).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-3',
-                  caseId: 'CASE-003',
-                  title: 'Litige commercial',
-                  description: 'Rupture de contrat avec fournisseur. Réclamation de dommages et intérêts pour non-respect des délais.',
-                  status: 'closed' as CaseStatus,
-                  createdAt: '2024-07-05T10:00:00.000Z',
-                  updatedAt: '2024-07-05T10:00:00.000Z',
-                  messages: new Array(38).fill(null),
-                  documents: new Array(15).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-4',
-                  caseId: 'CASE-004',
-                  title: 'Création d\'entreprise',
-                  description: 'Rédaction des statuts de SPRL et formalités administratives. Choix de la forme juridique optimale.',
-                  status: 'active' as CaseStatus,
-                  createdAt: '2024-07-03T10:00:00.000Z',
-                  updatedAt: '2024-07-03T10:00:00.000Z',
-                  messages: new Array(7).fill(null),
-                  documents: new Array(6).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-5',
-                  caseId: 'CASE-005',
-                  title: 'Divorce par consentement',
-                  description: 'Procédure de divorce amiable avec répartition des biens et garde des enfants.',
-                  status: 'pending' as CaseStatus,
-                  createdAt: '2024-07-01T10:00:00.000Z',
-                  updatedAt: '2024-07-01T10:00:00.000Z',
-                  messages: new Array(18).fill(null),
-                  documents: new Array(12).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-6',
-                  caseId: 'CASE-006',
-                  title: 'Achat immobilier',
-                  description: 'Vérification du compromis de vente et négociation des conditions suspensives.',
-                  status: 'closed' as CaseStatus,
-                  createdAt: '2024-06-28T10:00:00.000Z',
-                  updatedAt: '2024-06-28T10:00:00.000Z',
-                  messages: new Array(14).fill(null),
-                  documents: new Array(9).fill(null),
-                  userId: 'mock-user'
-                },
-                // Page 2 - Cases 7-12
-                {
-                  id: 'mock-7',
-                  caseId: 'CASE-007',
-                  title: 'Droit du travail',
-                  description: 'Licenciement abusif et réclamation d\'indemnités. Négociation avec l\'employeur.',
-                  status: 'active' as CaseStatus,
-                  createdAt: '2024-06-25T10:00:00.000Z',
-                  updatedAt: '2024-06-25T10:00:00.000Z',
-                  messages: new Array(22).fill(null),
-                  documents: new Array(11).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-8',
-                  caseId: 'CASE-008',
-                  title: 'Responsabilité civile',
-                  description: 'Accident de la circulation et réclamation d\'assurance. Expertise des dommages.',
-                  status: 'pending' as CaseStatus,
-                  createdAt: '2024-06-22T10:00:00.000Z',
-                  updatedAt: '2024-06-22T10:00:00.000Z',
-                  messages: new Array(16).fill(null),
-                  documents: new Array(7).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-9',
-                  caseId: 'CASE-009',
-                  title: 'Droit de la famille',
-                  description: 'Garde d\'enfants et pension alimentaire. Médiation familiale en cours.',
-                  status: 'active' as CaseStatus,
-                  createdAt: '2024-06-20T10:00:00.000Z',
-                  updatedAt: '2024-06-20T10:00:00.000Z',
-                  messages: new Array(31).fill(null),
-                  documents: new Array(13).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-10',
-                  caseId: 'CASE-010',
-                  title: 'Propriété intellectuelle',
-                  description: 'Dépôt de marque et protection des droits d\'auteur. Recherche d\'antériorité.',
-                  status: 'closed' as CaseStatus,
-                  createdAt: '2024-06-18T10:00:00.000Z',
-                  updatedAt: '2024-06-18T10:00:00.000Z',
-                  messages: new Array(9).fill(null),
-                  documents: new Array(4).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-11',
-                  caseId: 'CASE-011',
-                  title: 'Droit pénal',
-                  description: 'Défense en correctionnelle pour délit routier. Préparation de la plaidoirie.',
-                  status: 'active' as CaseStatus,
-                  createdAt: '2024-06-15T10:00:00.000Z',
-                  updatedAt: '2024-06-15T10:00:00.000Z',
-                  messages: new Array(27).fill(null),
-                  documents: new Array(18).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-12',
-                  caseId: 'CASE-012',
-                  title: 'Vente fonds de commerce',
-                  description: 'Cession d\'un restaurant avec transfert de licence. Vérification des obligations.',
-                  status: 'pending' as CaseStatus,
-                  createdAt: '2024-06-12T10:00:00.000Z',
-                  updatedAt: '2024-06-12T10:00:00.000Z',
-                  messages: new Array(19).fill(null),
-                  documents: new Array(14).fill(null),
-                  userId: 'mock-user'
-                },
-                // Page 3 - Cases 13-18
-                {
-                  id: 'mock-13',
-                  caseId: 'CASE-013',
-                  title: 'Droit des assurances',
-                  description: 'Refus de prise en charge d\'un sinistre habitation. Contestation de l\'expertise.',
-                  status: 'active' as CaseStatus,
-                  createdAt: '2024-06-10T10:00:00.000Z',
-                  updatedAt: '2024-06-10T10:00:00.000Z',
-                  messages: new Array(13).fill(null),
-                  documents: new Array(8).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-14',
-                  caseId: 'CASE-014',
-                  title: 'Copropriété',
-                  description: 'Conflit avec le syndic et travaux non autorisés. Convocation d\'assemblée générale.',
-                  status: 'closed' as CaseStatus,
-                  createdAt: '2024-06-08T10:00:00.000Z',
-                  updatedAt: '2024-06-08T10:00:00.000Z',
-                  messages: new Array(25).fill(null),
-                  documents: new Array(16).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-15',
-                  caseId: 'CASE-015',
-                  title: 'Recouvrement de créances',
-                  description: 'Impayés clients et mise en demeure. Procédure de référé provision.',
-                  status: 'active' as CaseStatus,
-                  createdAt: '2024-06-05T10:00:00.000Z',
-                  updatedAt: '2024-06-05T10:00:00.000Z',
-                  messages: new Array(8).fill(null),
-                  documents: new Array(3).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-16',
-                  caseId: 'CASE-016',
-                  title: 'Tutelle et curatelle',
-                  description: 'Demande de mise sous protection d\'un parent âgé. Constitution du dossier médical.',
-                  status: 'pending' as CaseStatus,
-                  createdAt: '2024-06-03T10:00:00.000Z',
-                  updatedAt: '2024-06-03T10:00:00.000Z',
-                  messages: new Array(21).fill(null),
-                  documents: new Array(10).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-17',
-                  caseId: 'CASE-017',
-                  title: 'Médiation commerciale',
-                  description: 'Différend contractuel entre partenaires commerciaux. Recherche de solution amiable.',
-                  status: 'active' as CaseStatus,
-                  createdAt: '2024-06-01T10:00:00.000Z',
-                  updatedAt: '2024-06-01T10:00:00.000Z',
-                  messages: new Array(33).fill(null),
-                  documents: new Array(20).fill(null),
-                  userId: 'mock-user'
-                },
-                {
-                  id: 'mock-18',
-                  caseId: 'CASE-018',
-                  title: 'Droit de l\'urbanisme',
-                  description: 'Contestation d\'un permis de construire en zone protégée. Recours administratif.',
-                  status: 'closed' as CaseStatus,
-                  createdAt: '2024-05-29T10:00:00.000Z',
-                  updatedAt: '2024-05-29T10:00:00.000Z',
-                  messages: new Array(29).fill(null),
-                  documents: new Array(17).fill(null),
-                  userId: 'mock-user'
-                }
-              ];
-              setCases(mockupCases);
-            } else {
-              setCases(convertedCases);
-            }
+            setCases(convertedCases);
           } catch (error) {
             console.error('Error fetching cases', error);
             setError('Failed to load cases. Please try again.');
@@ -909,3 +695,4 @@ export default function CasesPage() {
     </main>
   );
 }
+
