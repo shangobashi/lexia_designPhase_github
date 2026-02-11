@@ -79,9 +79,9 @@ export default function AuthLayout() {
       
       {/* Right Side - Login Form */}
       <div 
-        className={`w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-8 relative z-10 ${theme === 'dark' ? 'auth-right-pane-dark' : 'auth-panel-surface-light'}`}
+        className={`w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-8 relative z-10 ${isRecoveryRoute ? 'lg:-translate-y-2' : ''} ${theme === 'dark' ? 'auth-right-pane-dark' : 'auth-panel-surface-light'}`}
       >
-        <div className={`w-full ${isRecoveryRoute ? 'max-w-2xl' : 'max-w-lg'} mt-10 sm:mt-0`}>
+        <div className={`w-full ${isRecoveryRoute ? 'max-w-xl' : 'max-w-lg'} mt-10 sm:mt-0`}>
           <Outlet />
         </div>
       </div>
