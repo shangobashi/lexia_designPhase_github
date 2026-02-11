@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
+import { LanguageToggle } from '@/components/ui/language-toggle';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function RegisterPage() {
   const { user, register, googleLogin } = useAuth();
@@ -62,7 +64,19 @@ export default function RegisterPage() {
   };
   
   return (
-    <div className={`w-full max-w-md premium-shadow rounded-3xl p-6 sm:p-10 lg:p-12 shimmer ${isDark ? 'dark-form-bg' : 'bg-white'}`}>
+    <div className={`w-full max-w-md premium-shadow rounded-3xl p-6 sm:p-10 lg:p-12 shimmer ${isDark ? 'dark-form-bg' : 'bg-white'} relative`}>
+      {/* Theme Toggle (top-left) */}
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10">
+        <div className={`${isDark ? 'refined-icon' : 'bg-gray-100'} p-2.5 rounded-full`}>
+          <ThemeToggle />
+        </div>
+      </div>
+
+      {/* Language Switcher (top-right) */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-10">
+        <LanguageToggle />
+      </div>
+
       {/* Mobile Logo (visible on smaller screens) */}
       <div className="flex flex-col items-center mb-8 lg:hidden">
         <div className="mb-4 w-16 h-16 flex items-center justify-center">
