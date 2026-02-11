@@ -1,8 +1,10 @@
 import { Outlet } from 'react-router-dom';
 import { useTheme } from '@/contexts/theme-context';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function AuthLayout() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg document-flow' : 'sophisticated-bg book-flow'} flex flex-col lg:flex-row`}>
@@ -53,7 +55,7 @@ export default function AuthLayout() {
             Kingsley
           </h1>
           <p className={`text-lg font-clash font-light mb-16 leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-            Intelligence juridique avancée
+            {t.authLayout.tagline}
           </p>
           
           {/* Feature Cards */}
@@ -66,8 +68,8 @@ export default function AuthLayout() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className={`font-clash font-medium mb-1 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Analyse experte</h3>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>Solutions juridiques précises</p>
+                  <h3 className={`font-clash font-medium mb-1 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.authLayout.expertAnalysis}</h3>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{t.authLayout.expertAnalysisDesc}</p>
                 </div>
               </div>
             </div>
@@ -80,8 +82,8 @@ export default function AuthLayout() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className={`font-clash font-medium mb-1 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Documents intelligents</h3>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>Rédaction automatisée</p>
+                  <h3 className={`font-clash font-medium mb-1 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.authLayout.smartDocuments}</h3>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{t.authLayout.smartDocumentsDesc}</p>
                 </div>
               </div>
             </div>
@@ -94,8 +96,8 @@ export default function AuthLayout() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className={`font-clash font-medium mb-1 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Sécurité totale</h3>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>Confidentialité garantie</p>
+                  <h3 className={`font-clash font-medium mb-1 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.authLayout.totalSecurity}</h3>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{t.authLayout.totalSecurityDesc}</p>
                 </div>
               </div>
             </div>
