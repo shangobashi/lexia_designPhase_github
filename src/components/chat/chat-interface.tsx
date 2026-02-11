@@ -21,7 +21,8 @@ import {
   MAX_FILES,
 } from '@/lib/file-reader';
 
-const TEXTAREA_MIN_HEIGHT = 44;
+const COMPOSER_CONTROL_HEIGHT = 44;
+const TEXTAREA_MIN_HEIGHT = COMPOSER_CONTROL_HEIGHT;
 const TEXTAREA_MAX_HEIGHT = 220;
 const EMPTY_STATE_GLYPH_SEQUENCE = ['☰', '☱', '☲', '☳', '☴', '☵', '☶', '☷', '☶', '☵', '☴', '☳', '☲', '☱'];
 const EMPTY_STATE_GLYPH_INTERVAL_MS = 230;
@@ -794,8 +795,8 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 : 'bg-white/95 border-gray-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)]'
             )}
           >
-            <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-end gap-2">
-              <div className="flex-1 relative">
+            <div className="flex items-end gap-2">
+              <div className="relative min-w-0 flex-1">
                 <textarea
                   ref={textareaRef}
                   value={input}
@@ -803,7 +804,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   onKeyDown={handleKeyDown}
                   placeholder={composerPlaceholder}
                   className={cn(
-                    "w-full h-11 min-h-11 pl-12 pr-4 py-2.5 rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-5 transition-[height]",
+                    "w-full h-[44px] min-h-[44px] pl-12 pr-4 pt-[10px] pb-[12px] rounded-xl resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-5 transition-[height]",
                     "[scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-corner]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full",
                     isDark
                       ? 'bg-slate-800/95 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-blue-500/35 focus:border-blue-500/50 [scrollbar-color:rgba(148,163,184,0.45)_transparent] [&::-webkit-scrollbar-thumb]:bg-slate-500/45 [&::-webkit-scrollbar-thumb:hover]:bg-slate-400/60'
@@ -817,7 +818,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   onClick={handleFileClick}
                   disabled={isSending || isReadingFile}
                   className={cn(
-                    "absolute left-3 inset-y-0 my-auto z-10 inline-flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-200",
+                    "absolute left-3 top-1/2 z-10 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border transition-all duration-200",
                     "disabled:opacity-45 disabled:cursor-not-allowed",
                     isDark
                       ? 'bg-slate-700/75 border-slate-500/65 text-slate-100 hover:bg-slate-600/90 hover:border-slate-400/80'
@@ -829,7 +830,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                   {isReadingFile ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Plus className="h-3.5 w-3.5" strokeWidth={2.4} />
+                    <Plus className="h-3.5 w-3.5 -translate-y-px" strokeWidth={2.4} />
                   )}
                 </button>
                 <input
@@ -847,7 +848,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 onClick={handleSpeechInputToggle}
                 disabled={isSending || isSpeechInputTranscribing || !isSpeechInputSupported}
                 className={cn(
-                  "h-11 px-3.5 rounded-xl font-clash font-medium text-sm transition-colors self-end",
+                  "h-[44px] px-3.5 rounded-xl font-clash font-medium text-sm transition-colors shrink-0",
                   "inline-flex items-center justify-center gap-2",
                   "disabled:opacity-45 disabled:cursor-not-allowed",
                   isSpeechInputListening
@@ -877,7 +878,7 @@ export default function ChatInterface({ messages, onSend, onClearChat, isSending
                 type="submit"
                 disabled={isSending || isSpeechInputListening || isSpeechInputTranscribing || (!input.trim() && loadedFiles.length === 0)}
                 className={cn(
-                  "h-11 px-4 rounded-xl font-clash font-medium text-sm transition-colors self-end",
+                  "h-[44px] px-4 rounded-xl font-clash font-medium text-sm transition-colors shrink-0",
                   "inline-flex items-center justify-center gap-2",
                   "disabled:opacity-45 disabled:cursor-not-allowed",
                   "bg-blue-600 hover:bg-blue-700 text-white border border-blue-500/90",
