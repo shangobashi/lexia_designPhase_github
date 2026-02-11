@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
+import { LanguageToggle } from '@/components/ui/language-toggle';
 
 export default function LoginPage() {
   const { user, login, googleLogin, continueAsGuest } = useAuth();
@@ -61,7 +62,12 @@ export default function LoginPage() {
   };
   
   return (
-    <div className={`w-full ${isDark ? 'premium-shadow dark-form-bg' : 'premium-shadow bg-white'} rounded-3xl p-6 sm:p-10 lg:p-12 shimmer`}>
+    <div className={`w-full ${isDark ? 'premium-shadow dark-form-bg' : 'premium-shadow bg-white'} rounded-3xl p-6 sm:p-10 lg:p-12 shimmer relative`}>
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-10">
+        <LanguageToggle />
+      </div>
+
       {/* Mobile Logo */}
       <div className="flex items-center justify-center mb-8 lg:hidden">
         <div className={`w-16 h-16 flex items-center justify-center`}>
