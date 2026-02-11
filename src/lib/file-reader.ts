@@ -16,6 +16,32 @@ const PDF_EXTENSIONS = ['.pdf'];
 const DOCX_EXTENSIONS = ['.docx'];
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 
+const TEXT_MIME_TYPES = new Set([
+  'text/plain',
+  'text/markdown',
+  'text/x-markdown',
+  'text/csv',
+  'text/xml',
+  'application/xml',
+  'text/html',
+  'text/json',
+  'application/json',
+  'application/ld+json',
+  'text/javascript',
+  'application/javascript',
+  'application/x-javascript',
+  'text/css',
+  'application/sql',
+  'text/x-sql',
+  'application/yaml',
+  'text/yaml',
+  'text/x-yaml',
+]);
+
+const PDF_MIME_TYPES = new Set(['application/pdf']);
+const DOCX_MIME_TYPES = new Set(['application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
+const IMAGE_MIME_PREFIXES = ['image/'];
+
 export const ACCEPTED_EXTENSIONS = [
   ...TEXT_EXTENSIONS,
   ...PDF_EXTENSIONS,
@@ -49,9 +75,30 @@ function getExtension(filename: string): string {
   return idx >= 0 ? filename.slice(idx).toLowerCase() : '';
 }
 
-export function isSupported(file: File): boolean {
+function normalizeMimeType(file: File): string {
+  return (file.type || '').toLowerCase().trim();
+}
+
+function detectFileType(file: File): LoadedFile['type'] | null {
   const ext = getExtension(file.name);
-  return ACCEPTED_EXTENSIONS.includes(ext);
+  if (PDF_EXTENSIONS.includes(ext)) return 'pdf';
+  if (DOCX_EXTENSIONS.includes(ext)) return 'docx';
+  if (IMAGE_EXTENSIONS.includes(ext)) return 'image';
+  if (TEXT_EXTENSIONS.includes(ext)) return 'text';
+
+  const mimeType = normalizeMimeType(file);
+  if (!mimeType) return null;
+
+  if (PDF_MIME_TYPES.has(mimeType)) return 'pdf';
+  if (DOCX_MIME_TYPES.has(mimeType)) return 'docx';
+  if (IMAGE_MIME_PREFIXES.some((prefix) => mimeType.startsWith(prefix))) return 'image';
+  if (TEXT_MIME_TYPES.has(mimeType) || mimeType.startsWith('text/')) return 'text';
+
+  return null;
+}
+
+export function isSupported(file: File): boolean {
+  return detectFileType(file) !== null;
 }
 
 export function formatFileSize(bytes: number): string {
@@ -93,12 +140,8 @@ async function getMammothModule(): Promise<MammothModule> {
 // --- Readers ---
 
 async function readTextFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error('Failed to read text file'));
-    reader.readAsText(file, 'utf-8');
-  });
+  const value = await file.text();
+  return value.replace(/^\uFEFF/, '');
 }
 
 async function extractPdfText(
@@ -132,16 +175,74 @@ async function extractPdfText(
   return pages.join('\n\n');
 }
 
+function hasMeaningfulText(text: string): boolean {
+  const compact = text.replace(/\s+/g, ' ').trim();
+  if (compact.length < 80) return false;
+  const alnumChars = compact.match(/[A-Za-z0-9À-ÖØ-öø-ÿ]/g)?.length ?? 0;
+  return alnumChars >= 30;
+}
+
+function decodePdfEscapes(value: string): string {
+  return value
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\t/g, '\t')
+    .replace(/\\b/g, '\b')
+    .replace(/\\f/g, '\f')
+    .replace(/\\\(/g, '(')
+    .replace(/\\\)/g, ')')
+    .replace(/\\\\/g, '\\');
+}
+
+function extractPdfOperatorText(arrayBuffer: ArrayBuffer): string {
+  const binary = new TextDecoder('latin1').decode(new Uint8Array(arrayBuffer));
+  const segments: string[] = [];
+
+  const tjMatches = binary.matchAll(/\((?:\\.|[^\\)])+\)\s*Tj/g);
+  for (const match of tjMatches) {
+    const raw = match[0].replace(/\)\s*Tj$/, '');
+    segments.push(decodePdfEscapes(raw.slice(1)));
+  }
+
+  const tjArrayMatches = binary.matchAll(/\[(.*?)\]\s*TJ/gs);
+  for (const match of tjArrayMatches) {
+    const payload = match[1] || '';
+    const literals = payload.matchAll(/\((?:\\.|[^\\)])+\)/g);
+    for (const literal of literals) {
+      const item = literal[0];
+      segments.push(decodePdfEscapes(item.slice(1, -1)));
+    }
+  }
+
+  return segments.join(' ').replace(/\s{2,}/g, ' ').trim();
+}
+
 async function readPdfFile(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const pdfjs = await getPdfJsModule();
+  let extracted = '';
 
   try {
-    return await extractPdfText(pdfjs, arrayBuffer);
+    extracted = await extractPdfText(pdfjs, arrayBuffer);
   } catch {
     // Fallback for environments where worker loading is restricted.
-    return extractPdfText(pdfjs, arrayBuffer, true);
+    extracted = await extractPdfText(pdfjs, arrayBuffer, true);
   }
+
+  if (hasMeaningfulText(extracted)) {
+    return extracted;
+  }
+
+  const operatorText = extractPdfOperatorText(arrayBuffer);
+  if (operatorText.length > extracted.length) {
+    extracted = operatorText;
+  }
+
+  if (!extracted.trim()) {
+    return '[No readable text could be extracted from this PDF. The file may be image-based or protected.]';
+  }
+
+  return extracted;
 }
 
 async function readDocxFile(file: File): Promise<string> {
@@ -172,22 +273,26 @@ async function readImageFile(file: File): Promise<string> {
 // --- Main dispatcher ---
 
 export async function readFileContent(file: File): Promise<LoadedFile> {
-  const ext = getExtension(file.name);
-  let content: string;
-  let type: LoadedFile['type'];
+  const fileType = detectFileType(file);
+  if (!fileType) {
+    throw new Error(`Unsupported file format for "${file.name}"`);
+  }
 
-  if (PDF_EXTENSIONS.includes(ext)) {
-    type = 'pdf';
+  let content: string;
+  const type: LoadedFile['type'] = fileType;
+
+  if (type === 'pdf') {
     content = await readPdfFile(file);
-  } else if (DOCX_EXTENSIONS.includes(ext)) {
-    type = 'docx';
+  } else if (type === 'docx') {
     content = await readDocxFile(file);
-  } else if (IMAGE_EXTENSIONS.includes(ext)) {
-    type = 'image';
+  } else if (type === 'image') {
     content = await readImageFile(file);
   } else {
-    type = 'text';
     content = await readTextFile(file);
+  }
+
+  if (type !== 'image' && !content.trim()) {
+    content = '[No readable text could be extracted from this file.]';
   }
 
   // Truncate if too long.
@@ -213,7 +318,7 @@ export function buildFileContext(files: LoadedFile[]): string {
   const blocks: string[] = [];
 
   for (const file of files) {
-    let fileContent = file.content;
+    let fileContent = file.content.trim() ? file.content : '[No readable text could be extracted from this file.]';
 
     // Enforce total content cap.
     if (totalLength + fileContent.length > MAX_TOTAL_CONTENT) {
