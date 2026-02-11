@@ -18,6 +18,20 @@ function normalizeLanguage(language) {
   return language === 'fr' ? 'fr' : 'en';
 }
 
+function sanitizeApiKey(rawApiKey) {
+  if (typeof rawApiKey !== 'string') return '';
+  const trimmed = rawApiKey.trim();
+  if (!trimmed) return '';
+
+  const isWrappedInDoubleQuotes = trimmed.startsWith('"') && trimmed.endsWith('"');
+  const isWrappedInSingleQuotes = trimmed.startsWith("'") && trimmed.endsWith("'");
+  if (isWrappedInDoubleQuotes || isWrappedInSingleQuotes) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
 function sanitizeMimeType(mimeType) {
   const allowedTypes = new Set([
     'audio/webm',
@@ -53,7 +67,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.ELEVENLABS_API_KEY;
+  const apiKey = sanitizeApiKey(process.env.ELEVENLABS_API_KEY);
   if (!apiKey) {
     return res.status(500).json({ error: 'ElevenLabs API key not configured' });
   }
@@ -100,6 +114,13 @@ export default async function handler(req, res) {
     if (!sttResponse.ok) {
       const errorBody = await sttResponse.text();
       console.error('[Voice STT API] ElevenLabs error:', sttResponse.status, errorBody);
+
+      if (sttResponse.status === 401 || sttResponse.status === 403) {
+        return res.status(sttResponse.status).json({
+          error: 'ElevenLabs STT authentication failed. Verify ELEVENLABS_API_KEY in Vercel env (no extra quotes/spaces).',
+        });
+      }
+
       return res.status(sttResponse.status).json({
         error: `ElevenLabs STT API error: ${sttResponse.status}`,
       });
