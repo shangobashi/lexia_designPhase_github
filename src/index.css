@@ -586,6 +586,66 @@ body {
     }
 }
 
+/* Login micro-interactions */
+.login-form-shell {
+    transition: transform 220ms ease, box-shadow 260ms ease;
+}
+
+.login-field {
+    transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.login-field:hover {
+    transform: translateY(-1px);
+}
+
+.dark .login-field:hover {
+    border-color: rgba(148, 163, 184, 0.38);
+}
+
+.login-primary-action,
+.login-secondary-action,
+.login-ghost-action {
+    transition: transform 180ms ease, box-shadow 220ms ease, filter 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.login-primary-action:hover:not(:disabled),
+.login-secondary-action:hover:not(:disabled),
+.login-ghost-action:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.login-primary-action:active:not(:disabled),
+.login-secondary-action:active:not(:disabled),
+.login-ghost-action:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.login-primary-action:focus-visible,
+.login-secondary-action:focus-visible,
+.login-ghost-action:focus-visible,
+.login-inline-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.28);
+    border-radius: 0.75rem;
+}
+
+.login-inline-link {
+    transition: color 160ms ease, opacity 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login-form-shell,
+    .login-field,
+    .login-primary-action,
+    .login-secondary-action,
+    .login-ghost-action,
+    .login-inline-link {
+        transition: none !important;
+        transform: none !important;
+    }
+}
+
 .dark-secondary-bg {
     background: linear-gradient(120deg, rgba(15, 15, 35, 0.9) 0%, rgba(26, 26, 46, 0.85) 50%, rgba(22, 33, 62, 0.9) 100%);
 }

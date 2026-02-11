@@ -63,7 +63,7 @@ export default function LoginPage() {
   };
   
   return (
-    <div className={`w-full ${isDark ? 'premium-shadow dark-form-bg' : 'premium-shadow bg-white'} rounded-3xl p-6 sm:p-10 lg:p-12 shimmer relative`}>
+    <div className={`w-full login-form-shell ${isDark ? 'premium-shadow dark-form-bg' : 'premium-shadow bg-white'} rounded-3xl p-6 sm:p-10 lg:p-12 shimmer relative`}>
       {/* Theme Toggle (top-left) */}
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10">
         <ThemeToggle />
@@ -103,7 +103,7 @@ export default function LoginPage() {
                 isDark 
                   ? 'parchment-input' 
                   : 'border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-              }`}
+              } login-field`}
             />
             
             <input
@@ -116,7 +116,7 @@ export default function LoginPage() {
                 isDark 
                   ? 'parchment-input' 
                   : 'border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-              }`}
+              } login-field`}
             />
             
             <div className="text-right">
@@ -126,7 +126,7 @@ export default function LoginPage() {
                   isDark 
                     ? 'text-slate-400 hover:text-slate-300' 
                     : 'text-gray-500 hover:text-gray-700'
-                }`}
+                } login-inline-link`}
               >
                 {t.login.forgotPassword}
               </Link>
@@ -135,7 +135,7 @@ export default function LoginPage() {
         
           <button 
             type="submit" 
-            className="executive-button w-full text-white py-3.5 sm:py-4 rounded-2xl font-clash font-medium shimmer" 
+            className="executive-button login-primary-action w-full text-white py-3.5 sm:py-4 rounded-2xl font-clash font-medium shimmer" 
             disabled={isLoading}
           >
             {isLoading ? t.login.submitting : t.login.submitButton}
@@ -159,7 +159,7 @@ export default function LoginPage() {
               isDark
                 ? 'bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm'
-            } disabled:opacity-60 disabled:cursor-not-allowed`}
+            } login-secondary-action disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -180,7 +180,7 @@ export default function LoginPage() {
               isDark
                 ? 'text-slate-400 hover:text-slate-300 hover:bg-slate-800/50'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
+            } login-ghost-action`}
           >
             {t.login.continueAsGuest}
           </button>
@@ -195,7 +195,7 @@ export default function LoginPage() {
                 isDark
                   ? 'text-slate-200 hover:text-slate-100'
                   : 'text-slate-800 hover:text-slate-600'
-              }`}
+              } login-inline-link`}
             >
               {t.login.createAccount}
             </Link>
