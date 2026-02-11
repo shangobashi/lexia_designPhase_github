@@ -44,8 +44,8 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className={`w-full ${isDark ? 'premium-shadow dark-form-bg' : 'premium-shadow bg-white'} rounded-3xl p-6 sm:p-10 lg:p-12 shimmer relative`}>
-      {/* Theme Toggle (top-left) */}
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10">
+      {/* Theme Toggle (top-left) — mobile/tablet only; desktop uses auth-layout fixed toggle */}
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 lg:hidden">
         <div className={`${isDark ? 'refined-icon' : 'bg-gray-100'} p-2.5 rounded-full`}>
           <ThemeToggle />
         </div>
