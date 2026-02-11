@@ -19,8 +19,8 @@ const INTRO_STORAGE_PREFIX = 'kingsley-intro-shown:';
 const ERROR_MESSAGES = [
   "Objection! All my neural pathways are currently in recess. Even AI lawyers need a break sometimes. Please try again in a moment.",
   "Court is temporarily adjourned. My legal circuits are experiencing a brief intermission. I'll be back faster than a Belgian court ruling.",
-  "The jury of AI models is currently deliberating... in another dimension. Please retry — justice delayed is not justice denied!",
-  "My legal library seems to have misplaced itself. Like a good lawyer, I'll find the right argument — just give me another try.",
+  "The jury of AI models is currently deliberating... in another dimension. Please retry - justice delayed is not justice denied!",
+  "My legal library seems to have misplaced itself. Like a good lawyer, I'll find the right argument - just give me another try.",
   "Brief technical sidebar: all engines are refueling. In the meantime, may I suggest a nice Belgian waffle while you wait?",
 ];
 
@@ -71,17 +71,33 @@ function extractPostComplianceFailure(content: string): string {
   return candidate;
 }
 
+function pickMostActionableAssistantBlock(content: string): string {
+  const blocks = content
+    .split(/\n\s*kingsley\s*:?\s*/i)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  if (blocks.length <= 1) return content;
+  return blocks[blocks.length - 1];
+}
+
+function stripComplianceNoise(content: string): string {
+  return content
+    .replace(/COMPLIANCE REPORT[\s\S]*$/i, '')
+    .replace(/COMPLIANCE FAILURE:[^\n]*/gi, '')
+    .trim();
+}
+
 function sanitizeAssistantContent(content: string): string {
   const postCompliance = extractPostComplianceFailure(content);
-  return postCompliance
+  const lastAssistantBlock = pickMostActionableAssistantBlock(postCompliance);
+  return stripComplianceNoise(lastAssistantBlock)
     .replace(/^\s*kingsley\s*:?\s*/i, '')
     .trim();
 }
 
 function normalizeForDedup(content: string): string {
-  return content
-    .replace(/═══ COMPLIANCE REPORT ═══[\s\S]*$/i, '')
-    .replace(/COMPLIANCE FAILURE:[^\n]*/gi, '')
+  return stripComplianceNoise(content)
     .replace(/^\s*kingsley\s*:?\s*/gi, '')
     .replace(/\s+/g, ' ')
     .trim()
@@ -247,7 +263,7 @@ export default function ChatPage() {
       const finalAssistantMessage = introAllowedRef.current
         ? result.message
         : stripRepeatedIntro(result.message);
-      const sanitizedAssistantMessage = sanitizeAssistantContent(finalAssistantMessage);
+      const sanitizedAssistantMessage = sanitizeAssistantContent(finalAssistantMessage) || stripComplianceNoise(finalAssistantMessage) || t.chat.errorDefault;
 
       const aiMessage: Message = {
         id: uuid(),
@@ -259,10 +275,17 @@ export default function ChatPage() {
 
       setMessages((prev) => {
         const lastMessage = prev[prev.length - 1];
+        const lastNormalized = lastMessage ? normalizeForDedup(lastMessage.content) : '';
+        const nextNormalized = normalizeForDedup(aiMessage.content);
+        const isNearDuplicate =
+          lastNormalized.length > 80 &&
+          nextNormalized.length > 80 &&
+          (lastNormalized.includes(nextNormalized) || nextNormalized.includes(lastNormalized));
+
         if (
           lastMessage &&
           lastMessage.sender === 'assistant' &&
-          normalizeForDedup(lastMessage.content) === normalizeForDedup(aiMessage.content)
+          (lastNormalized === nextNormalized || isNearDuplicate)
         ) {
           return [
             ...prev.slice(0, -1),
@@ -441,3 +464,4 @@ export default function ChatPage() {
     </div>
   );
 }
+
