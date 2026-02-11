@@ -7,37 +7,7 @@ export default function AuthLayout() {
   const { t } = useLanguage();
   
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg document-flow' : 'sophisticated-bg book-flow'} flex flex-col lg:flex-row`}>
-      {/* Floating Icons Background - positioned away from logo area */}
-      {theme === 'dark' ? (
-        <>
-          <div className="floating-document top-1/4 right-1/4 w-3 h-3" style={{animationDelay: '-25s'}}>
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-slate-400">
-              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-            </svg>
-          </div>
-          <div className="floating-document top-3/4 right-1/3 w-3 h-3" style={{animationDelay: '-8s'}}>
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-slate-400">
-              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-            </svg>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="floating-document top-1/4 left-1/4 w-4 h-4">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-gray-500">
-              <path d="M19,2L14,6.5V17.5L19,13V2M6.5,5C4.55,5 2.45,5.4 1,6.5V21.16C1,21.41 1.25,21.66 1.5,21.66C1.6,21.66 1.65,21.59 1.75,21.59C3.1,20.94 5.05,20.68 6.5,20.68C8.45,20.68 10.55,21.1 12,22.2C13.45,21.1 15.55,20.68 17.5,20.68C18.95,20.68 20.9,20.94 22.25,21.59C22.35,21.66 22.4,21.66 22.5,21.66C22.75,21.66 23,21.41 23,21.16V6.5C21.55,5.4 19.45,5 17.5,5C15.55,5 13.45,5.4 12,6.5C10.55,5.4 8.45,5 6.5,5Z"/>
-            </svg>
-          </div>
-          <div className="floating-document top-2/3 right-1/3 w-3 h-3" style={{animationDelay: '-8s'}}>
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-gray-500">
-              <path d="M19,2L14,6.5V17.5L19,13V2M6.5,5C4.55,5 2.45,5.4 1,6.5V21.16C1,21.41 1.25,21.66 1.5,21.66C1.6,21.66 1.65,21.59 1.75,21.59C3.1,20.94 5.05,20.68 6.5,20.68C8.45,20.68 10.55,21.1 12,22.2C13.45,21.1 15.55,20.68 17.5,20.68C18.95,20.68 20.9,20.94 22.25,21.59C22.35,21.66 22.4,21.66 22.5,21.66C22.75,21.66 23,21.41 23,21.16V6.5C21.55,5.4 19.45,5 17.5,5C15.55,5 13.45,5.4 12,6.5C10.55,5.4 8.45,5 6.5,5Z"/>
-            </svg>
-          </div>
-        </>
-      )}
-      
-      {/* Texture Overlay removed to prevent yellow tint */}
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg book-flow' : 'sophisticated-bg book-flow'} flex flex-col lg:flex-row`}>
       
       {/* Left Side - Branding and Features */}
       <div className={`hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-10 xl:p-16 relative z-10 ${theme === 'dark' ? 'dark-secondary-bg' : ''}`}>
