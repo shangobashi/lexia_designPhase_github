@@ -507,6 +507,9 @@ const en = {
     voiceInputTranscriptionError: 'Unable to transcribe voice input',
     voiceInputUnexpectedError: 'Unexpected voice input error',
     voiceInputErrorTitle: 'Voice input failed',
+    autoAnalyzePreparing: 'Preparing document analysis...',
+    autoAnalyzeFailed: 'Automatic document analysis failed',
+    autoAnalyzePrompt: 'Please analyze the attached document "{documentName}" in depth. Structure your answer with: 1) executive summary, 2) key legal issues, 3) legal risks and procedural deadlines, 4) missing information to request, 5) recommended next actions under Belgian law.',
   },
 
   // Uploads Page

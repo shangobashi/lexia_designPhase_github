@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 import { gsap } from 'gsap';
 import ChatInterface from '@/components/chat/chat-interface';
@@ -9,9 +10,10 @@ import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
 import { generateStreamingChat, KingsleyMode } from '@/lib/ai-service';
 import { config } from '@/lib/config';
+import { downloadFile, getUserDocumentById } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types/message';
-import { LoadedFile, buildFileContext, formatFileSize } from '@/lib/file-reader';
+import { LoadedFile, MAX_FILE_SIZE, buildFileContext, formatFileSize, readFileContent } from '@/lib/file-reader';
 
 const INTRO_STORAGE_PREFIX = 'kingsley-intro-shown:';
 const ERROR_MESSAGES = [
@@ -65,6 +67,7 @@ function introStorageKeyForUser(userId: string | undefined): string {
 }
 
 export default function ChatPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, continueAsGuest } = useAuth();
   const { theme } = useTheme();
   const { t, language } = useLanguage();
@@ -80,6 +83,8 @@ export default function ChatPage() {
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const titleWordRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const accentLineRef = useRef<HTMLDivElement>(null);
+  const autoAnalyzeInFlightRef = useRef(false);
+  const processedAutoAnalyzeIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -254,6 +259,76 @@ export default function ChatPage() {
   }, [isSending, toast, mode, t, language, user?.id]);
 
   const handleClear = () => setMessages([]);
+
+  const clearAutoAnalyzeParams = useCallback(() => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('analyze');
+    nextParams.delete('fresh');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (searchParams.get('analyze')) return;
+    if (autoAnalyzeInFlightRef.current) return;
+    processedAutoAnalyzeIdRef.current = null;
+  }, [searchParams]);
+
+  useEffect(() => {
+    const analyzeDocumentId = searchParams.get('analyze');
+    if (!analyzeDocumentId) return;
+    if (autoAnalyzeInFlightRef.current || processedAutoAnalyzeIdRef.current === analyzeDocumentId) return;
+    if (isSending) return;
+
+    autoAnalyzeInFlightRef.current = true;
+    processedAutoAnalyzeIdRef.current = analyzeDocumentId;
+    const shouldStartFresh = searchParams.get('fresh') === '1';
+
+    const runAutoAnalyze = async () => {
+      try {
+        if (shouldStartFresh) {
+          setMessages([]);
+        }
+
+        toast({
+          title: t.chat.autoAnalyzePreparing,
+        });
+
+        const documentRecord = await getUserDocumentById(analyzeDocumentId);
+        if (!documentRecord?.storage_path) {
+          throw new Error('Missing document storage path');
+        }
+
+        if (documentRecord.file_size > MAX_FILE_SIZE) {
+          throw new Error(t.chat.fileTooLargeDesc);
+        }
+
+        const blob = await downloadFile(documentRecord.storage_path);
+        if (!blob) {
+          throw new Error('Unable to download file');
+        }
+
+        const fileName = documentRecord.original_name || documentRecord.name || 'document';
+        const mimeType = documentRecord.mime_type || blob.type || 'application/octet-stream';
+        const file = new File([blob], fileName, { type: mimeType });
+        const loadedFile = await readFileContent(file);
+        const autoPrompt = t.chat.autoAnalyzePrompt.replace('{documentName}', fileName);
+
+        await handleSend(autoPrompt, [loadedFile]);
+      } catch (error: any) {
+        console.error('Auto document analysis error:', error);
+        toast({
+          title: t.chat.autoAnalyzeFailed,
+          description: error?.message || t.chat.errorDefault,
+          variant: 'destructive',
+        });
+      } finally {
+        autoAnalyzeInFlightRef.current = false;
+        clearAutoAnalyzeParams();
+      }
+    };
+
+    void runAutoAnalyze();
+  }, [clearAutoAnalyzeParams, handleSend, isSending, searchParams, t, toast]);
 
   const isDark = theme === 'dark';
 

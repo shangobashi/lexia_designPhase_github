@@ -7,7 +7,7 @@ export default function AuthLayout() {
   const { t } = useLanguage();
   
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg book-flow' : 'sophisticated-bg book-flow'} flex flex-col lg:flex-row`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg dark-book-flow' : 'sophisticated-bg book-flow'} flex flex-col lg:flex-row`}>
       
       {/* Left Side - Branding and Features */}
       <div className={`hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-10 xl:p-16 relative z-10 ${theme === 'dark' ? 'dark-secondary-bg' : ''}`}>

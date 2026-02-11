@@ -507,6 +507,9 @@ const fr = {
     voiceInputTranscriptionError: 'Impossible de transcrire l\u2019entr\u00e9e vocale',
     voiceInputUnexpectedError: 'Erreur inattendue de saisie vocale',
     voiceInputErrorTitle: '\u00c9chec de la saisie vocale',
+    autoAnalyzePreparing: 'Pr\u00e9paration de l\u2019analyse du document...',
+    autoAnalyzeFailed: '\u00c9chec de l\u2019analyse automatique du document',
+    autoAnalyzePrompt: 'Veuillez analyser en profondeur le document joint "{documentName}". Structurez votre r\u00e9ponse avec : 1) r\u00e9sum\u00e9 ex\u00e9cutif, 2) points juridiques cl\u00e9s, 3) risques juridiques et d\u00e9lais proc\u00e9duraux, 4) informations manquantes \u00e0 demander, 5) prochaines actions recommand\u00e9es en droit belge.',
   },
 
   // Uploads Page

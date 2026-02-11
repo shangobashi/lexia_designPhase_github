@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FileUploader } from '@/components/uploads/file-uploader';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
@@ -21,6 +22,7 @@ type DocumentType = 'all' | 'pdf' | 'doc' | 'image' | 'text';
 type SortOption = 'newest' | 'oldest' | 'name' | 'size';
 
 export default function UploadsPage() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
@@ -257,6 +259,10 @@ export default function UploadsPage() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
+
+  const handleAnalyzeDocument = useCallback((documentId: string) => {
+    navigate(`/chat?analyze=${encodeURIComponent(documentId)}&fresh=1`);
+  }, [navigate]);
   
   // Helper function to format date
   const formatDisplayDate = (dateString: string) => {
@@ -555,6 +561,7 @@ export default function UploadsPage() {
                         <Download className="h-4 w-4" />
                       </button>
                       <button 
+                        onClick={() => handleAnalyzeDocument(doc.id)}
                         className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
                         title={t.uploads.analyze}
                       >

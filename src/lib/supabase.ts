@@ -550,6 +550,32 @@ export const getUserDocuments = async (userId?: string) => {
   return data;
 };
 
+export const getUserDocumentById = async (documentId: string, userId?: string) => {
+  ensureConfigured();
+  const uid = userId || (await getCurrentUser())?.id;
+  if (!uid) throw new Error('No user ID provided');
+
+  const { data, error } = await supabase
+    .from('documents')
+    .select(`
+      id,
+      case_id,
+      name,
+      original_name,
+      file_size,
+      mime_type,
+      storage_path,
+      uploaded_at,
+      cases!inner(user_id)
+    `)
+    .eq('id', documentId)
+    .eq('cases.user_id', uid)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
 export const deleteDocument = async (documentId: string) => {
   ensureConfigured();
   const { data: document, error: fetchError } = await supabase
