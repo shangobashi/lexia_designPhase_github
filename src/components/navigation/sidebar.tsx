@@ -1,13 +1,14 @@
 
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/contexts/auth-context';
+import { useToast } from '@/hooks/use-toast';
 import { getUserInitials } from '@/lib/utils';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, LogOut } from 'lucide-react';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -19,7 +20,9 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: SidebarProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const displayName = user?.isGuest
     ? t.common.guest
     : (user?.displayName || user?.email || t.common.guest);
@@ -29,6 +32,24 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: Sidebar
     const next = !collapsed;
     setCollapsed(next);
     localStorage.setItem('sidebar-collapsed', JSON.stringify(next));
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: t.common.loggedOut,
+        description: t.common.loggedOutDesc,
+        variant: 'success',
+      });
+      navigate('/login', { replace: true });
+    } catch (error: any) {
+      toast({
+        title: t.common.logoutFailed,
+        description: error?.message || t.common.logoutFailedDesc,
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -217,6 +238,41 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: Sidebar
             </div>
           </div>
         </div>
+        {user && !user.isGuest && (
+          <div className={cn("mt-2", collapsed ? "px-0" : "")}>
+            {collapsed ? (
+              <Tooltip content={t.common.logout}>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className={cn(
+                    "w-full flex items-center justify-center p-3 rounded-xl transition-colors",
+                    theme === 'dark'
+                      ? "text-slate-300 hover:text-slate-100 hover:bg-slate-700/50 border border-slate-600/50"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-gray-300"
+                  )}
+                  aria-label={t.common.logout}
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </Tooltip>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className={cn(
+                  "w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-clash font-medium transition-colors",
+                  theme === 'dark'
+                    ? "text-slate-200 border border-slate-600 hover:bg-slate-700/50"
+                    : "text-gray-700 border border-gray-300 hover:bg-gray-100"
+                )}
+              >
+                <LogOut className="h-4 w-4" />
+                <span>{t.common.logout}</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </aside>
   );

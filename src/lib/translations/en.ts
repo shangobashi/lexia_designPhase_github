@@ -30,6 +30,12 @@ const en = {
     privacy: 'Privacy',
     support: 'Support',
     learnMore: 'Learn more',
+    logout: 'Log out',
+    logoutHint: 'End your current session on this device.',
+    loggedOut: 'Logged out',
+    loggedOutDesc: 'You have been signed out.',
+    logoutFailed: 'Sign-out failed',
+    logoutFailedDesc: 'Please try again.',
   },
 
   // Landing Page

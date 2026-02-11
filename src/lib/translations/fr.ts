@@ -30,6 +30,12 @@ const fr = {
     privacy: 'Confidentialit\u00e9',
     support: 'Support',
     learnMore: 'En savoir plus',
+    logout: 'Se d\u00e9connecter',
+    logoutHint: 'Terminez votre session actuelle sur cet appareil.',
+    loggedOut: 'D\u00e9connect\u00e9',
+    loggedOutDesc: 'Vous avez \u00e9t\u00e9 d\u00e9connect\u00e9.',
+    logoutFailed: '\u00c9chec de d\u00e9connexion',
+    logoutFailedDesc: 'Veuillez r\u00e9essayer.',
   },
 
   // Landing Page

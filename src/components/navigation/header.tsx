@@ -3,8 +3,9 @@ import { LanguageToggle } from '@/components/ui/language-toggle';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
+import { useToast } from '@/hooks/use-toast';
 import { getUserInitials } from '@/lib/utils';
-import { Bell, Search, MessageCircle, Menu } from 'lucide-react';
+import { Bell, Search, MessageCircle, Menu, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
@@ -14,9 +15,10 @@ interface HeaderProps {
 }
 
 export default function Header({ toggleSidebar, isCollapsed, hideAIButton = false }: HeaderProps) {
-  const { user, continueAsGuest } = useAuth();
+  const { user, continueAsGuest, logout } = useAuth();
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { toast } = useToast();
   const navigate = useNavigate();
   
   const displayName = user?.isGuest ? t.common.guest : (user?.displayName || user?.email || t.common.guest);
@@ -27,6 +29,24 @@ export default function Header({ toggleSidebar, isCollapsed, hideAIButton = fals
       await continueAsGuest();
     }
     navigate('/chat');
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: t.common.loggedOut,
+        description: t.common.loggedOutDesc,
+        variant: 'success',
+      });
+      navigate('/login', { replace: true });
+    } catch (error: any) {
+      toast({
+        title: t.common.logoutFailed,
+        description: error?.message || t.common.logoutFailedDesc,
+        variant: 'destructive',
+      });
+    }
   };
   
   return (
@@ -75,6 +95,22 @@ export default function Header({ toggleSidebar, isCollapsed, hideAIButton = fals
               {initials}
             </div>
           </div>
+          {user && !user.isGuest && (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-clash font-medium transition-colors ${
+                theme === 'dark'
+                  ? 'border border-slate-600 text-slate-200 hover:bg-slate-700/60'
+                  : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+              title={t.common.logout}
+              aria-label={t.common.logout}
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden xl:inline">{t.common.logout}</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

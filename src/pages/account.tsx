@@ -1,9 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
-import { Camera, Shield, Bell, Database } from 'lucide-react';
+import { Camera, Shield, Bell, Database, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/language-context';
+import { useNavigate } from 'react-router-dom';
 
 type NotificationKey = 'email' | 'deadline' | 'product' | 'marketing';
 
@@ -12,6 +13,7 @@ export default function AccountPage() {
   const { theme } = useTheme();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const isDark = theme === 'dark';
 
   if (loading || !user) {
@@ -222,13 +224,49 @@ export default function AccountPage() {
     setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: t.common.loggedOut,
+        description: t.common.loggedOutDesc,
+        variant: 'success',
+      });
+      navigate('/login', { replace: true });
+    } catch (error: any) {
+      toast({
+        title: t.common.logoutFailed,
+        description: error?.message || t.common.logoutFailedDesc,
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className={`min-h-screen ${isDark ? 'dark-bg' : 'sophisticated-bg'} p-3 sm:p-6`}>
       <div className={`${isDark ? 'dark-executive-card' : 'executive-card'} rounded-2xl p-4 sm:p-6 mb-6`}>
-        <h1 className={`text-2xl sm:text-3xl font-clash font-light ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
-          {t.account.title}
-        </h1>
-        <p className={`mt-1 text-sm sm:text-base ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{t.account.subtitle}</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className={`text-2xl sm:text-3xl font-clash font-light ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+              {t.account.title}
+            </h1>
+            <p className={`mt-1 text-sm sm:text-base ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{t.account.subtitle}</p>
+          </div>
+          {!user.isGuest && (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-clash font-medium transition-colors ${
+                isDark
+                  ? 'border border-slate-600 text-slate-200 hover:bg-slate-700/50'
+                  : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <LogOut className="h-4 w-4" />
+              {t.common.logout}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -547,23 +585,19 @@ export default function AccountPage() {
               </button>
             </div>
 
-            <div
-              className={`rounded-xl border p-4 ${
-                isDark ? 'border-red-500/40 bg-red-900/10' : 'border-red-200 bg-red-50/60'
-              }`}
-            >
-              <p className={`font-medium ${isDark ? 'text-red-300' : 'text-red-700'}`}>{t.account.dataManagement.deleteAccount}</p>
-              <p className={`mt-1 text-sm ${isDark ? 'text-red-300/90' : 'text-red-600'}`}>{t.account.dataManagement.deleteAccountDesc}</p>
+            <div className={`rounded-xl border p-4 ${isDark ? 'border-slate-700 bg-slate-800/40' : 'border-gray-200 bg-white/70'}`}>
+              <p className={`font-medium ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>{t.common.logout}</p>
+              <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{t.common.logoutHint}</p>
               <button
                 type="button"
-                onClick={logout}
+                onClick={handleLogout}
                 className={`mt-3 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
                   isDark
-                    ? 'border-red-500/60 text-red-300 hover:bg-red-900/30'
-                    : 'border-red-300 text-red-700 hover:bg-red-100'
+                    ? 'border-slate-600 text-slate-200 hover:bg-slate-700/50'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                {t.account.dataManagement.deleteButton}
+                {t.common.logout}
               </button>
             </div>
           </div>

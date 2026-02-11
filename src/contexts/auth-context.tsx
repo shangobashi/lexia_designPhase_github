@@ -261,6 +261,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
       }
+      clearGuestSession();
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
