@@ -100,8 +100,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleUserSession = async (supabaseUser: SupabaseUser) => {
+    const oauthAvatar =
+      supabaseUser.user_metadata?.avatar_url
+      || supabaseUser.user_metadata?.picture
+      || null;
+    const oauthName =
+      supabaseUser.user_metadata?.full_name
+      || supabaseUser.user_metadata?.name
+      || supabaseUser.user_metadata?.preferred_username
+      || null;
+
     try {
-      const profile = await getProfile(supabaseUser.id);
+      let profile = await getProfile(supabaseUser.id);
+      const profileUpdates: Partial<Profile> = {};
+
+      // Keep existing profile rows in sync with OAuth metadata when fields are empty.
+      if (oauthAvatar && !profile.avatar_url) {
+        profileUpdates.avatar_url = oauthAvatar;
+      }
+      if (oauthName && !profile.full_name) {
+        profileUpdates.full_name = oauthName;
+      }
+
+      if (Object.keys(profileUpdates).length > 0) {
+        const { data: updatedProfile, error: updateError } = await supabase
+          .from('profiles')
+          .update(profileUpdates)
+          .eq('id', supabaseUser.id)
+          .select('*')
+          .single();
+
+        if (updateError) {
+          console.warn('Profile sync warning:', updateError);
+          profile = { ...profile, ...profileUpdates };
+        } else if (updatedProfile) {
+          profile = updatedProfile;
+        }
+      }
+
       setUser({
         id: supabaseUser.id,
         email: supabaseUser.email || '',
@@ -114,8 +150,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser({
         id: supabaseUser.id,
         email: supabaseUser.email || '',
-        displayName: supabaseUser.user_metadata?.full_name || null,
-        photoURL: null
+        displayName: oauthName,
+        photoURL: oauthAvatar
       });
     }
   };
@@ -202,12 +238,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const googleLogin = async () => {
     ensureSupabase();
-    setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          scopes: 'openid email profile',
         }
       });
 
@@ -215,8 +255,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 

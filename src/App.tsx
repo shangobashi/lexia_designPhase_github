@@ -10,6 +10,8 @@ import { useAuth } from './contexts/auth-context';
 const LandingPage = lazy(() => import('./pages/landing'));
 const LoginPage = lazy(() => import('./pages/login'));
 const RegisterPage = lazy(() => import('./pages/register'));
+const ForgotPasswordPage = lazy(() => import('./pages/forgot-password'));
+const ResetPasswordPage = lazy(() => import('./pages/reset-password'));
 const DashboardPage = lazy(() => import('./pages/dashboard'));
 const NewCasePage = lazy(() => import('./pages/new-case'));
 const CasesPage = lazy(() => import('./pages/cases'));
@@ -56,6 +58,8 @@ function App() {
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
           </Route>
           
           {/* Protected Routes - Require auth or guest mode */}
