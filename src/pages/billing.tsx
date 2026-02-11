@@ -443,7 +443,9 @@ export default function BillingPage() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>{t.billing.currentPlan.status}</span>
-                  <span className={`px-2 py-1 ${theme === 'dark' ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'} text-xs rounded-full font-clash font-medium`}>{t.billing.currentPlan.guestStatus}</span>
+                  <span className={`px-2 py-1 ${theme === 'dark' ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'} text-xs rounded-full font-clash font-medium`}>
+                    {user?.isGuest ? t.billing.currentPlan.guestStatus : (userProfile.subscription_status || t.common.active)}
+                  </span>
                 </div>
               </div>
             </div>

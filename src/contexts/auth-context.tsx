@@ -2,7 +2,7 @@ import * as React from 'react';
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured, getProfile, Profile } from '@/lib/supabase';
-import { getGuestSession } from '@/lib/guest-session';
+import { clearGuestSession, getGuestSession } from '@/lib/guest-session';
 
 // Types
 export type User = {
@@ -36,6 +36,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const continueAsGuest = () => {
+    if (user && !user.isGuest) {
+      return;
+    }
+
     const guestSession = getGuestSession();
     const remaining = Math.max(0, guestSession.maxQueries - guestSession.queriesUsed);
 
@@ -100,6 +104,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleUserSession = async (supabaseUser: SupabaseUser) => {
+    const resolvedEmail =
+      supabaseUser.email
+      || supabaseUser.user_metadata?.email
+      || supabaseUser.identities?.[0]?.identity_data?.email
+      || '';
     const oauthAvatar =
       supabaseUser.user_metadata?.avatar_url
       || supabaseUser.user_metadata?.picture
@@ -140,19 +149,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       setUser({
         id: supabaseUser.id,
-        email: supabaseUser.email || '',
+        email: resolvedEmail,
         displayName: profile.full_name,
         photoURL: profile.avatar_url,
         profile
       });
+      clearGuestSession();
     } catch (error) {
       console.error('Error loading profile:', error);
+
+      let fallbackProfile: Profile | undefined;
+      try {
+        const upsertPayload = {
+          id: supabaseUser.id,
+          email: resolvedEmail,
+          full_name: oauthName,
+          avatar_url: oauthAvatar,
+        };
+        const { data: upsertedProfile, error: upsertError } = await supabase
+          .from('profiles')
+          .upsert(upsertPayload, { onConflict: 'id' })
+          .select('*')
+          .single();
+
+        if (!upsertError && upsertedProfile) {
+          fallbackProfile = upsertedProfile;
+        }
+      } catch (profileCreateError) {
+        console.warn('Profile bootstrap warning:', profileCreateError);
+      }
+
       setUser({
         id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        displayName: oauthName,
-        photoURL: oauthAvatar
+        email: resolvedEmail,
+        displayName: fallbackProfile?.full_name || oauthName,
+        photoURL: fallbackProfile?.avatar_url || oauthAvatar,
+        profile: fallbackProfile
       });
+      clearGuestSession();
     }
   };
 

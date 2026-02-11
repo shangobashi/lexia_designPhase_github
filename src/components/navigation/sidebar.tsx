@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
+import { useAuth } from '@/contexts/auth-context';
+import { getUserInitials } from '@/lib/utils';
 import { ChevronLeft } from 'lucide-react';
 
 interface SidebarProps {
@@ -17,6 +19,11 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: SidebarProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const displayName = user?.isGuest
+    ? t.common.guest
+    : (user?.displayName || user?.email || t.common.guest);
+  const initials = getUserInitials(displayName);
 
   const handleToggleCollapse = () => {
     const next = !collapsed;
@@ -183,10 +190,12 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: Sidebar
           )}>
             <div className={cn("flex items-center", collapsed ? "justify-center" : "space-x-3")}>
               <div className={cn(
-                "rounded-full flex-shrink-0",
+                "rounded-full flex-shrink-0 flex items-center justify-center font-clash font-medium",
                 collapsed ? "w-7 h-7" : "w-8 h-8",
                 theme === 'dark' ? 'bg-slate-500' : 'bg-gray-300'
-              )} />
+              )}>
+                {initials}
+              </div>
               <AnimatePresence>
                 {!collapsed && (
                   <motion.div
@@ -198,7 +207,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen }: Sidebar
                   >
                     <div className={`text-sm font-clash font-medium ${
                       theme === 'dark' ? 'text-slate-100' : 'text-gray-900'
-                    }`}>{t.common.guest}</div>
+                    }`}>{displayName}</div>
                     <div className={`text-xs ${
                       theme === 'dark' ? 'text-slate-300' : 'text-gray-500'
                     }`}>{t.common.free}</div>
