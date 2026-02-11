@@ -92,14 +92,9 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className={`w-full ${isDark ? 'premium-shadow dark-form-bg' : 'premium-shadow bg-white'} rounded-3xl p-6 sm:p-10 lg:p-12 shimmer relative`}>
-      {/* Theme Toggle (top-left) */}
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10">
+    <div className={`w-full login-form-shell reset-password-shell ${isDark ? 'premium-shadow dark-form-bg' : 'premium-shadow bg-white'} rounded-3xl p-6 sm:p-10 lg:p-12 shimmer relative`}>
+      <div className="mb-6 sm:mb-8 flex items-center justify-between">
         <ThemeToggle />
-      </div>
-
-      {/* Language Switcher (top-right) */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-10">
         <LanguageToggle />
       </div>
 
@@ -139,11 +134,12 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
+                disabled={isLoading}
                 className={`w-full px-4 sm:px-6 py-3.5 sm:py-4 rounded-2xl focus:outline-none font-clash font-light ${
                   isDark
                     ? 'parchment-input'
                     : 'border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                }`}
+                } login-field`}
               />
               <input
                 type="password"
@@ -152,11 +148,12 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
+                disabled={isLoading}
                 className={`w-full px-4 sm:px-6 py-3.5 sm:py-4 rounded-2xl focus:outline-none font-clash font-light ${
                   isDark
                     ? 'parchment-input'
                     : 'border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                }`}
+                } login-field`}
               />
               <p className={`text-xs font-clash font-light ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                 {t.resetPassword.hint}
@@ -165,10 +162,18 @@ export default function ResetPasswordPage() {
 
             <button
               type="submit"
-              className="executive-button w-full text-white py-3.5 sm:py-4 rounded-2xl font-clash font-medium shimmer"
+              className="executive-button login-primary-action w-full text-white py-3.5 sm:py-4 rounded-2xl font-clash font-medium shimmer"
               disabled={isLoading}
             >
-              {isLoading ? t.resetPassword.submitting : t.resetPassword.submitButton}
+              <span className="inline-flex items-center justify-center gap-2">
+                {isLoading && (
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.35" strokeWidth="2" />
+                    <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                )}
+                {isLoading ? t.resetPassword.submitting : t.resetPassword.submitButton}
+              </span>
             </button>
           </form>
         )}

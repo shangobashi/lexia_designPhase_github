@@ -1,10 +1,12 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
 
 export default function AuthLayout() {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const location = useLocation();
+  const isRecoveryRoute = location.pathname === '/forgot-password' || location.pathname === '/reset-password';
   
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg dark-book-flow' : 'sophisticated-bg book-flow'} flex flex-col lg:flex-row`}>
@@ -79,7 +81,7 @@ export default function AuthLayout() {
       <div 
         className={`w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-8 relative z-10 ${theme === 'dark' ? 'auth-right-pane-dark' : 'auth-panel-surface-light'}`}
       >
-        <div className="w-full max-w-lg mt-10 sm:mt-0">
+        <div className={`w-full ${isRecoveryRoute ? 'max-w-xl' : 'max-w-lg'} mt-10 sm:mt-0`}>
           <Outlet />
         </div>
       </div>
