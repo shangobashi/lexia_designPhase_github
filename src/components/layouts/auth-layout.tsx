@@ -43,7 +43,7 @@ export default function AuthLayout() {
       <div className={`hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-10 xl:p-16 relative z-10 ${theme === 'dark' ? 'dark-secondary-bg' : ''}`}>
         <div className="max-w-sm mx-auto text-center flex flex-col items-center">
           {/* Logo - Perfectly Centered with Creative Inheritance */}
-          <div className={`mb-12 w-24 h-24 flex items-center justify-center mx-auto`}>
+          <div className={`mb-8 w-20 h-20 flex items-center justify-center mx-auto`}>
             <img
               src={`${import.meta.env.BASE_URL}kingsley-logo.png`}
               alt="Kingsley Logo"
@@ -51,16 +51,16 @@ export default function AuthLayout() {
             />
           </div>
           
-          <h1 className={`text-6xl font-clash font-medium tracking-wide mb-8 leading-none kingsley-jony-ive`}>
+          <h1 className={`text-5xl font-clash font-medium tracking-wide mb-5 leading-none kingsley-jony-ive`}>
             Kingsley
           </h1>
-          <p className={`text-lg font-clash font-light mb-16 leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+          <p className={`text-base font-clash font-light mb-10 leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
             {t.authLayout.tagline}
           </p>
           
           {/* Feature Cards */}
-          <div className="space-y-8 text-left">
-            <div className={`${theme === 'dark' ? 'paper-card' : 'bg-white border border-gray-200 shadow-lg'} p-8 rounded-2xl shimmer`}>
+          <div className="space-y-5 text-left">
+            <div className={`${theme === 'dark' ? 'paper-card' : 'bg-white border border-gray-200 shadow-lg'} p-6 rounded-2xl shimmer`}>
               <div className="flex items-center space-x-4">
                 <div className={`w-12 h-12 rounded-2xl ${theme === 'dark' ? 'refined-icon' : 'bg-gray-100'} flex items-center justify-center`}>
                   <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
@@ -74,7 +74,7 @@ export default function AuthLayout() {
               </div>
             </div>
             
-            <div className={`${theme === 'dark' ? 'paper-card' : 'bg-white border border-gray-200 shadow-lg'} p-8 rounded-2xl shimmer`} style={{animationDelay: '-2s'}}>
+            <div className={`${theme === 'dark' ? 'paper-card' : 'bg-white border border-gray-200 shadow-lg'} p-6 rounded-2xl shimmer`} style={{animationDelay: '-2s'}}>
               <div className="flex items-center space-x-4">
                 <div className={`w-12 h-12 rounded-2xl ${theme === 'dark' ? 'refined-icon' : 'bg-gray-100'} flex items-center justify-center`}>
                   <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
@@ -88,7 +88,7 @@ export default function AuthLayout() {
               </div>
             </div>
             
-            <div className={`${theme === 'dark' ? 'paper-card' : 'bg-white border border-gray-200 shadow-lg'} p-8 rounded-2xl shimmer`} style={{animationDelay: '-4s'}}>
+            <div className={`${theme === 'dark' ? 'paper-card' : 'bg-white border border-gray-200 shadow-lg'} p-6 rounded-2xl shimmer`} style={{animationDelay: '-4s'}}>
               <div className="flex items-center space-x-4">
                 <div className={`w-12 h-12 rounded-2xl ${theme === 'dark' ? 'refined-icon' : 'bg-gray-100'} flex items-center justify-center`}>
                   <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
@@ -113,7 +113,7 @@ export default function AuthLayout() {
           : { background: 'linear-gradient(120deg, rgba(241, 243, 244, 0.9) 0%, rgba(248, 249, 250, 0.85) 50%, rgba(255, 255, 255, 0.9) 100%)' }
         }
       >
-        <div className="w-full max-w-md mt-10 sm:mt-0">
+        <div className="w-full max-w-lg mt-10 sm:mt-0">
           <Outlet />
         </div>
       </div>
