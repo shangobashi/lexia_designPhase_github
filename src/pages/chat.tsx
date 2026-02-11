@@ -62,6 +62,32 @@ function stripRepeatedIntro(content: string): string {
   return result || content;
 }
 
+function extractPostComplianceFailure(content: string): string {
+  const match = content.match(/COMPLIANCE FAILURE:[^\n]*\n([\s\S]*)/i);
+  if (!match) return content;
+
+  const candidate = match[1]?.trim();
+  if (!candidate || candidate.length < 80) return content;
+  return candidate;
+}
+
+function sanitizeAssistantContent(content: string): string {
+  const postCompliance = extractPostComplianceFailure(content);
+  return postCompliance
+    .replace(/^\s*kingsley\s*:?\s*/i, '')
+    .trim();
+}
+
+function normalizeForDedup(content: string): string {
+  return content
+    .replace(/═══ COMPLIANCE REPORT ═══[\s\S]*$/i, '')
+    .replace(/COMPLIANCE FAILURE:[^\n]*/gi, '')
+    .replace(/^\s*kingsley\s*:?\s*/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 function introStorageKeyForUser(userId: string | undefined): string {
   return `${INTRO_STORAGE_PREFIX}${userId || 'guest-user'}`;
 }
@@ -221,16 +247,35 @@ export default function ChatPage() {
       const finalAssistantMessage = introAllowedRef.current
         ? result.message
         : stripRepeatedIntro(result.message);
+      const sanitizedAssistantMessage = sanitizeAssistantContent(finalAssistantMessage);
 
       const aiMessage: Message = {
         id: uuid(),
-        content: finalAssistantMessage,
+        content: sanitizedAssistantMessage,
         sender: 'assistant',
         timestamp: new Date().toISOString(),
         caseId: 'ad-hoc',
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+        if (
+          lastMessage &&
+          lastMessage.sender === 'assistant' &&
+          normalizeForDedup(lastMessage.content) === normalizeForDedup(aiMessage.content)
+        ) {
+          return [
+            ...prev.slice(0, -1),
+            {
+              ...lastMessage,
+              content: aiMessage.content,
+              timestamp: aiMessage.timestamp,
+            },
+          ];
+        }
+
+        return [...prev, aiMessage];
+      });
 
       if (introAllowedRef.current && typeof window !== 'undefined') {
         const storageKey = introStorageKeyForUser(user?.id);
