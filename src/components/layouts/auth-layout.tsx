@@ -10,7 +10,7 @@ export default function AuthLayout() {
     <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg dark-book-flow' : 'sophisticated-bg book-flow'} flex flex-col lg:flex-row`}>
       
       {/* Left Side - Branding and Features */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-10 xl:p-16 relative z-10">
+      <div className={`hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-10 xl:p-16 relative z-10 ${theme === 'dark' ? 'auth-left-pane-dark' : ''}`}>
         <div className="max-w-sm mx-auto text-center flex flex-col items-center">
           {/* Logo - Perfectly Centered with Creative Inheritance */}
           <div className={`mb-8 w-20 h-20 flex items-center justify-center mx-auto`}>
@@ -77,7 +77,7 @@ export default function AuthLayout() {
       
       {/* Right Side - Login Form */}
       <div 
-        className={`w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-8 relative z-10 ${theme === 'dark' ? '' : 'auth-panel-surface-light'}`}
+        className={`w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-8 relative z-10 ${theme === 'dark' ? 'auth-right-pane-dark' : 'auth-panel-surface-light'}`}
       >
         <div className="w-full max-w-lg mt-10 sm:mt-0">
           <Outlet />
