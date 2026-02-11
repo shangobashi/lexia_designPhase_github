@@ -64,14 +64,9 @@ export default function RegisterPage() {
   };
   
   return (
-    <div className={`w-full max-w-md premium-shadow rounded-3xl p-6 sm:p-10 lg:p-12 shimmer ${isDark ? 'dark-form-bg' : 'bg-white'} relative`}>
-      {/* Theme Toggle (top-left) */}
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10">
+    <div className={`w-full max-w-lg login-form-shell premium-shadow rounded-3xl p-6 sm:p-10 lg:p-12 shimmer ${isDark ? 'dark-form-bg' : 'bg-white'} relative`}>
+      <div className="mb-6 sm:mb-8 flex items-center justify-between">
         <ThemeToggle />
-      </div>
-
-      {/* Language Switcher (top-right) */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-10">
         <LanguageToggle />
       </div>
 
