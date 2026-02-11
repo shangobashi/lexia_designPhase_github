@@ -270,6 +270,13 @@ export default function UploadsPage() {
   };
   
   const storagePercentage = (storageUsage.totalSize / (1024 * 1024 * 1024)) * 100; // 1GB limit
+
+  const formatCaseReference = (caseId: string) => {
+    if (!caseId) return '';
+    if (caseId.startsWith('LEX-')) return caseId;
+    if (caseId.length <= 14) return caseId;
+    return `${caseId.slice(0, 8)}...${caseId.slice(-4)}`;
+  };
   
   const getFileIcon = (fileType: string) => {
     if (fileType.includes('pdf')) {
@@ -389,11 +396,11 @@ export default function UploadsPage() {
   }
   
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-3 sm:p-6`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark-bg' : 'sophisticated-bg'} p-3 sm:p-6 overflow-x-hidden`}>
       {/* Header */}
       <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} p-4 sm:p-6 rounded-xl mb-6`}>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
+          <div className="min-w-0 w-full md:w-auto">
             <h1 className={`text-2xl font-clash font-bold tracking-tight ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{t.uploads.title}</h1>
             <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
               {t.uploads.subtitle}
@@ -401,7 +408,7 @@ export default function UploadsPage() {
           </div>
           <button 
             onClick={() => setActiveTab('upload')}
-            className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} text-white px-6 py-3 rounded-xl font-clash font-medium flex items-center space-x-2`}
+            className={`${theme === 'dark' ? 'dark-primary-button' : 'primary-button'} w-full md:w-auto text-white px-6 py-3 rounded-xl font-clash font-medium flex items-center justify-center space-x-2`}
           >
             <Plus className="h-4 w-4" />
             <span>{t.uploads.addFiles}</span>
@@ -411,10 +418,10 @@ export default function UploadsPage() {
 
       {/* Document Management Tabs */}
       <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-xl mb-6`}>
-        <div className="flex flex-wrap gap-1 p-2">
+        <div className="flex gap-1 p-2 overflow-x-auto whitespace-nowrap scrollbar-thin">
           <button
             onClick={() => setActiveTab('all-documents')}
-            className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors flex-shrink-0 ${
               activeTab === 'all-documents'
                 ? (theme === 'dark' ? 'bg-slate-700 text-slate-100' : 'bg-gray-100 text-gray-900')
                 : (theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50')
@@ -424,7 +431,7 @@ export default function UploadsPage() {
           </button>
           <button
             onClick={() => setActiveTab('upload')}
-            className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors flex-shrink-0 ${
               activeTab === 'upload'
                 ? (theme === 'dark' ? 'bg-slate-700 text-slate-100' : 'bg-gray-100 text-gray-900')
                 : (theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50')
@@ -434,7 +441,7 @@ export default function UploadsPage() {
           </button>
           <button
             onClick={() => setActiveTab('organize')}
-            className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-clash font-medium transition-colors flex-shrink-0 ${
               activeTab === 'organize'
                 ? (theme === 'dark' ? 'bg-slate-700 text-slate-100' : 'bg-gray-100 text-gray-900')
                 : (theme === 'dark' ? 'text-slate-300 hover:text-slate-100 hover:bg-slate-700/30' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50')
@@ -466,28 +473,28 @@ export default function UploadsPage() {
                 </div>
               </div>
               
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex gap-2 items-center overflow-x-auto whitespace-nowrap pb-1">
                 <button 
                   onClick={() => setTypeFilter('all')}
-                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${typeFilter === 'all' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'all' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'all' ? 'text-gray-700' : 'text-gray-600')}`}
+                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium flex-shrink-0 ${typeFilter === 'all' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'all' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'all' ? 'text-gray-700' : 'text-gray-600')}`}
                 >
                   {t.uploads.filterAll}
                 </button>
                 <button 
                   onClick={() => setTypeFilter('pdf')}
-                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${typeFilter === 'pdf' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'pdf' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'pdf' ? 'text-gray-700' : 'text-gray-600')}`}
+                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium flex-shrink-0 ${typeFilter === 'pdf' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'pdf' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'pdf' ? 'text-gray-700' : 'text-gray-600')}`}
                 >
                   PDF
                 </button>
                 <button 
                   onClick={() => setTypeFilter('doc')}
-                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${typeFilter === 'doc' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'doc' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'doc' ? 'text-gray-700' : 'text-gray-600')}`}
+                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium flex-shrink-0 ${typeFilter === 'doc' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'doc' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'doc' ? 'text-gray-700' : 'text-gray-600')}`}
                 >
                   DOC
                 </button>
                 <button 
                   onClick={() => setTypeFilter('image')}
-                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium ${typeFilter === 'image' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'image' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'image' ? 'text-gray-700' : 'text-gray-600')}`}
+                  className={`${theme === 'dark' ? 'dark-filter-button' : 'filter-button'} px-4 py-2 rounded-lg text-sm font-clash font-medium flex-shrink-0 ${typeFilter === 'image' ? 'active' : ''} ${theme === 'dark' ? (typeFilter === 'image' ? 'text-slate-200' : 'text-slate-300') : (typeFilter === 'image' ? 'text-gray-700' : 'text-gray-600')}`}
                 >
                   Images
                 </button>
@@ -509,30 +516,34 @@ export default function UploadsPage() {
           {/* Document List */}
           {paginatedDocuments.length > 0 ? (
             <>
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {paginatedDocuments.map((doc, index) => (
-                <div key={`${doc.id}-${index}`} className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-5 sm:p-6 cursor-pointer min-h-[14rem] h-auto flex flex-col`}>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-3">
+                <div key={`${doc.id}-${index}`} className={`${theme === 'dark' ? 'dark-case-card' : 'case-card'} rounded-xl p-4 sm:p-6 cursor-pointer min-h-[13rem] h-auto flex flex-col min-w-0 overflow-hidden`}>
+                  <div className="flex items-start justify-between mb-3 sm:mb-4 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-3 mb-2 min-w-0">
                         {getFileIcon(doc.type)}
                         <div className="flex-1 min-w-0">
-                          <h3 className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-lg truncate`}>
+                          <h3
+                            className={`font-clash font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'} text-base sm:text-lg leading-tight truncate`}
+                            title={doc.name}
+                          >
                             {doc.name}
                           </h3>
                         </div>
                       </div>
-                      <div className={`flex items-center text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'} mb-3`}>
-                        <span>{t.uploads.caseLabel} {doc.caseId}</span>
-                        <span className="mx-2">•</span>
-                        <span>{formatFileSize(doc.size)}</span>
+                      <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-xs sm:text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'} mb-2 sm:mb-3 min-w-0`}>
+                        <span className="truncate" title={`${t.uploads.caseLabel} ${doc.caseId}`}>
+                          {t.uploads.caseLabel} {formatCaseReference(doc.caseId)}
+                        </span>
+                        <span className="whitespace-nowrap">{formatFileSize(doc.size)}</span>
                       </div>
                     </div>
                   </div>
                   
                   <div className="mt-auto">
                     <div className={`mb-4 flex flex-wrap items-center justify-between gap-2 text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                      <span>{t.uploads.uploadedOn} {formatDisplayDate(doc.uploadedAt)}</span>
+                      <span className="truncate">{t.uploads.uploadedOn} {formatDisplayDate(doc.uploadedAt)}</span>
                     </div>
                     
                     <div className="flex items-center justify-end space-x-2">
@@ -735,3 +746,4 @@ export default function UploadsPage() {
     </div>
   );
 }
+
