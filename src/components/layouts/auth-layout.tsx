@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router-dom';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTheme } from '@/contexts/theme-context';
 
 export default function AuthLayout() {
@@ -38,13 +37,6 @@ export default function AuthLayout() {
       
       {/* Texture Overlay removed to prevent yellow tint */}
       
-      {/* Theme Toggle - visible on desktop left panel only */}
-      <div className="hidden lg:block fixed right-3 top-3 z-50 sm:right-6 sm:top-6">
-        <div className={`${theme === 'dark' ? 'refined-icon' : 'bg-gray-100'} p-3 rounded-full shimmer`}>
-          <ThemeToggle />
-        </div>
-      </div>
-
       {/* Left Side - Branding and Features */}
       <div className={`hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-10 xl:p-16 relative z-10 ${theme === 'dark' ? 'dark-secondary-bg' : ''}`}>
         <div className="max-w-sm mx-auto text-center flex flex-col items-center">

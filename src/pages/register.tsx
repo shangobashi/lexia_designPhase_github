@@ -65,11 +65,9 @@ export default function RegisterPage() {
   
   return (
     <div className={`w-full max-w-md premium-shadow rounded-3xl p-6 sm:p-10 lg:p-12 shimmer ${isDark ? 'dark-form-bg' : 'bg-white'} relative`}>
-      {/* Theme Toggle (top-left) — mobile/tablet only; desktop uses auth-layout fixed toggle */}
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 lg:hidden">
-        <div className={`${isDark ? 'refined-icon' : 'bg-gray-100'} p-2.5 rounded-full`}>
-          <ThemeToggle />
-        </div>
+      {/* Theme Toggle (top-left) */}
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10">
+        <ThemeToggle />
       </div>
 
       {/* Language Switcher (top-right) */}
