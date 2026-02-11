@@ -577,7 +577,7 @@ body {
 }
 
 .auth-right-pane-dark {
-    background: linear-gradient(120deg, rgba(12, 18, 40, 0.2) 0%, rgba(18, 26, 52, 0.16) 50%, rgba(12, 18, 40, 0.2) 100%);
+    background: linear-gradient(120deg, rgba(12, 18, 40, 0.94) 0%, rgba(18, 26, 52, 0.92) 50%, rgba(12, 18, 40, 0.94) 100%);
 }
 
 @media (min-width: 1024px) {
