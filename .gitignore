@@ -36,3 +36,9 @@ yarn-error.log*
 .eslintcache 
 .vercel
 .env*.local
+.night/
+public/night-status.json
+public/night-monitor.json
+
+.vercel
+.env*.local

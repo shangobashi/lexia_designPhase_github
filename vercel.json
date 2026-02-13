@@ -4,7 +4,30 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "devCommand": "npm run dev",
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "klawie.shangobashi.com"
+        }
+      ],
+      "destination": "/night-monitor.html",
+      "permanent": false
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "klawie.shangobashi.com"
+        }
+      ],
+      "destination": "/night-monitor.html"
+    },
     {
       "source": "/((?!api/|assets/).*)",
       "destination": "/index.html"

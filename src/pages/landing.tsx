@@ -1,5 +1,5 @@
 ﻿import { Link, useNavigate } from 'react-router-dom';
-import { HelpCircle, FileText, Briefcase } from 'lucide-react';
+import { HelpCircle, FileText, Briefcase, Radar, Workflow, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { LanguageToggle } from '@/components/ui/language-toggle';
@@ -11,6 +11,26 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const nextGenFeatures = [
+    {
+      id: 'memory',
+      title: t.landing.nextGen.memory.title,
+      description: t.landing.nextGen.memory.description,
+      icon: Radar,
+    },
+    {
+      id: 'workflows',
+      title: t.landing.nextGen.workflows.title,
+      description: t.landing.nextGen.workflows.description,
+      icon: Workflow,
+    },
+    {
+      id: 'guardrails',
+      title: t.landing.nextGen.guardrails.title,
+      description: t.landing.nextGen.guardrails.description,
+      icon: ShieldCheck,
+    },
+  ] as const;
 
   const handleGuestAccess = () => {
     continueAsGuest();
@@ -133,6 +153,45 @@ export default function LandingPage() {
                 <p className={`font-clash leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
                   {t.landing.features.caseManagement.description}
                 </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-8 sm:py-14">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className={`${theme === 'dark' ? 'dark-executive-card' : 'executive-card'} rounded-3xl p-6 sm:p-8`}>
+              <div className="mb-8">
+                <p className={`mb-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-clash font-semibold tracking-[0.08em] uppercase ${theme === 'dark' ? 'bg-cyan-500/10 text-cyan-200' : 'bg-cyan-50 text-cyan-700'}`}>
+                  <Sparkles className="h-3 w-3" />
+                  {t.landing.nextGen.badge}
+                </p>
+                <h2 className={`font-clash text-3xl sm:text-4xl font-light ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
+                  {t.landing.nextGen.title}
+                </h2>
+                <p className={`mt-3 max-w-3xl font-clash text-sm sm:text-base ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
+                  {t.landing.nextGen.subtitle}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                {nextGenFeatures.map((feature) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div
+                      key={feature.id}
+                      className={`${theme === 'dark' ? 'bg-slate-900/45 border-slate-700/60' : 'bg-white/80 border-slate-200/80'} rounded-2xl border p-5`}
+                    >
+                      <div className={`${theme === 'dark' ? 'bg-indigo-500/15 text-indigo-200' : 'bg-indigo-50 text-indigo-700'} mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <h3 className={`font-clash text-lg font-semibold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{feature.title}</h3>
+                      <p className={`mt-2 font-clash text-sm leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
+                        {feature.description}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

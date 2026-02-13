@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: 'guest@kingsley.com',
         full_name: null,
         avatar_url: null,
+        is_trust_admin: false,
         subscription_status: 'trialing',
         subscription_plan: 'free',
         credits_remaining: remaining,

@@ -34,8 +34,19 @@ You'll need accounts for:
 ### 1.3 Run Database Migration
 1. In Supabase dashboard, go to **SQL Editor**
 2. Click "New query"
-3. Copy the entire contents from `supabase/migrations/001_initial_schema.sql`
-4. Paste and click "Run"
+3. Run these files in order:
+   - `supabase/migrations/001_initial_schema.sql`
+   - `supabase/migrations/002_oauth_improvements.sql`
+   - `supabase/migrations/003_case_tasks.sql`
+   - `supabase/migrations/004_task_policies_and_events.sql`
+   - `supabase/migrations/005_task_policy_events_and_retention.sql`
+   - `supabase/migrations/005_task_policy_audit_and_event_retention.sql`
+   - `supabase/migrations/006_task_event_filters_and_pagination.sql`
+   - `supabase/migrations/007_deadline_provenance_entities.sql`
+   - `supabase/migrations/008_profiles_trust_admin_role_claim.sql`
+   - `supabase/migrations/009_readiness_telemetry.sql`
+   - `supabase/migrations/010_readiness_export_history.sql`
+4. Paste each file and click "Run"
 5. Verify no errors appear
 
 ### 1.4 Configure Authentication
@@ -186,3 +197,4 @@ Once the MVP is working:
 ---
 
 Need help? Check the browser console for errors and verify all environment variables are set correctly.
+

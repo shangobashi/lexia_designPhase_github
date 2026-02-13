@@ -3,6 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+import { createHash, createHmac, createPrivateKey, createPublicKey, sign, timingSafeEqual, verify } from 'crypto';
+import { existsSync } from 'fs';
+import { appendFile, mkdir, open, readFile, writeFile } from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import { chatWithAI, analyzeDocuments, providerHealth } from './ai/providers.js';
 import voiceRoutes from './voice.js';
@@ -23,6 +28,1083 @@ if (process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET) {
 }
 
 dotenv.config();
+
+const TRUE_ENV_VALUES = new Set(['1', 'true', 'yes', 'on']);
+const FAILING_TASK_STATES = new Set(['failed', 'blocked', 'timeout', 'exception']);
+const DEFAULT_ORCHESTRATOR_INTERVAL_SECONDS = 300;
+const DEFAULT_SELFPROMPT_INTERVAL_SECONDS = 900;
+const NIGHT_ORCHESTRATOR_CONFIG_FALLBACK = 'agent_configs/night/kingsley_night_orchestrator.json';
+const NIGHT_SELFPROMPT_CONFIG_FALLBACK = 'agent_configs/night/codex_selfprompt.json';
+const NIGHT_LANE_IDS = ['message', 'cron', 'selfprompt'];
+const DEFAULT_NIGHT_LANE_TASK_IDS = {
+  message: ['ensure-local-dev'],
+  cron: ['night-publisher', 'build-health', 'night-maintenance'],
+  selfprompt: ['autonomous-improvement-loop'],
+};
+const LEGACY_NIGHT_LANE_TASK_IDS = {
+  message: ['ensure-local-dev'],
+  cron: ['build-health', 'night-maintenance'],
+  selfprompt: ['autonomous-improvement-loop'],
+};
+
+const parseBooleanEnv = (value, fallbackValue) => {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return fallbackValue;
+  }
+
+  return TRUE_ENV_VALUES.has(value.trim().toLowerCase());
+};
+
+const parseBoundedIntegerEnv = (value, fallbackValue, minValue, maxValue) => {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (Number.isNaN(parsed)) return fallbackValue;
+  return Math.min(maxValue, Math.max(minValue, parsed));
+};
+
+const backendDirectory = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(backendDirectory, '..');
+
+const resolveNightPath = (configuredPath, fallbackRelativePath) => {
+  if (typeof configuredPath !== 'string' || configuredPath.trim().length === 0) {
+    return path.resolve(repoRoot, fallbackRelativePath);
+  }
+
+  return path.isAbsolute(configuredPath)
+    ? configuredPath
+    : path.resolve(repoRoot, configuredPath);
+};
+
+const NIGHT_STATUS_API_ENABLED = parseBooleanEnv(
+  process.env.ENABLE_NIGHT_STATUS_API,
+  process.env.NODE_ENV !== 'production'
+);
+const NIGHT_STATUS_API_AUTH_TOKEN = (process.env.NIGHT_STATUS_API_AUTH_TOKEN ?? '').trim();
+const NIGHT_STATUS_API_AUTH_HEADER = (process.env.NIGHT_STATUS_API_AUTH_HEADER ?? 'x-night-status-token')
+  .trim()
+  .toLowerCase();
+const NIGHT_STATUS_MIN_STALE_MINUTES = parseBoundedIntegerEnv(
+  process.env.NIGHT_STATUS_STALE_MINUTES,
+  15,
+  5,
+  180
+);
+const NIGHT_STATUS_WINDOW_MINUTES = parseBoundedIntegerEnv(
+  process.env.NIGHT_STATUS_WINDOW_MINUTES,
+  180,
+  30,
+  1440
+);
+const NIGHT_STATUS_GRACE_MINUTES = parseBoundedIntegerEnv(
+  process.env.NIGHT_STATUS_GRACE_MINUTES,
+  5,
+  1,
+  120
+);
+const NIGHT_STATUS_SESSION_TAIL_LINES = parseBoundedIntegerEnv(
+  process.env.NIGHT_STATUS_SESSION_TAIL_LINES,
+  600,
+  50,
+  5000
+);
+const NIGHT_STATUS_SESSION_TAIL_BYTES = parseBoundedIntegerEnv(
+  process.env.NIGHT_STATUS_SESSION_TAIL_BYTES,
+  1024 * 512,
+  64 * 1024,
+  4 * 1024 * 1024
+);
+const AUDIT_MANIFEST_SIGNING_ENABLED = parseBooleanEnv(
+  process.env.AUDIT_MANIFEST_SIGNING_ENABLED,
+  false
+);
+const AUDIT_MANIFEST_PUBLIC_KEY_EXPOSURE_ENABLED = parseBooleanEnv(
+  process.env.AUDIT_MANIFEST_PUBLIC_KEY_EXPOSURE_ENABLED,
+  process.env.NODE_ENV !== 'production'
+);
+const AUDIT_MANIFEST_VERIFICATION_API_ENABLED = parseBooleanEnv(
+  process.env.AUDIT_MANIFEST_VERIFICATION_API_ENABLED,
+  process.env.NODE_ENV !== 'production'
+);
+const AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED = parseBooleanEnv(
+  process.env.AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED,
+  process.env.NODE_ENV !== 'production'
+);
+const AUDIT_TRUST_REGISTRY_ADMIN_USER_IDS = new Set(
+  (typeof process.env.AUDIT_TRUST_REGISTRY_ADMIN_USER_IDS === 'string'
+    ? process.env.AUDIT_TRUST_REGISTRY_ADMIN_USER_IDS.split(',').map((item) => item.trim()).filter((item) => item.length > 0)
+    : [])
+    .map((item) => item.toLowerCase())
+);
+const AUDIT_TRUST_REGISTRY_ADMIN_EMAILS = new Set(
+  (typeof process.env.AUDIT_TRUST_REGISTRY_ADMIN_EMAILS === 'string'
+    ? process.env.AUDIT_TRUST_REGISTRY_ADMIN_EMAILS.split(',').map((item) => item.trim()).filter((item) => item.length > 0)
+    : [])
+    .map((item) => item.toLowerCase())
+);
+const AUDIT_MANIFEST_TRUST_POLICY_MODE = (process.env.AUDIT_MANIFEST_TRUST_POLICY_MODE ?? 'advisory')
+  .trim()
+  .toLowerCase();
+const AUDIT_MANIFEST_SIGNING_KEY_ID = (process.env.AUDIT_MANIFEST_SIGNING_KEY_ID ?? 'kingsley-ed25519-v1').trim();
+const AUDIT_MANIFEST_SIGNING_PRIVATE_KEY_PEM = (process.env.AUDIT_MANIFEST_SIGNING_PRIVATE_KEY_PEM ?? '')
+  .replace(/\\n/g, '\n')
+  .trim();
+const AUDIT_EXPORT_ARTIFACT_RETENTION_DAYS_DEFAULT = parseBoundedIntegerEnv(
+  process.env.AUDIT_EXPORT_ARTIFACT_RETENTION_DAYS_DEFAULT,
+  365,
+  30,
+  3650
+);
+const AUDIT_EXPORT_ARTIFACT_RETENTION_DAYS_MAX = parseBoundedIntegerEnv(
+  process.env.AUDIT_EXPORT_ARTIFACT_RETENTION_DAYS_MAX,
+  3650,
+  90,
+  3650
+);
+const AUDIT_EXPORT_RECEIPT_HMAC_SECRET = (process.env.AUDIT_EXPORT_RECEIPT_HMAC_SECRET ?? '').trim();
+const nightStatusFilePath = resolveNightPath(process.env.NIGHT_STATUS_FILE, '.night/status.json');
+const nightPublicStatusFilePath = resolveNightPath(process.env.NIGHT_PUBLIC_STATUS_FILE, 'public/night-status.json');
+const nightSessionLogFilePath = resolveNightPath(process.env.NIGHT_SESSION_LOG_FILE, '.night/logs/sessions.jsonl');
+const nightOrchestratorConfigFilePath = resolveNightPath(
+  process.env.NIGHT_ORCHESTRATOR_CONFIG_FILE,
+  NIGHT_ORCHESTRATOR_CONFIG_FALLBACK
+);
+const nightSelfpromptConfigFilePath = resolveNightPath(
+  process.env.NIGHT_SELFPROMPT_CONFIG_FILE,
+  NIGHT_SELFPROMPT_CONFIG_FALLBACK
+);
+const auditTrustRegistryRuntimeFilePath = resolveNightPath(
+  process.env.AUDIT_TRUST_REGISTRY_FILE,
+  '.night/runtime/audit-trusted-signers.json'
+);
+const auditTrustRegistryAuditLogFilePath = resolveNightPath(
+  process.env.AUDIT_TRUST_REGISTRY_AUDIT_LOG_FILE,
+  '.night/logs/audit-trust-registry-events.jsonl'
+);
+const auditTrustRegistrySnapshotFilePath = resolveNightPath(
+  process.env.AUDIT_TRUST_REGISTRY_SNAPSHOT_FILE,
+  '.night/runtime/audit-trust-registry-snapshots.jsonl'
+);
+
+const parseTimestampMs = (rawTimestamp) => {
+  if (typeof rawTimestamp !== 'string' || rawTimestamp.length === 0) {
+    return Number.NaN;
+  }
+
+  const parsedMs = Date.parse(rawTimestamp);
+  return Number.isNaN(parsedMs) ? Number.NaN : parsedMs;
+};
+
+const resolvePositiveInteger = (value, fallbackValue) => {
+  const parsed = Number.parseInt(String(value ?? ''), 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return fallbackValue;
+  }
+
+  return parsed;
+};
+
+const normalizeNightLaneId = (value) => {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toLowerCase();
+  return NIGHT_LANE_IDS.includes(normalized) ? normalized : null;
+};
+
+const digestSecret = (value) => createHash('sha256').update(value).digest();
+const HEX_64_REGEX = /^[a-f0-9]{64}$/;
+
+const toCanonicalJson = (value) => {
+  if (value === null || typeof value !== 'object') {
+    return JSON.stringify(value);
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => toCanonicalJson(item)).join(',')}]`;
+  }
+
+  const entries = Object.entries(value)
+    .filter(([, entryValue]) => typeof entryValue !== 'undefined')
+    .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey));
+  return `{${entries
+    .map(([key, entryValue]) => `${JSON.stringify(key)}:${toCanonicalJson(entryValue)}`)
+    .join(',')}}`;
+};
+
+const buildAuditManifestSigner = () => {
+  if (!AUDIT_MANIFEST_SIGNING_ENABLED || AUDIT_MANIFEST_SIGNING_PRIVATE_KEY_PEM.length === 0) {
+    return null;
+  }
+
+  try {
+    const privateKey = createPrivateKey({
+      key: AUDIT_MANIFEST_SIGNING_PRIVATE_KEY_PEM,
+      format: 'pem',
+    });
+    if (privateKey.asymmetricKeyType !== 'ed25519') {
+      console.warn('AUDIT_MANIFEST_SIGNING_PRIVATE_KEY_PEM must be an Ed25519 private key. Signing disabled.');
+      return null;
+    }
+
+    const publicKeyPem = createPublicKey(privateKey).export({
+      type: 'spki',
+      format: 'pem',
+    }).toString();
+
+    return {
+      keyId: AUDIT_MANIFEST_SIGNING_KEY_ID.length > 0
+        ? AUDIT_MANIFEST_SIGNING_KEY_ID
+        : 'kingsley-ed25519-v1',
+      privateKey,
+      publicKeyPem,
+    };
+  } catch (error) {
+    console.warn('Failed to initialize audit manifest signer. Signing disabled.', error);
+    return null;
+  }
+};
+
+const AUDIT_MANIFEST_SIGNER = buildAuditManifestSigner();
+const AUDIT_MANIFEST_PUBLIC_KEY_SHA256 = AUDIT_MANIFEST_SIGNER
+  ? createHash('sha256').update(AUDIT_MANIFEST_SIGNER.publicKeyPem, 'utf8').digest('hex')
+  : null;
+
+const buildAuditExportReceiptSignature = (canonicalReceiptPayload) => {
+  if (AUDIT_MANIFEST_SIGNER) {
+    return {
+      algorithm: 'ed25519',
+      keyId: AUDIT_MANIFEST_SIGNER.keyId,
+      signature: sign(null, Buffer.from(canonicalReceiptPayload, 'utf8'), AUDIT_MANIFEST_SIGNER.privateKey).toString('base64'),
+    };
+  }
+
+  const fallbackSecret = AUDIT_EXPORT_RECEIPT_HMAC_SECRET.length > 0
+    ? AUDIT_EXPORT_RECEIPT_HMAC_SECRET
+    : supabaseServiceKey;
+  return {
+    algorithm: 'hmac-sha256',
+    keyId: 'server-hmac-v1',
+    signature: computeHmacSha256Base64(canonicalReceiptPayload, fallbackSecret),
+  };
+};
+
+const computeSha256Hex = (value) => createHash('sha256').update(value, 'utf8').digest('hex');
+const computeHmacSha256Base64 = (value, secret) => createHmac('sha256', secret).update(value, 'utf8').digest('base64');
+const parseCommaSeparatedList = (value) => (
+  typeof value === 'string'
+    ? value.split(',').map((item) => item.trim()).filter((item) => item.length > 0)
+    : []
+);
+const TRUST_POLICY_MODES = new Set(['off', 'advisory', 'enforced']);
+const NORMALIZED_AUDIT_TRUST_POLICY_MODE = TRUST_POLICY_MODES.has(AUDIT_MANIFEST_TRUST_POLICY_MODE)
+  ? AUDIT_MANIFEST_TRUST_POLICY_MODE
+  : 'advisory';
+const AUDIT_MANIFEST_TRUSTED_KEY_IDS = new Set(
+  parseCommaSeparatedList(process.env.AUDIT_MANIFEST_TRUSTED_KEY_IDS).map((item) => item.toLowerCase())
+);
+const AUDIT_MANIFEST_TRUSTED_PUBLIC_KEY_SHA256S = new Set(
+  parseCommaSeparatedList(process.env.AUDIT_MANIFEST_TRUSTED_PUBLIC_KEY_SHA256S)
+    .map((item) => item.toLowerCase())
+    .filter((item) => HEX_64_REGEX.test(item))
+);
+const TRUSTED_SIGNER_STATUSES = new Set(['active', 'revoked', 'disabled']);
+const normalizeTrustedSignerEntry = (entry) => {
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
+  const keyId = typeof entry.key_id === 'string' ? entry.key_id.trim() : '';
+  const publicKeySha256 = typeof entry.public_key_sha256 === 'string'
+    ? entry.public_key_sha256.trim().toLowerCase()
+    : '';
+  const notBefore = typeof entry.not_before === 'string' ? entry.not_before.trim() : '';
+  const notAfter = typeof entry.not_after === 'string' ? entry.not_after.trim() : '';
+  const status = typeof entry.status === 'string'
+    ? entry.status.trim().toLowerCase()
+    : 'active';
+
+  if (
+    keyId.length === 0
+    && (publicKeySha256.length === 0 || !HEX_64_REGEX.test(publicKeySha256))
+  ) {
+    return null;
+  }
+
+  if (publicKeySha256.length > 0 && !HEX_64_REGEX.test(publicKeySha256)) {
+    return null;
+  }
+
+  if (notBefore.length > 0 && Number.isNaN(Date.parse(notBefore))) {
+    return null;
+  }
+  if (notAfter.length > 0 && Number.isNaN(Date.parse(notAfter))) {
+    return null;
+  }
+  if (notBefore.length > 0 && notAfter.length > 0 && Date.parse(notBefore) > Date.parse(notAfter)) {
+    return null;
+  }
+
+  return {
+    keyId,
+    publicKeySha256,
+    notBefore,
+    notAfter,
+    status: TRUSTED_SIGNER_STATUSES.has(status) ? status : 'active',
+  };
+};
+
+const parseTrustedSignerRegistry = (rawValue) => {
+  if (typeof rawValue !== 'string' || rawValue.trim().length === 0) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((entry) => normalizeTrustedSignerEntry(entry))
+      .filter((entry) => entry !== null);
+  } catch {
+    return [];
+  }
+};
+
+const AUDIT_MANIFEST_TRUSTED_SIGNERS = parseTrustedSignerRegistry(process.env.AUDIT_MANIFEST_TRUSTED_SIGNERS_JSON);
+let AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS = [];
+const getEffectiveTrustedSigners = () => [
+  ...AUDIT_MANIFEST_TRUSTED_SIGNERS,
+  ...AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS,
+];
+const isAuditSignerTrustConfigured = () =>
+  AUDIT_MANIFEST_TRUSTED_KEY_IDS.size > 0
+  || AUDIT_MANIFEST_TRUSTED_PUBLIC_KEY_SHA256S.size > 0
+  || getEffectiveTrustedSigners().length > 0;
+
+const loadRuntimeTrustedSignerRegistry = async () => {
+  try {
+    if (!existsSync(auditTrustRegistryRuntimeFilePath)) {
+      AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS = [];
+      return;
+    }
+    const raw = await readFile(auditTrustRegistryRuntimeFilePath, 'utf8');
+    const parsed = JSON.parse(raw);
+    const entries = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(parsed?.entries)
+        ? parsed.entries
+        : [];
+
+    AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS = entries
+      .map((entry) => normalizeTrustedSignerEntry(entry))
+      .filter((entry) => entry !== null);
+  } catch {
+    AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS = [];
+  }
+};
+
+const appendTrustRegistryAuditEvent = async (eventPayload) => {
+  const line = `${JSON.stringify({
+    ...eventPayload,
+    created_at: new Date().toISOString(),
+  })}\n`;
+
+  try {
+    await mkdir(path.dirname(auditTrustRegistryAuditLogFilePath), { recursive: true });
+    await appendFile(auditTrustRegistryAuditLogFilePath, line, 'utf8');
+  } catch (error) {
+    console.error('Failed to append trust registry audit event', error);
+  }
+};
+
+const normalizeTrustRegistrySnapshotEntries = (entries) => (
+  Array.isArray(entries)
+    ? entries
+      .map((entry) => normalizeTrustedSignerEntry(entry))
+      .filter((entry) => entry !== null)
+      .map((entry) => ({
+        key_id: entry.keyId,
+        public_key_sha256: entry.publicKeySha256,
+        not_before: entry.notBefore,
+        not_after: entry.notAfter,
+        status: entry.status,
+      }))
+    : []
+);
+
+const appendTrustRegistrySnapshot = async (snapshotPayload) => {
+  const line = `${JSON.stringify({
+    ...snapshotPayload,
+    created_at: snapshotPayload.created_at ?? new Date().toISOString(),
+  })}\n`;
+
+  try {
+    await mkdir(path.dirname(auditTrustRegistrySnapshotFilePath), { recursive: true });
+    await appendFile(auditTrustRegistrySnapshotFilePath, line, 'utf8');
+  } catch (error) {
+    console.error('Failed to append trust registry snapshot', error);
+  }
+};
+
+const parseTrustRegistrySnapshots = (rawContent, maxLines = 200) => {
+  const lines = rawContent.split(/\r?\n/).filter((line) => line.trim().length > 0);
+  return lines
+    .slice(-maxLines)
+    .map((line) => {
+      try {
+        const parsed = JSON.parse(line);
+        if (!parsed || typeof parsed !== 'object') return null;
+        if (typeof parsed.snapshot_id !== 'string' || parsed.snapshot_id.trim().length === 0) return null;
+        const entries = normalizeTrustRegistrySnapshotEntries(parsed.entries);
+        return {
+          snapshot_id: parsed.snapshot_id,
+          created_at: typeof parsed.created_at === 'string' ? parsed.created_at : new Date().toISOString(),
+          actor_user_id: typeof parsed.actor_user_id === 'string' ? parsed.actor_user_id : null,
+          entries_count: Number.isFinite(Number(parsed.entries_count))
+            ? Number(parsed.entries_count)
+            : entries.length,
+          note: typeof parsed.note === 'string' ? parsed.note : null,
+          source: typeof parsed.source === 'string' ? parsed.source : 'unknown',
+          entries,
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter((item) => item !== null)
+    .reverse();
+};
+
+const evaluateTrustRegistryRotationPreflight = (proposedRuntimeEntries) => {
+  const combinedEntries = [
+    ...AUDIT_MANIFEST_TRUSTED_SIGNERS,
+    ...proposedRuntimeEntries,
+  ];
+  const nowMs = Date.now();
+  const plus24hMs = nowMs + (24 * 60 * 60 * 1000);
+  let activeNowCount = 0;
+  let activeIn24hCount = 0;
+  let stagedEntriesCount = 0;
+  let revokedEntriesCount = 0;
+  let disabledEntriesCount = 0;
+
+  for (const entry of combinedEntries) {
+    const status = typeof entry.status === 'string' ? entry.status : 'active';
+    if (status === 'revoked') {
+      revokedEntriesCount += 1;
+      continue;
+    }
+    if (status === 'disabled') {
+      disabledEntriesCount += 1;
+      continue;
+    }
+
+    const notBeforeMs = entry.notBefore.length > 0 ? Date.parse(entry.notBefore) : Number.NaN;
+    const notAfterMs = entry.notAfter.length > 0 ? Date.parse(entry.notAfter) : Number.NaN;
+    if (Number.isFinite(notBeforeMs) && notBeforeMs > nowMs) {
+      stagedEntriesCount += 1;
+    }
+
+    const isActiveNow = (!Number.isFinite(notBeforeMs) || notBeforeMs <= nowMs)
+      && (!Number.isFinite(notAfterMs) || notAfterMs >= nowMs);
+    const isActiveIn24h = (!Number.isFinite(notBeforeMs) || notBeforeMs <= plus24hMs)
+      && (!Number.isFinite(notAfterMs) || notAfterMs >= plus24hMs);
+    if (isActiveNow) activeNowCount += 1;
+    if (isActiveIn24h) activeIn24hCount += 1;
+  }
+
+  const warnings = [];
+  const errors = [];
+  if (proposedRuntimeEntries.length === 0) {
+    warnings.push('runtime_entries_empty');
+  }
+  if (activeNowCount === 0) {
+    warnings.push('no_active_signer_now');
+  }
+  if (activeIn24hCount === 0) {
+    errors.push('no_active_signer_in_24h');
+  }
+  if (stagedEntriesCount === 0) {
+    warnings.push('no_staged_entries');
+  }
+
+  return {
+    valid: errors.length === 0,
+    summary: {
+      total_entries: combinedEntries.length,
+      env_entries_count: AUDIT_MANIFEST_TRUSTED_SIGNERS.length,
+      runtime_entries_count: proposedRuntimeEntries.length,
+      active_now_count: activeNowCount,
+      active_in_24h_count: activeIn24hCount,
+      staged_entries_count: stagedEntriesCount,
+      revoked_entries_count: revokedEntriesCount,
+      disabled_entries_count: disabledEntriesCount,
+    },
+    warnings,
+    errors,
+  };
+};
+
+const isAuditTrustRegistryAllowlistAdmin = (user) => {
+  if (!user) return false;
+  const userId = typeof user.id === 'string' ? user.id.toLowerCase() : '';
+  const userEmail = typeof user.email === 'string' ? user.email.toLowerCase() : '';
+  if (AUDIT_TRUST_REGISTRY_ADMIN_USER_IDS.size === 0 && AUDIT_TRUST_REGISTRY_ADMIN_EMAILS.size === 0) {
+    return false;
+  }
+
+  return AUDIT_TRUST_REGISTRY_ADMIN_USER_IDS.has(userId) || AUDIT_TRUST_REGISTRY_ADMIN_EMAILS.has(userEmail);
+};
+
+const isRecoverableTrustAdminLookupError = (error) => {
+  if (!error || typeof error !== 'object') return false;
+  const errorCode = typeof error.code === 'string' ? error.code.toUpperCase() : '';
+  const errorMessage = typeof error.message === 'string' ? error.message.toLowerCase() : '';
+  if (errorCode === 'PGRST204' || errorCode === '42703') {
+    return true;
+  }
+
+  return errorMessage.includes('is_trust_admin');
+};
+
+const resolveAuditTrustRegistryAdminAccess = async (user) => {
+  if (!user || typeof user.id !== 'string' || user.id.trim().length === 0) {
+    return {
+      isAdmin: false,
+      source: 'none',
+      roleLookupAvailable: false,
+    };
+  }
+
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('id, is_trust_admin')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (error) {
+      if (isRecoverableTrustAdminLookupError(error)) {
+        const allowlistAdmin = isAuditTrustRegistryAllowlistAdmin(user);
+        return {
+          isAdmin: allowlistAdmin,
+          source: allowlistAdmin ? 'env_allowlist' : 'none',
+          roleLookupAvailable: false,
+        };
+      }
+
+      console.error('Trust registry admin role lookup failed', error);
+      return {
+        isAdmin: false,
+        source: 'none',
+        roleLookupAvailable: false,
+      };
+    }
+
+    if (profile && typeof profile.is_trust_admin === 'boolean') {
+      return {
+        isAdmin: profile.is_trust_admin,
+        source: 'profile_claim',
+        roleLookupAvailable: true,
+      };
+    }
+
+    const allowlistAdmin = isAuditTrustRegistryAllowlistAdmin(user);
+    return {
+      isAdmin: allowlistAdmin,
+      source: allowlistAdmin ? 'env_allowlist' : 'none',
+      roleLookupAvailable: false,
+    };
+  } catch (error) {
+    console.error('Trust registry admin access resolution failed', error);
+    const allowlistAdmin = isAuditTrustRegistryAllowlistAdmin(user);
+    return {
+      isAdmin: allowlistAdmin,
+      source: allowlistAdmin ? 'env_allowlist' : 'none',
+      roleLookupAvailable: false,
+    };
+  }
+};
+
+const enforceAuditTrustRegistryAdmin = async (req, res, forbiddenMessage) => {
+  const adminAccess = await resolveAuditTrustRegistryAdminAccess(req.user);
+  req.auditTrustRegistryAdminAccess = adminAccess;
+
+  if (!adminAccess.isAdmin) {
+    res.status(403).json({
+      error: forbiddenMessage,
+      admin_access_source: adminAccess.source,
+    });
+    return null;
+  }
+
+  return adminAccess;
+};
+
+const TRUST_ADMIN_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const normalizeTrustAdminTargetEmail = (rawValue) => (
+  typeof rawValue === 'string'
+    ? rawValue.trim().toLowerCase()
+    : ''
+);
+
+const parseTrustRegistryAuditEvents = (rawContent, maxLines = 200) => {
+  const lines = rawContent.split(/\r?\n/).filter((line) => line.trim().length > 0);
+  return lines
+    .slice(-maxLines)
+    .map((line) => {
+      try {
+        const parsed = JSON.parse(line);
+        if (!parsed || typeof parsed !== 'object') return null;
+        return parsed;
+      } catch {
+        return null;
+      }
+    })
+    .filter((item) => item !== null)
+    .reverse();
+};
+
+const TRUST_GOVERNANCE_DIGEST_ACTIONS = new Set([
+  'trust_admin_granted',
+  'trust_admin_revoked',
+  'trust_registry_rotated',
+  'trust_registry_rolled_back',
+]);
+
+const resolveTrustRegistryEventSnapshotId = (event) => {
+  if (event && typeof event.snapshot_id === 'string' && event.snapshot_id.trim().length > 0) {
+    return event.snapshot_id.trim();
+  }
+  const note = event && typeof event.note === 'string'
+    ? event.note
+    : '';
+  if (note.length === 0) return '';
+  const snapshotMatch = note.match(/snapshot=([a-z0-9_-]+)/i);
+  return snapshotMatch?.[1] ?? '';
+};
+
+const countActiveTrustedSignerEntries = (entries, timestampMs) => (
+  entries.reduce((count, entry) => {
+    const status = typeof entry.status === 'string'
+      ? entry.status
+      : 'active';
+    if (status === 'revoked' || status === 'disabled') {
+      return count;
+    }
+
+    const notBeforeMs = typeof entry.notBefore === 'string' && entry.notBefore.length > 0
+      ? Date.parse(entry.notBefore)
+      : Number.NaN;
+    const notAfterMs = typeof entry.notAfter === 'string' && entry.notAfter.length > 0
+      ? Date.parse(entry.notAfter)
+      : Number.NaN;
+    const isActiveNow = (!Number.isFinite(notBeforeMs) || notBeforeMs <= timestampMs)
+      && (!Number.isFinite(notAfterMs) || notAfterMs >= timestampMs);
+    return isActiveNow ? count + 1 : count;
+  }, 0)
+);
+
+const resolveSignerTrustStatus = (keyId, publicKeySha256, nowMs = Date.now()) => {
+  const normalizedKeyId = typeof keyId === 'string' ? keyId.trim().toLowerCase() : '';
+  const normalizedPublicKeySha256 = typeof publicKeySha256 === 'string'
+    ? publicKeySha256.trim().toLowerCase()
+    : '';
+
+  const keyIdTrusted = AUDIT_MANIFEST_TRUSTED_KEY_IDS.size === 0
+    ? null
+    : AUDIT_MANIFEST_TRUSTED_KEY_IDS.has(normalizedKeyId);
+  const publicKeyTrusted = AUDIT_MANIFEST_TRUSTED_PUBLIC_KEY_SHA256S.size === 0
+    ? null
+    : AUDIT_MANIFEST_TRUSTED_PUBLIC_KEY_SHA256S.has(normalizedPublicKeySha256);
+
+  let signerRegistryEntry = null;
+  const trustedSigners = getEffectiveTrustedSigners();
+  for (const candidate of trustedSigners) {
+    const keyIdMatches = candidate.keyId.length === 0 || candidate.keyId.toLowerCase() === normalizedKeyId;
+    const fingerprintMatches = candidate.publicKeySha256.length === 0 || candidate.publicKeySha256 === normalizedPublicKeySha256;
+    if (keyIdMatches && fingerprintMatches) {
+      signerRegistryEntry = candidate;
+      break;
+    }
+  }
+
+  let signerRegistryStatus = null;
+  let signerRegistryTrustPassed = null;
+  if (signerRegistryEntry) {
+    const notBeforeMs = signerRegistryEntry.notBefore.length > 0
+      ? Date.parse(signerRegistryEntry.notBefore)
+      : Number.NaN;
+    const notAfterMs = signerRegistryEntry.notAfter.length > 0
+      ? Date.parse(signerRegistryEntry.notAfter)
+      : Number.NaN;
+    const isRevoked = signerRegistryEntry.status === 'revoked' || signerRegistryEntry.status === 'disabled';
+    const isBeforeWindow = Number.isFinite(notBeforeMs) && nowMs < notBeforeMs;
+    const isAfterWindow = Number.isFinite(notAfterMs) && nowMs > notAfterMs;
+
+    if (isRevoked) {
+      signerRegistryStatus = 'revoked';
+      signerRegistryTrustPassed = false;
+    } else if (isBeforeWindow) {
+      signerRegistryStatus = 'not_yet_valid';
+      signerRegistryTrustPassed = false;
+    } else if (isAfterWindow) {
+      signerRegistryStatus = 'expired';
+      signerRegistryTrustPassed = false;
+    } else {
+      signerRegistryStatus = 'active';
+      signerRegistryTrustPassed = true;
+    }
+  } else if (trustedSigners.length > 0) {
+    signerRegistryStatus = 'not_listed';
+    signerRegistryTrustPassed = false;
+  }
+
+  const trustRegistryConfigured = isAuditSignerTrustConfigured();
+  const trustPolicyApplies = NORMALIZED_AUDIT_TRUST_POLICY_MODE !== 'off' && trustRegistryConfigured;
+  const trustCheckPassed = !trustPolicyApplies
+    || ((keyIdTrusted !== false) && (publicKeyTrusted !== false) && (signerRegistryTrustPassed !== false));
+
+  return {
+    keyIdTrusted,
+    publicKeyTrusted,
+    signerRegistryStatus,
+    trustRegistryConfigured,
+    trustCheckPassed,
+  };
+};
+
+void loadRuntimeTrustedSignerRegistry();
+
+const inferNightLaneIdFromTask = (taskId, taskConfig) => {
+  const normalizedTaskId = taskId.toLowerCase();
+  const command = typeof taskConfig?.command === 'string'
+    ? taskConfig.command.toLowerCase()
+    : '';
+
+  if (
+    normalizedTaskId.includes('selfprompt')
+    || normalizedTaskId.includes('autonomous-improvement-loop')
+    || command.includes('codex-selfprompt-loop.ps1')
+  ) {
+    return 'selfprompt';
+  }
+
+  if (
+    normalizedTaskId.includes('local-dev')
+    || normalizedTaskId.includes('ensure-local-dev')
+    || command.includes('start-local-dev.ps1')
+  ) {
+    return 'message';
+  }
+
+  return 'cron';
+};
+
+const dedupeTaskIds = (taskIds) => Array.from(new Set(taskIds));
+
+const mergeLaneTaskIdMap = (primaryLaneTaskIds, fallbackLaneTaskIds) => ({
+  message: dedupeTaskIds([
+    ...(Array.isArray(primaryLaneTaskIds?.message) ? primaryLaneTaskIds.message : []),
+    ...(Array.isArray(fallbackLaneTaskIds?.message) ? fallbackLaneTaskIds.message : []),
+  ]),
+  cron: dedupeTaskIds([
+    ...(Array.isArray(primaryLaneTaskIds?.cron) ? primaryLaneTaskIds.cron : []),
+    ...(Array.isArray(fallbackLaneTaskIds?.cron) ? fallbackLaneTaskIds.cron : []),
+  ]),
+  selfprompt: dedupeTaskIds([
+    ...(Array.isArray(primaryLaneTaskIds?.selfprompt) ? primaryLaneTaskIds.selfprompt : []),
+    ...(Array.isArray(fallbackLaneTaskIds?.selfprompt) ? fallbackLaneTaskIds.selfprompt : []),
+  ]),
+});
+
+const resolveNightStatusAuthHeader = () =>
+  NIGHT_STATUS_API_AUTH_HEADER.length > 0
+    ? NIGHT_STATUS_API_AUTH_HEADER
+    : 'x-night-status-token';
+
+const resolveNightStatusRequestToken = (req) => {
+  const explicitHeader = req.get(resolveNightStatusAuthHeader());
+  if (typeof explicitHeader === 'string' && explicitHeader.trim().length > 0) {
+    return explicitHeader.trim();
+  }
+
+  const authHeader = req.get('authorization');
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+    return authHeader.slice('Bearer '.length).trim();
+  }
+
+  return '';
+};
+
+const isNightStatusRequestAuthorized = (req) => {
+  if (NIGHT_STATUS_API_AUTH_TOKEN.length === 0) {
+    return true;
+  }
+
+  const providedToken = resolveNightStatusRequestToken(req);
+  if (providedToken.length === 0) {
+    return false;
+  }
+
+  const expectedDigest = digestSecret(NIGHT_STATUS_API_AUTH_TOKEN);
+  const providedDigest = digestSecret(providedToken);
+  return timingSafeEqual(expectedDigest, providedDigest);
+};
+
+const resolveNightLaneTaskIds = async (runtimeStatus) => {
+  const runtimeConfigPath = typeof runtimeStatus?.config_path === 'string'
+    ? runtimeStatus.config_path
+    : null;
+  const orchestratorConfigPath = runtimeConfigPath
+    ? resolveNightPath(runtimeConfigPath, NIGHT_ORCHESTRATOR_CONFIG_FALLBACK)
+    : nightOrchestratorConfigFilePath;
+
+  const orchestratorConfig = await readJsonObjectFile(orchestratorConfigPath);
+  const configuredTasks = Array.isArray(orchestratorConfig?.tasks)
+    ? orchestratorConfig.tasks
+    : [];
+
+  const laneTaskIdsFromConfig = {
+    message: [],
+    cron: [],
+    selfprompt: [],
+  };
+
+  configuredTasks.forEach((taskConfig) => {
+    if (!taskConfig || typeof taskConfig !== 'object') return;
+    const rawTaskId = taskConfig.id;
+    if (typeof rawTaskId !== 'string' || rawTaskId.trim().length === 0) return;
+
+    const taskId = rawTaskId.trim();
+    const explicitLane = normalizeNightLaneId(taskConfig.lane ?? taskConfig.lane_id);
+    const laneId = explicitLane ?? inferNightLaneIdFromTask(taskId, taskConfig);
+    laneTaskIdsFromConfig[laneId].push(taskId);
+  });
+
+  const fallbackLaneTaskIds = mergeLaneTaskIdMap(
+    DEFAULT_NIGHT_LANE_TASK_IDS,
+    LEGACY_NIGHT_LANE_TASK_IDS
+  );
+  const mergedLaneTaskIds = mergeLaneTaskIdMap(laneTaskIdsFromConfig, fallbackLaneTaskIds);
+  const hasConfiguredLaneIds = NIGHT_LANE_IDS.some((laneId) => laneTaskIdsFromConfig[laneId].length > 0);
+
+  return {
+    laneTaskIds: mergedLaneTaskIds,
+    source: hasConfiguredLaneIds ? 'config+fallback' : 'fallback-only',
+    config_path: orchestratorConfigPath,
+  };
+};
+
+const parseSessionEvents = (rawContent, maxLines = NIGHT_STATUS_SESSION_TAIL_LINES) => {
+  const lines = rawContent.split(/\r?\n/).filter((line) => line.trim().length > 0);
+  const selectedLines = lines.slice(-maxLines);
+
+  return selectedLines
+    .map((line) => {
+      try {
+        const event = JSON.parse(line);
+        const timestampMs = parseTimestampMs(event?.timestamp);
+        if (!event || typeof event !== 'object' || Number.isNaN(timestampMs)) {
+          return null;
+        }
+
+        return {
+          ...event,
+          timestamp_ms: timestampMs,
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter((event) => event !== null)
+    .sort((left, right) => right.timestamp_ms - left.timestamp_ms);
+};
+
+const readJsonObjectFile = async (filePath) => {
+  if (!existsSync(filePath)) {
+    return null;
+  }
+
+  try {
+    const raw = await readFile(filePath, 'utf8');
+    const payload = JSON.parse(raw);
+    if (payload && typeof payload === 'object') {
+      return payload;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
+const readNightRuntimeStatus = async () => {
+  const candidatePaths = [nightStatusFilePath, nightPublicStatusFilePath];
+  for (const candidatePath of candidatePaths) {
+    const payload = await readJsonObjectFile(candidatePath);
+    if (payload) {
+      return payload;
+    }
+  }
+
+  return null;
+};
+
+const readFileTail = async (filePath, maxBytes) => {
+  const fileHandle = await open(filePath, 'r');
+
+  try {
+    const fileStats = await fileHandle.stat();
+    const bytesToRead = Math.min(Math.max(0, maxBytes), fileStats.size);
+    if (bytesToRead === 0) return '';
+
+    const buffer = Buffer.alloc(bytesToRead);
+    await fileHandle.read(buffer, 0, bytesToRead, fileStats.size - bytesToRead);
+    return buffer.toString('utf8');
+  } finally {
+    await fileHandle.close();
+  }
+};
+
+const readNightSessionEvents = async () => {
+  if (!existsSync(nightSessionLogFilePath)) {
+    return [];
+  }
+
+  try {
+    const rawTail = await readFileTail(nightSessionLogFilePath, NIGHT_STATUS_SESSION_TAIL_BYTES);
+    return parseSessionEvents(rawTail);
+  } catch {
+    return [];
+  }
+};
+
+const resolveLaneCadenceSeconds = async (runtimeStatus) => {
+  const runtimeConfigPath = typeof runtimeStatus?.config_path === 'string'
+    ? runtimeStatus.config_path
+    : null;
+  const orchestratorConfigPath = runtimeConfigPath
+    ? resolveNightPath(runtimeConfigPath, NIGHT_ORCHESTRATOR_CONFIG_FALLBACK)
+    : nightOrchestratorConfigFilePath;
+
+  const [orchestratorConfig, selfpromptConfig] = await Promise.all([
+    readJsonObjectFile(orchestratorConfigPath),
+    readJsonObjectFile(nightSelfpromptConfigFilePath),
+  ]);
+
+  const orchestratorInterval = resolvePositiveInteger(
+    orchestratorConfig?.loop?.interval_seconds,
+    DEFAULT_ORCHESTRATOR_INTERVAL_SECONDS
+  );
+  const selfpromptInterval = resolvePositiveInteger(
+    selfpromptConfig?.interval_seconds,
+    DEFAULT_SELFPROMPT_INTERVAL_SECONDS
+  );
+
+  return {
+    message: orchestratorInterval,
+    cron: orchestratorInterval,
+    selfprompt: selfpromptInterval,
+  };
+};
+
+const resolveLaneStatus = (latestEvent, recentFailureCount, minutesSinceSeen, staleAfterMinutes) => {
+  if (!latestEvent) return 'unavailable';
+
+  const latestState = typeof latestEvent.state === 'string'
+    ? latestEvent.state.toLowerCase()
+    : '';
+  const isLatestFailure = latestEvent.ok === false || FAILING_TASK_STATES.has(latestState);
+  if (isLatestFailure) return 'failing';
+  if (minutesSinceSeen > staleAfterMinutes) return 'stale';
+  if (recentFailureCount > 0) return 'degraded';
+  return 'healthy';
+};
+
+const buildLaneSummary = (laneId, taskIds, events, nowMs, windowMinutes, cadenceSeconds) => {
+  const laneEvents = events.filter((event) => taskIds.includes(event.task));
+  const latestEvent = laneEvents[0];
+  const windowStartMs = nowMs - (windowMinutes * 60 * 1000);
+  const recentLaneEvents = laneEvents.filter((event) => event.timestamp_ms >= windowStartMs);
+  const recentFailureCount = recentLaneEvents.filter((event) => {
+    const state = typeof event.state === 'string' ? event.state.toLowerCase() : '';
+    return event.ok === false || FAILING_TASK_STATES.has(state);
+  }).length;
+  const recentSuccessCount = recentLaneEvents.filter((event) => event.ok === true).length;
+
+  const minutesSinceSeen = latestEvent
+    ? Math.max(0, Math.round((nowMs - latestEvent.timestamp_ms) / 60000))
+    : null;
+  // Heartbeat status follows period + grace semantics to reduce false positives.
+  const expectedPeriodMinutes = Math.max(1, Math.ceil(cadenceSeconds / 60));
+  const staleAfterMinutes = Math.max(
+    NIGHT_STATUS_MIN_STALE_MINUTES,
+    expectedPeriodMinutes + NIGHT_STATUS_GRACE_MINUTES
+  );
+  const status = resolveLaneStatus(
+    latestEvent,
+    recentFailureCount,
+    minutesSinceSeen ?? Number.POSITIVE_INFINITY,
+    staleAfterMinutes
+  );
+
+  return {
+    lane: laneId,
+    status,
+    task_ids: taskIds,
+    last_task: latestEvent?.task ?? null,
+    last_state: latestEvent?.state ?? null,
+    last_detail: latestEvent?.detail ?? null,
+    last_seen_at: latestEvent?.timestamp ?? null,
+    minutes_since_seen: minutesSinceSeen,
+    recent_failures: recentFailureCount,
+    recent_successes: recentSuccessCount,
+    expected_period_minutes: expectedPeriodMinutes,
+    grace_minutes: NIGHT_STATUS_GRACE_MINUTES,
+    stale_after_minutes: staleAfterMinutes,
+  };
+};
+
+const resolveNightHealth = (laneSummaries, runtimeStatus) => {
+  const statuses = Object.values(laneSummaries).map((summary) => summary.status);
+  if (statuses.some((status) => status === 'failing')) {
+    return 'fail';
+  }
+
+  if (
+    statuses.some((status) => status === 'degraded' || status === 'stale' || status === 'unavailable')
+    || Number(runtimeStatus?.last_iteration_failures ?? 0) > 0
+    || Number(runtimeStatus?.consecutive_failures ?? 0) > 0
+  ) {
+    return 'warn';
+  }
+
+  return 'pass';
+};
+
+const buildNightStatusResponse = (runtimeStatus, sessionEvents, laneCadenceSeconds) => {
+  const nowMs = Date.now();
+  const laneSummaries = Object.fromEntries(
+    Object.entries(NIGHT_LANE_TASK_IDS).map(([laneId, taskIds]) => [
+      laneId,
+      buildLaneSummary(
+        laneId,
+        taskIds,
+        sessionEvents,
+        nowMs,
+        NIGHT_STATUS_WINDOW_MINUTES,
+        laneCadenceSeconds[laneId] ?? DEFAULT_ORCHESTRATOR_INTERVAL_SECONDS
+      ),
+    ])
+  );
+  const staleThresholdMinutes = Object.values(laneSummaries)
+    .map((laneSummary) => laneSummary.stale_after_minutes)
+    .filter((value) => Number.isFinite(value));
+
+  return {
+    health: resolveNightHealth(laneSummaries, runtimeStatus),
+    timestamp: new Date().toISOString(),
+    stale_after_minutes: staleThresholdMinutes.length > 0
+      ? Math.max(...staleThresholdMinutes)
+      : NIGHT_STATUS_MIN_STALE_MINUTES,
+    grace_minutes: NIGHT_STATUS_GRACE_MINUTES,
+    window_minutes: NIGHT_STATUS_WINDOW_MINUTES,
+    runtime: runtimeStatus,
+    lanes: laneSummaries,
+  };
+};
 
 const app = express();
 
@@ -916,6 +1998,1354 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.post('/api/audit/sign-manifest', verifyAuth, async (req, res) => {
+  if (!AUDIT_MANIFEST_SIGNING_ENABLED || !AUDIT_MANIFEST_SIGNER) {
+    return res.status(503).json({ error: 'Audit manifest signing is unavailable.' });
+  }
+
+  const {
+    manifestHashSha256,
+    exportType,
+    generatedAt,
+    rowCount,
+    context,
+  } = req.body ?? {};
+
+  if (typeof manifestHashSha256 !== 'string' || !HEX_64_REGEX.test(manifestHashSha256.toLowerCase())) {
+    return res.status(400).json({ error: 'manifestHashSha256 must be a 64-character lowercase hex SHA-256 value.' });
+  }
+
+  if (typeof exportType !== 'string' || exportType.trim().length === 0 || exportType.length > 64) {
+    return res.status(400).json({ error: 'exportType is required.' });
+  }
+
+  const generatedAtMs = Date.parse(String(generatedAt ?? ''));
+  if (Number.isNaN(generatedAtMs)) {
+    return res.status(400).json({ error: 'generatedAt must be a valid ISO timestamp.' });
+  }
+
+  const normalizedRowCount = Number.parseInt(String(rowCount ?? ''), 10);
+  if (!Number.isFinite(normalizedRowCount) || normalizedRowCount < 0 || normalizedRowCount > 1000000) {
+    return res.status(400).json({ error: 'rowCount must be a non-negative integer.' });
+  }
+
+  const safeContext = context && typeof context === 'object' && !Array.isArray(context)
+    ? context
+    : {};
+  const signedAt = new Date().toISOString();
+  const signingPayload = {
+    bundle_type: 'kingsley_audit_export',
+    export_type: exportType.trim(),
+    manifest_hash_sha256: manifestHashSha256.toLowerCase(),
+    generated_at: new Date(generatedAtMs).toISOString(),
+    row_count: normalizedRowCount,
+    signed_at: signedAt,
+    signer_key_id: AUDIT_MANIFEST_SIGNER.keyId,
+    user_id: req.user.id,
+    context: safeContext,
+  };
+
+  try {
+    const canonicalPayload = toCanonicalJson(signingPayload);
+    const signature = sign(
+      null,
+      Buffer.from(canonicalPayload, 'utf8'),
+      AUDIT_MANIFEST_SIGNER.privateKey
+    ).toString('base64');
+
+    return res.json({
+      algorithm: 'Ed25519',
+      payload_encoding: 'canonical-json',
+      key_id: AUDIT_MANIFEST_SIGNER.keyId,
+      public_key_pem: AUDIT_MANIFEST_SIGNER.publicKeyPem,
+      signed_at: signedAt,
+      signature,
+      payload: signingPayload,
+    });
+  } catch (error) {
+    console.error('Audit manifest signing failed:', error);
+    return res.status(500).json({ error: 'Failed to sign audit manifest.' });
+  }
+});
+
+app.get('/api/audit/signing-status', (req, res) => {
+  if (!AUDIT_MANIFEST_PUBLIC_KEY_EXPOSURE_ENABLED) {
+    return res.status(404).json({ error: 'Audit signing status is unavailable.' });
+  }
+
+  if (!AUDIT_MANIFEST_SIGNING_ENABLED || !AUDIT_MANIFEST_SIGNER || !AUDIT_MANIFEST_PUBLIC_KEY_SHA256) {
+    return res.json({
+      enabled: false,
+      algorithm: 'Ed25519',
+      reason: 'signing_not_configured',
+      trust_policy: {
+        mode: NORMALIZED_AUDIT_TRUST_POLICY_MODE,
+        trusted_key_ids_count: AUDIT_MANIFEST_TRUSTED_KEY_IDS.size,
+        trusted_fingerprints_count: AUDIT_MANIFEST_TRUSTED_PUBLIC_KEY_SHA256S.size,
+      },
+    });
+  }
+
+  const signerTrustStatus = resolveSignerTrustStatus(
+    AUDIT_MANIFEST_SIGNER.keyId,
+    AUDIT_MANIFEST_PUBLIC_KEY_SHA256
+  );
+
+  return res.json({
+    enabled: true,
+    algorithm: 'Ed25519',
+    key_id: AUDIT_MANIFEST_SIGNER.keyId,
+    public_key_pem: AUDIT_MANIFEST_SIGNER.publicKeyPem,
+    public_key_sha256: AUDIT_MANIFEST_PUBLIC_KEY_SHA256,
+    payload_encoding: 'canonical-json',
+    trust_policy: {
+      mode: NORMALIZED_AUDIT_TRUST_POLICY_MODE,
+      trust_registry_configured: signerTrustStatus.trustRegistryConfigured,
+      key_id_trusted: signerTrustStatus.keyIdTrusted,
+      public_key_trusted: signerTrustStatus.publicKeyTrusted,
+      signer_registry_status: signerTrustStatus.signerRegistryStatus,
+      trust_check_passed: signerTrustStatus.trustCheckPassed,
+      trusted_key_ids_count: AUDIT_MANIFEST_TRUSTED_KEY_IDS.size,
+      trusted_fingerprints_count: AUDIT_MANIFEST_TRUSTED_PUBLIC_KEY_SHA256S.size,
+      trusted_signer_entries_count: getEffectiveTrustedSigners().length,
+    },
+  });
+});
+
+app.get('/api/audit/trust-registry', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust registry management is unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust registry management requires admin access.'
+  );
+  if (!adminAccess) return;
+
+  await loadRuntimeTrustedSignerRegistry();
+  return res.json({
+    management_enabled: true,
+    trust_policy_mode: NORMALIZED_AUDIT_TRUST_POLICY_MODE,
+    trust_registry_configured: isAuditSignerTrustConfigured(),
+    env_entries_count: AUDIT_MANIFEST_TRUSTED_SIGNERS.length,
+    runtime_entries_count: AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS.length,
+    env_entries: AUDIT_MANIFEST_TRUSTED_SIGNERS.map((entry) => ({
+      key_id: entry.keyId,
+      public_key_sha256: entry.publicKeySha256,
+      not_before: entry.notBefore,
+      not_after: entry.notAfter,
+      status: entry.status,
+      source: 'env',
+    })),
+    runtime_entries: AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS.map((entry) => ({
+      key_id: entry.keyId,
+      public_key_sha256: entry.publicKeySha256,
+      not_before: entry.notBefore,
+      not_after: entry.notAfter,
+      status: entry.status,
+      source: 'runtime',
+    })),
+    admin_access: {
+      source: adminAccess.source,
+      role_lookup_available: adminAccess.roleLookupAvailable,
+    },
+  });
+});
+
+app.put('/api/audit/trust-registry', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust registry management is unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust registry management requires admin access.'
+  );
+  if (!adminAccess) return;
+
+  const { entries, note } = req.body ?? {};
+  if (!Array.isArray(entries)) {
+    return res.status(400).json({ error: 'entries must be an array.' });
+  }
+  if (entries.length > 200) {
+    return res.status(400).json({ error: 'entries cannot exceed 200 items.' });
+  }
+
+  const normalizedEntries = [];
+  for (let index = 0; index < entries.length; index += 1) {
+    const normalized = normalizeTrustedSignerEntry(entries[index]);
+    if (!normalized) {
+      return res.status(400).json({ error: `Entry at index ${index} is invalid.` });
+    }
+    normalizedEntries.push(normalized);
+  }
+
+  const runtimePayload = {
+    updated_at: new Date().toISOString(),
+    updated_by: req.user?.id ?? 'unknown',
+    entries: normalizedEntries.map((entry) => ({
+      key_id: entry.keyId,
+      public_key_sha256: entry.publicKeySha256,
+      not_before: entry.notBefore,
+      not_after: entry.notAfter,
+      status: entry.status,
+    })),
+  };
+
+  try {
+    await loadRuntimeTrustedSignerRegistry();
+    const preUpdateEntries = AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS.map((entry) => ({
+      key_id: entry.keyId,
+      public_key_sha256: entry.publicKeySha256,
+      not_before: entry.notBefore,
+      not_after: entry.notAfter,
+      status: entry.status,
+    }));
+    await appendTrustRegistrySnapshot({
+      snapshot_id: `trs-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      actor_user_id: req.user?.id ?? null,
+      entries_count: preUpdateEntries.length,
+      source: 'pre_update',
+      note: typeof note === 'string' && note.trim().length > 0
+        ? `pre_update:${note.trim().slice(0, 120)}`
+        : 'pre_update:dashboard_registry_update',
+      entries: preUpdateEntries,
+    });
+
+    await mkdir(path.dirname(auditTrustRegistryRuntimeFilePath), { recursive: true });
+    await writeFile(auditTrustRegistryRuntimeFilePath, JSON.stringify(runtimePayload, null, 2), 'utf8');
+    AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS = normalizedEntries;
+
+    await appendTrustRegistryAuditEvent({
+      action: 'trust_registry_updated',
+      actor_user_id: req.user?.id ?? null,
+      entries_count: normalizedEntries.length,
+      note: typeof note === 'string' ? note.slice(0, 300) : null,
+    });
+
+    return res.json({
+      success: true,
+      updated_at: runtimePayload.updated_at,
+      entries_count: normalizedEntries.length,
+      admin_access_source: adminAccess.source,
+    });
+  } catch (error) {
+    console.error('Failed to update trust registry runtime file', error);
+    return res.status(500).json({ error: 'Failed to persist trust registry.' });
+  }
+});
+
+app.post('/api/audit/trust-registry/rotation/preflight', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust registry rotation preflight is unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust registry rotation preflight requires admin access.'
+  );
+  if (!adminAccess) return;
+
+  const { entries } = req.body ?? {};
+  if (!Array.isArray(entries)) {
+    return res.status(400).json({ error: 'entries must be an array.' });
+  }
+  if (entries.length > 200) {
+    return res.status(400).json({ error: 'entries cannot exceed 200 items.' });
+  }
+
+  const normalizedEntries = [];
+  for (let index = 0; index < entries.length; index += 1) {
+    const normalized = normalizeTrustedSignerEntry(entries[index]);
+    if (!normalized) {
+      return res.status(400).json({ error: `Entry at index ${index} is invalid.` });
+    }
+    normalizedEntries.push(normalized);
+  }
+
+  const preflight = evaluateTrustRegistryRotationPreflight(normalizedEntries);
+  return res.json({
+    valid: preflight.valid,
+    summary: preflight.summary,
+    warnings: preflight.warnings,
+    errors: preflight.errors,
+    admin_access_source: adminAccess.source,
+  });
+});
+
+app.post('/api/audit/trust-registry/rotate', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust registry rotation is unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust registry rotation requires admin access.'
+  );
+  if (!adminAccess) return;
+
+  const { entries, note } = req.body ?? {};
+  if (!Array.isArray(entries)) {
+    return res.status(400).json({ error: 'entries must be an array.' });
+  }
+  if (entries.length > 200) {
+    return res.status(400).json({ error: 'entries cannot exceed 200 items.' });
+  }
+
+  const normalizedEntries = [];
+  for (let index = 0; index < entries.length; index += 1) {
+    const normalized = normalizeTrustedSignerEntry(entries[index]);
+    if (!normalized) {
+      return res.status(400).json({ error: `Entry at index ${index} is invalid.` });
+    }
+    normalizedEntries.push(normalized);
+  }
+
+  const preflight = evaluateTrustRegistryRotationPreflight(normalizedEntries);
+  if (!preflight.valid) {
+    return res.status(400).json({
+      error: 'Trust registry rotation preflight failed.',
+      valid: preflight.valid,
+      summary: preflight.summary,
+      warnings: preflight.warnings,
+      errors: preflight.errors,
+    });
+  }
+
+  try {
+    await loadRuntimeTrustedSignerRegistry();
+    const preUpdateEntries = AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS.map((entry) => ({
+      key_id: entry.keyId,
+      public_key_sha256: entry.publicKeySha256,
+      not_before: entry.notBefore,
+      not_after: entry.notAfter,
+      status: entry.status,
+    }));
+    const rotationSnapshotId = `trs-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    await appendTrustRegistrySnapshot({
+      snapshot_id: rotationSnapshotId,
+      actor_user_id: req.user?.id ?? null,
+      entries_count: preUpdateEntries.length,
+      source: 'pre_rotation',
+      note: typeof note === 'string' && note.trim().length > 0
+        ? `pre_rotation:${note.trim().slice(0, 120)}`
+        : 'pre_rotation:rotation_wizard',
+      entries: preUpdateEntries,
+    });
+
+    const runtimePayload = {
+      updated_at: new Date().toISOString(),
+      updated_by: req.user?.id ?? 'unknown',
+      rotation_snapshot_id: rotationSnapshotId,
+      entries: normalizedEntries.map((entry) => ({
+        key_id: entry.keyId,
+        public_key_sha256: entry.publicKeySha256,
+        not_before: entry.notBefore,
+        not_after: entry.notAfter,
+        status: entry.status,
+      })),
+    };
+    await mkdir(path.dirname(auditTrustRegistryRuntimeFilePath), { recursive: true });
+    await writeFile(auditTrustRegistryRuntimeFilePath, JSON.stringify(runtimePayload, null, 2), 'utf8');
+    AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS = normalizedEntries;
+
+    await appendTrustRegistryAuditEvent({
+      action: 'trust_registry_rotated',
+      actor_user_id: req.user?.id ?? null,
+      entries_count: normalizedEntries.length,
+      note: typeof note === 'string' ? note.slice(0, 300) : null,
+      snapshot_id: rotationSnapshotId,
+    });
+
+    return res.json({
+      success: true,
+      snapshot_id: rotationSnapshotId,
+      updated_at: runtimePayload.updated_at,
+      entries_count: normalizedEntries.length,
+      preflight,
+      admin_access_source: adminAccess.source,
+    });
+  } catch (error) {
+    console.error('Failed to apply trust registry rotation', error);
+    return res.status(500).json({ error: 'Failed to apply trust registry rotation.' });
+  }
+});
+
+app.get('/api/audit/trust-admins', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust admin management is unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust admin management requires admin access.'
+  );
+  if (!adminAccess) return;
+
+  try {
+    const { data: admins, error } = await supabase
+      .from('profiles')
+      .select('id,email,full_name,is_trust_admin,updated_at')
+      .eq('is_trust_admin', true)
+      .order('updated_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      if (isRecoverableTrustAdminLookupError(error)) {
+        return res.status(503).json({
+          error: 'Trust admin roles are unavailable until database migrations are applied.',
+          admin_access_source: adminAccess.source,
+        });
+      }
+      console.error('Failed to load trust admin profiles', error);
+      return res.status(500).json({ error: 'Failed to load trust admin profiles.' });
+    }
+
+    return res.json({
+      admins: Array.isArray(admins) ? admins : [],
+      admin_access_source: adminAccess.source,
+      role_lookup_available: adminAccess.roleLookupAvailable,
+    });
+  } catch (error) {
+    console.error('Failed to load trust admin profiles', error);
+    return res.status(500).json({ error: 'Failed to load trust admin profiles.' });
+  }
+});
+
+app.post('/api/audit/trust-admins', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust admin management is unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust admin management requires admin access.'
+  );
+  if (!adminAccess) return;
+
+  const targetUserId = typeof req.body?.target_user_id === 'string'
+    ? req.body.target_user_id.trim()
+    : '';
+  const targetEmail = normalizeTrustAdminTargetEmail(req.body?.target_email);
+  const isTrustAdmin = req.body?.is_trust_admin;
+  const note = typeof req.body?.note === 'string'
+    ? req.body.note.trim().slice(0, 300)
+    : '';
+
+  if (typeof isTrustAdmin !== 'boolean') {
+    return res.status(400).json({ error: 'is_trust_admin boolean is required.' });
+  }
+  if (targetUserId.length === 0 && targetEmail.length === 0) {
+    return res.status(400).json({ error: 'Provide target_user_id or target_email.' });
+  }
+  if (targetEmail.length > 0 && !TRUST_ADMIN_EMAIL_REGEX.test(targetEmail)) {
+    return res.status(400).json({ error: 'target_email must be a valid email address.' });
+  }
+
+  try {
+    const targetProfileQuery = supabase
+      .from('profiles')
+      .select('id,email,full_name,is_trust_admin,updated_at')
+      .limit(1);
+    const { data: targetProfile, error: targetProfileError } = targetUserId.length > 0
+      ? await targetProfileQuery.eq('id', targetUserId).maybeSingle()
+      : await targetProfileQuery.eq('email', targetEmail).maybeSingle();
+
+    if (targetProfileError) {
+      if (isRecoverableTrustAdminLookupError(targetProfileError)) {
+        return res.status(503).json({
+          error: 'Trust admin roles are unavailable until database migrations are applied.',
+          admin_access_source: adminAccess.source,
+        });
+      }
+      console.error('Trust admin target lookup failed', targetProfileError);
+      return res.status(500).json({ error: 'Failed to resolve trust admin target.' });
+    }
+    if (!targetProfile) {
+      return res.status(404).json({ error: 'No profile found for the requested trust admin target.' });
+    }
+
+    if (targetProfile.is_trust_admin === isTrustAdmin) {
+      return res.json({
+        success: true,
+        admin: targetProfile,
+        already_set: true,
+        admin_access_source: adminAccess.source,
+      });
+    }
+
+    if (!isTrustAdmin) {
+      const { count, error: remainingAdminsError } = await supabase
+        .from('profiles')
+        .select('id', { head: true, count: 'exact' })
+        .eq('is_trust_admin', true)
+        .neq('id', targetProfile.id);
+      if (remainingAdminsError) {
+        if (isRecoverableTrustAdminLookupError(remainingAdminsError)) {
+          return res.status(503).json({
+            error: 'Trust admin roles are unavailable until database migrations are applied.',
+            admin_access_source: adminAccess.source,
+          });
+        }
+        console.error('Failed to validate remaining trust admins', remainingAdminsError);
+        return res.status(500).json({ error: 'Failed to validate trust admin changes.' });
+      }
+
+      if ((count ?? 0) < 1) {
+        return res.status(409).json({
+          error: 'At least one trust admin must remain assigned.',
+        });
+      }
+    }
+
+    const { data: updatedProfile, error: updateError } = await supabase
+      .from('profiles')
+      .update({ is_trust_admin: isTrustAdmin })
+      .eq('id', targetProfile.id)
+      .select('id,email,full_name,is_trust_admin,updated_at')
+      .single();
+
+    if (updateError) {
+      if (isRecoverableTrustAdminLookupError(updateError)) {
+        return res.status(503).json({
+          error: 'Trust admin roles are unavailable until database migrations are applied.',
+          admin_access_source: adminAccess.source,
+        });
+      }
+      console.error('Failed to update trust admin role', updateError);
+      return res.status(500).json({ error: 'Failed to update trust admin role.' });
+    }
+
+    await appendTrustRegistryAuditEvent({
+      action: isTrustAdmin ? 'trust_admin_granted' : 'trust_admin_revoked',
+      actor_user_id: req.user?.id ?? null,
+      target_user_id: updatedProfile.id,
+      target_email: updatedProfile.email,
+      entries_count: isTrustAdmin ? 1 : 0,
+      note: note.length > 0 ? note : null,
+      admin_access_source: adminAccess.source,
+    });
+
+    return res.json({
+      success: true,
+      admin: updatedProfile,
+      admin_access_source: adminAccess.source,
+    });
+  } catch (error) {
+    console.error('Trust admin update failed', error);
+    return res.status(500).json({ error: 'Failed to update trust admin role.' });
+  }
+});
+
+app.get('/api/audit/trust-registry/snapshots', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust registry snapshots are unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust registry snapshots require admin access.'
+  );
+  if (!adminAccess) return;
+
+  const limitRaw = Number.parseInt(String(req.query.limit ?? '20'), 10);
+  const limit = Number.isNaN(limitRaw) ? 20 : Math.max(1, Math.min(100, limitRaw));
+
+  try {
+    if (!existsSync(auditTrustRegistrySnapshotFilePath)) {
+      return res.json({
+        snapshots: [],
+        admin_access_source: adminAccess.source,
+      });
+    }
+
+    const rawTail = await readFileTail(auditTrustRegistrySnapshotFilePath, 512 * 1024);
+    const parsedSnapshots = parseTrustRegistrySnapshots(rawTail, 2000)
+      .slice(0, limit)
+      .map((snapshot) => ({
+        snapshot_id: snapshot.snapshot_id,
+        created_at: snapshot.created_at,
+        actor_user_id: snapshot.actor_user_id,
+        entries_count: snapshot.entries_count,
+        note: snapshot.note,
+        source: snapshot.source,
+      }));
+
+    return res.json({
+      snapshots: parsedSnapshots,
+      admin_access_source: adminAccess.source,
+    });
+  } catch (error) {
+    console.error('Failed to load trust registry snapshots', error);
+    return res.status(500).json({ error: 'Failed to load trust registry snapshots.' });
+  }
+});
+
+app.post('/api/audit/trust-registry/rollback', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust registry rollback is unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust registry rollback requires admin access.'
+  );
+  if (!adminAccess) return;
+
+  const snapshotId = typeof req.body?.snapshot_id === 'string'
+    ? req.body.snapshot_id.trim()
+    : '';
+  const note = typeof req.body?.note === 'string'
+    ? req.body.note.trim().slice(0, 300)
+    : '';
+  if (snapshotId.length === 0) {
+    return res.status(400).json({ error: 'snapshot_id is required.' });
+  }
+
+  try {
+    if (!existsSync(auditTrustRegistrySnapshotFilePath)) {
+      return res.status(404).json({ error: 'No trust registry snapshots are available.' });
+    }
+
+    const rawTail = await readFileTail(auditTrustRegistrySnapshotFilePath, 1024 * 1024);
+    const parsedSnapshots = parseTrustRegistrySnapshots(rawTail, 5000);
+    const targetSnapshot = parsedSnapshots.find((snapshot) => snapshot.snapshot_id === snapshotId);
+    if (!targetSnapshot) {
+      return res.status(404).json({ error: 'Requested trust registry snapshot was not found.' });
+    }
+
+    await loadRuntimeTrustedSignerRegistry();
+    const preRollbackEntries = AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS.map((entry) => ({
+      key_id: entry.keyId,
+      public_key_sha256: entry.publicKeySha256,
+      not_before: entry.notBefore,
+      not_after: entry.notAfter,
+      status: entry.status,
+    }));
+    await appendTrustRegistrySnapshot({
+      snapshot_id: `trs-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      actor_user_id: req.user?.id ?? null,
+      entries_count: preRollbackEntries.length,
+      source: 'pre_rollback',
+      note: `pre_rollback:${snapshotId}`,
+      entries: preRollbackEntries,
+    });
+
+    const runtimePayload = {
+      updated_at: new Date().toISOString(),
+      updated_by: req.user?.id ?? 'unknown',
+      rollback_snapshot_id: snapshotId,
+      entries: targetSnapshot.entries,
+    };
+    await mkdir(path.dirname(auditTrustRegistryRuntimeFilePath), { recursive: true });
+    await writeFile(auditTrustRegistryRuntimeFilePath, JSON.stringify(runtimePayload, null, 2), 'utf8');
+    AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS = targetSnapshot.entries
+      .map((entry) => normalizeTrustedSignerEntry(entry))
+      .filter((entry) => entry !== null);
+
+    await appendTrustRegistryAuditEvent({
+      action: 'trust_registry_rolled_back',
+      actor_user_id: req.user?.id ?? null,
+      entries_count: targetSnapshot.entries.length,
+      note: note.length > 0
+        ? `snapshot=${snapshotId};note=${note}`
+        : `snapshot=${snapshotId}`,
+    });
+
+    return res.json({
+      success: true,
+      snapshot_id: snapshotId,
+      entries_count: targetSnapshot.entries.length,
+      admin_access_source: adminAccess.source,
+    });
+  } catch (error) {
+    console.error('Failed to rollback trust registry snapshot', error);
+    return res.status(500).json({ error: 'Failed to rollback trust registry snapshot.' });
+  }
+});
+
+app.get('/api/audit/trust-registry/governance-digest', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust registry governance digest is unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust registry governance digest requires admin access.'
+  );
+  if (!adminAccess) return;
+
+  const limitRaw = Number.parseInt(String(req.query.limit ?? '400'), 10);
+  const limit = Number.isNaN(limitRaw) ? 400 : Math.max(50, Math.min(2000, limitRaw));
+  const retentionDaysRaw = Number.parseInt(String(req.query.retention_days ?? '365'), 10);
+  const retentionDays = Number.isNaN(retentionDaysRaw)
+    ? 365
+    : Math.max(7, Math.min(3650, retentionDaysRaw));
+  const nowMs = Date.now();
+  const cutoffMs = nowMs - (retentionDays * 24 * 60 * 60 * 1000);
+
+  try {
+    await loadRuntimeTrustedSignerRegistry();
+    const runtimeEntriesCount = AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS.length;
+    const runtimeActiveNowCount = countActiveTrustedSignerEntries(
+      AUDIT_MANIFEST_RUNTIME_TRUSTED_SIGNERS,
+      nowMs
+    );
+    if (!existsSync(auditTrustRegistryAuditLogFilePath)) {
+      return res.json({
+        generated_at: new Date(nowMs).toISOString(),
+        events: [],
+        returned_count: 0,
+        total_count: 0,
+        counts: {
+          admin_mutation_count: 0,
+          rollback_count: 0,
+          rotation_count: 0,
+        },
+        rotation_runbook: {
+          latest_rotation_at: null,
+          latest_rotation_snapshot_id: null,
+          latest_rollback_at: null,
+          latest_rollback_snapshot_id: null,
+          runtime_entries_count: runtimeEntriesCount,
+          runtime_active_now_count: runtimeActiveNowCount,
+        },
+        admin_access_source: adminAccess.source,
+      });
+    }
+
+    const rawTail = await readFileTail(auditTrustRegistryAuditLogFilePath, 2 * 1024 * 1024);
+    const parsedEvents = parseTrustRegistryAuditEvents(rawTail, 10000);
+    const governanceEvents = parsedEvents
+      .filter((event) => {
+        if (!event || typeof event !== 'object') return false;
+        if (!TRUST_GOVERNANCE_DIGEST_ACTIONS.has(event.action)) return false;
+        const timestampMs = Date.parse(String(event.created_at ?? ''));
+        if (Number.isNaN(timestampMs)) return false;
+        return timestampMs >= cutoffMs;
+      })
+      .map((event) => ({
+        action: typeof event.action === 'string' ? event.action : 'unknown',
+        actor_user_id: typeof event.actor_user_id === 'string' ? event.actor_user_id : null,
+        target_user_id: typeof event.target_user_id === 'string' ? event.target_user_id : null,
+        target_email: typeof event.target_email === 'string' ? event.target_email : null,
+        admin_access_source: typeof event.admin_access_source === 'string'
+          ? event.admin_access_source
+          : null,
+        snapshot_id: resolveTrustRegistryEventSnapshotId(event) || null,
+        note: typeof event.note === 'string' ? event.note : null,
+        entries_count: Number.isFinite(Number(event.entries_count))
+          ? Number(event.entries_count)
+          : 0,
+        created_at: typeof event.created_at === 'string'
+          ? event.created_at
+          : new Date(nowMs).toISOString(),
+      }));
+
+    const returnedEvents = governanceEvents.slice(0, limit);
+    const adminMutationCount = governanceEvents.filter((event) =>
+      event.action === 'trust_admin_granted' || event.action === 'trust_admin_revoked'
+    ).length;
+    const rollbackCount = governanceEvents.filter((event) =>
+      event.action === 'trust_registry_rolled_back'
+    ).length;
+    const rotationCount = governanceEvents.filter((event) =>
+      event.action === 'trust_registry_rotated'
+    ).length;
+    const latestRotationEvent = governanceEvents.find((event) => event.action === 'trust_registry_rotated');
+    const latestRollbackEvent = governanceEvents.find((event) => event.action === 'trust_registry_rolled_back');
+
+    return res.json({
+      generated_at: new Date(nowMs).toISOString(),
+      events: returnedEvents,
+      returned_count: returnedEvents.length,
+      total_count: governanceEvents.length,
+      counts: {
+        admin_mutation_count: adminMutationCount,
+        rollback_count: rollbackCount,
+        rotation_count: rotationCount,
+      },
+      rotation_runbook: {
+        latest_rotation_at: latestRotationEvent?.created_at ?? null,
+        latest_rotation_snapshot_id: latestRotationEvent?.snapshot_id ?? null,
+        latest_rollback_at: latestRollbackEvent?.created_at ?? null,
+        latest_rollback_snapshot_id: latestRollbackEvent?.snapshot_id ?? null,
+        runtime_entries_count: runtimeEntriesCount,
+        runtime_active_now_count: runtimeActiveNowCount,
+      },
+      admin_access_source: adminAccess.source,
+    });
+  } catch (error) {
+    console.error('Failed to build trust governance digest', error);
+    return res.status(500).json({ error: 'Failed to build trust governance digest.' });
+  }
+});
+
+app.get('/api/audit/trust-registry/history', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust registry history is unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust registry history requires admin access.'
+  );
+  if (!adminAccess) return;
+
+  const limitRaw = Number.parseInt(String(req.query.limit ?? '100'), 10);
+  const limit = Number.isNaN(limitRaw) ? 100 : Math.max(1, Math.min(200, limitRaw));
+  const offsetRaw = Number.parseInt(String(req.query.offset ?? '0'), 10);
+  const offset = Number.isNaN(offsetRaw) ? 0 : Math.max(0, offsetRaw);
+  const retentionDaysRaw = Number.parseInt(String(req.query.retention_days ?? ''), 10);
+  const retentionDays = Number.isNaN(retentionDaysRaw) ? null : Math.max(1, Math.min(3650, retentionDaysRaw));
+  try {
+    if (!existsSync(auditTrustRegistryAuditLogFilePath)) {
+      return res.json({
+        events: [],
+        next_offset: 0,
+        has_more: false,
+        total_count: 0,
+        admin_access_source: adminAccess.source,
+      });
+    }
+    const rawTail = await readFileTail(auditTrustRegistryAuditLogFilePath, 512 * 1024);
+    const parsedEvents = parseTrustRegistryAuditEvents(rawTail, 2000);
+    const filteredEvents = retentionDays
+      ? parsedEvents.filter((event) => {
+        const timestampMs = Date.parse(String(event.created_at ?? ''));
+        if (Number.isNaN(timestampMs)) return false;
+        return timestampMs >= (Date.now() - (retentionDays * 24 * 60 * 60 * 1000));
+      })
+      : parsedEvents;
+
+    const pagedEvents = filteredEvents.slice(offset, offset + limit);
+    const nextOffset = offset + pagedEvents.length;
+    const hasMore = nextOffset < filteredEvents.length;
+    return res.json({
+      events: pagedEvents,
+      next_offset: nextOffset,
+      has_more: hasMore,
+      total_count: filteredEvents.length,
+      admin_access_source: adminAccess.source,
+    });
+  } catch (error) {
+    console.error('Failed to read trust registry audit log', error);
+    return res.status(500).json({ error: 'Failed to read trust registry history.' });
+  }
+});
+
+app.post('/api/audit/trust-registry/history/trim', verifyAuth, async (req, res) => {
+  if (!AUDIT_TRUST_REGISTRY_MANAGEMENT_ENABLED) {
+    return res.status(404).json({ error: 'Trust registry history controls are unavailable.' });
+  }
+  const adminAccess = await enforceAuditTrustRegistryAdmin(
+    req,
+    res,
+    'Trust registry history controls require admin access.'
+  );
+  if (!adminAccess) return;
+
+  const keepDaysRaw = Number.parseInt(String(req.body?.keep_days ?? '180'), 10);
+  const keepLatestRaw = Number.parseInt(String(req.body?.keep_latest ?? '200'), 10);
+  const keepDays = Number.isNaN(keepDaysRaw) ? 180 : Math.max(7, Math.min(3650, keepDaysRaw));
+  const keepLatest = Number.isNaN(keepLatestRaw) ? 200 : Math.max(20, Math.min(2000, keepLatestRaw));
+
+  try {
+    if (!existsSync(auditTrustRegistryAuditLogFilePath)) {
+      return res.json({
+        removed_count: 0,
+        remaining_count: 0,
+        keep_days: keepDays,
+        keep_latest: keepLatest,
+        admin_access_source: adminAccess.source,
+      });
+    }
+
+    const raw = await readFile(auditTrustRegistryAuditLogFilePath, 'utf8');
+    const lines = raw.split(/\r?\n/).filter((line) => line.trim().length > 0);
+    if (lines.length === 0) {
+      return res.json({
+        removed_count: 0,
+        remaining_count: 0,
+        keep_days: keepDays,
+        keep_latest: keepLatest,
+        admin_access_source: adminAccess.source,
+      });
+    }
+
+    const cutoffMs = Date.now() - (keepDays * 24 * 60 * 60 * 1000);
+    const keepFromIndex = Math.max(0, lines.length - keepLatest);
+    const keptLines = lines.filter((line, index) => {
+      if (index >= keepFromIndex) return true;
+      try {
+        const parsed = JSON.parse(line);
+        const timestampMs = Date.parse(String(parsed?.created_at ?? ''));
+        if (Number.isNaN(timestampMs)) return false;
+        return timestampMs >= cutoffMs;
+      } catch {
+        return false;
+      }
+    });
+
+    const removedCount = Math.max(0, lines.length - keptLines.length);
+    await mkdir(path.dirname(auditTrustRegistryAuditLogFilePath), { recursive: true });
+    const nextContent = keptLines.length > 0
+      ? `${keptLines.join('\n')}\n`
+      : '';
+    await writeFile(auditTrustRegistryAuditLogFilePath, nextContent, 'utf8');
+
+    await appendTrustRegistryAuditEvent({
+      action: 'trust_registry_history_trimmed',
+      actor_user_id: req.user?.id ?? null,
+      entries_count: keptLines.length,
+      note: `keep_days=${keepDays},keep_latest=${keepLatest},removed=${removedCount}`,
+    });
+
+    return res.json({
+      removed_count: removedCount,
+      remaining_count: keptLines.length,
+      keep_days: keepDays,
+      keep_latest: keepLatest,
+      admin_access_source: adminAccess.source,
+    });
+  } catch (error) {
+    console.error('Failed to trim trust registry history', error);
+    return res.status(500).json({ error: 'Failed to trim trust registry history.' });
+  }
+});
+
+app.post('/api/audit/verify-manifest', async (req, res) => {
+  if (!AUDIT_MANIFEST_VERIFICATION_API_ENABLED) {
+    return res.status(404).json({ error: 'Audit manifest verification is unavailable.' });
+  }
+
+  const { manifest, csvContent } = req.body ?? {};
+  if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
+    return res.status(400).json({ error: 'manifest object is required.' });
+  }
+
+  const manifestRecord = manifest;
+  const manifestHash = typeof manifestRecord.sha256 === 'string'
+    ? manifestRecord.sha256.toLowerCase()
+    : '';
+  if (!HEX_64_REGEX.test(manifestHash)) {
+    return res.status(400).json({ error: 'manifest.sha256 must be a 64-character lowercase hex SHA-256 value.' });
+  }
+
+  const signerRecord = manifestRecord.signer && typeof manifestRecord.signer === 'object' && !Array.isArray(manifestRecord.signer)
+    ? manifestRecord.signer
+    : null;
+  if (!signerRecord || signerRecord.mode !== 'server_attested') {
+    return res.status(400).json({ error: 'manifest.signer.mode must be server_attested for verification.' });
+  }
+
+  const signature = typeof signerRecord.signature === 'string' ? signerRecord.signature : '';
+  const publicKeyPem = typeof signerRecord.public_key_pem === 'string' ? signerRecord.public_key_pem : '';
+  const payload = signerRecord.payload && typeof signerRecord.payload === 'object' && !Array.isArray(signerRecord.payload)
+    ? signerRecord.payload
+    : null;
+  const keyId = typeof signerRecord.key_id === 'string' ? signerRecord.key_id : '';
+  const algorithm = typeof signerRecord.algorithm === 'string' ? signerRecord.algorithm : '';
+  const payloadEncoding = typeof signerRecord.payload_encoding === 'string' ? signerRecord.payload_encoding : '';
+
+  if (!signature || !publicKeyPem || !payload || !keyId || !algorithm || !payloadEncoding) {
+    return res.status(400).json({ error: 'manifest signer metadata is incomplete.' });
+  }
+
+  let csvHashMatchesManifest = null;
+  let csvHashSha256 = null;
+  if (typeof csvContent === 'string' && csvContent.length > 0) {
+    if (csvContent.length > 2_000_000) {
+      return res.status(413).json({ error: 'csvContent exceeds 2MB limit.' });
+    }
+    csvHashSha256 = computeSha256Hex(csvContent);
+    csvHashMatchesManifest = csvHashSha256 === manifestHash;
+  }
+
+  try {
+    const canonicalPayload = toCanonicalJson(payload);
+    const payloadManifestHash = typeof payload.manifest_hash_sha256 === 'string'
+      ? payload.manifest_hash_sha256.toLowerCase()
+      : '';
+    const payloadBindsManifestHash = payloadManifestHash === manifestHash;
+
+    const publicKey = createPublicKey({
+      key: publicKeyPem,
+      format: 'pem',
+    });
+    const signatureValid = verify(
+      null,
+      Buffer.from(canonicalPayload, 'utf8'),
+      publicKey,
+      Buffer.from(signature, 'base64')
+    );
+
+    const keyFingerprintSha256 = computeSha256Hex(publicKeyPem);
+    const verifiedAt = new Date().toISOString();
+    const signerTrustStatus = resolveSignerTrustStatus(keyId, keyFingerprintSha256, Date.parse(verifiedAt));
+
+    const verificationPassed = signatureValid
+      && payloadBindsManifestHash
+      && (csvHashMatchesManifest !== false)
+      && (NORMALIZED_AUDIT_TRUST_POLICY_MODE !== 'enforced' || signerTrustStatus.trustCheckPassed);
+    const receipt = {
+      receipt_version: 1,
+      verified_at: verifiedAt,
+      verification_passed: verificationPassed,
+      checks: {
+        signature_valid: signatureValid,
+        payload_binds_manifest_hash: payloadBindsManifestHash,
+        csv_hash_matches_manifest: csvHashMatchesManifest,
+        key_id_trusted: signerTrustStatus.keyIdTrusted,
+        public_key_trusted: signerTrustStatus.publicKeyTrusted,
+        signer_registry_status: signerTrustStatus.signerRegistryStatus,
+        trust_check_passed: signerTrustStatus.trustCheckPassed,
+      },
+      signer: {
+        key_id: keyId,
+        algorithm,
+        payload_encoding: payloadEncoding,
+        public_key_sha256: keyFingerprintSha256,
+      },
+      trust_policy: {
+        mode: NORMALIZED_AUDIT_TRUST_POLICY_MODE,
+        trust_registry_configured: signerTrustStatus.trustRegistryConfigured,
+        enforced_for_pass_fail: NORMALIZED_AUDIT_TRUST_POLICY_MODE === 'enforced' && signerTrustStatus.trustRegistryConfigured,
+      },
+      manifest: {
+        bundle_type: typeof manifestRecord.bundle_type === 'string' ? manifestRecord.bundle_type : null,
+        export_type: payload && typeof payload.export_type === 'string' ? payload.export_type : null,
+        generated_at: typeof manifestRecord.generated_at === 'string' ? manifestRecord.generated_at : null,
+        manifest_sha256: manifestHash,
+        row_count: typeof manifestRecord.row_count === 'number' ? manifestRecord.row_count : null,
+      },
+      payload: payload,
+    };
+    const receiptId = computeSha256Hex(toCanonicalJson(receipt));
+
+    return res.json({
+      ...receipt,
+      receipt_id: receiptId,
+      csv_sha256: csvHashSha256,
+    });
+  } catch (error) {
+    console.error('Audit manifest verification failed:', error);
+    return res.status(400).json({ error: 'Failed to verify manifest payload.' });
+  }
+});
+
+app.post('/api/audit/readiness-exports', verifyAuth, async (req, res) => {
+  const {
+    signatureMode,
+    cadence,
+    playbookScope,
+    caseScope,
+    eventCount,
+    csvSha256,
+    manifestSha256,
+    metadata,
+  } = req.body ?? {};
+
+  if (typeof csvSha256 !== 'string' || !HEX_64_REGEX.test(csvSha256.toLowerCase())) {
+    return res.status(400).json({ error: 'csvSha256 must be a 64-character lowercase hex SHA-256 value.' });
+  }
+  if (typeof manifestSha256 !== 'string' || !HEX_64_REGEX.test(manifestSha256.toLowerCase())) {
+    return res.status(400).json({ error: 'manifestSha256 must be a 64-character lowercase hex SHA-256 value.' });
+  }
+
+  const normalizedSignatureMode = signatureMode === 'server_attested' ? 'server_attested' : 'local_checksum';
+  const normalizedCadence = cadence === 'weekly' || cadence === 'monthly' ? cadence : 'off';
+  const normalizedCaseScope = caseScope === 'case-linked' || caseScope === 'ad-hoc' ? caseScope : 'all';
+  const normalizedPlaybookScope = typeof playbookScope === 'string' && playbookScope.trim().length > 0
+    ? playbookScope.trim().slice(0, 80)
+    : 'all';
+  const normalizedEventCount = Number.isFinite(Number(eventCount))
+    ? Math.max(0, Math.min(5000, Number(eventCount)))
+    : 0;
+  const normalizedMetadata = metadata && typeof metadata === 'object' && !Array.isArray(metadata)
+    ? metadata
+    : null;
+
+  try {
+    const { data, error } = await supabase
+      .from('readiness_export_history')
+      .insert({
+        user_id: req.user.id,
+        signature_mode: normalizedSignatureMode,
+        cadence: normalizedCadence,
+        playbook_scope: normalizedPlaybookScope,
+        case_scope: normalizedCaseScope,
+        event_count: normalizedEventCount,
+        csv_sha256: csvSha256.toLowerCase(),
+        manifest_sha256: manifestSha256.toLowerCase(),
+        metadata: normalizedMetadata,
+      })
+      .select('id, created_at')
+      .single();
+
+    if (error) throw error;
+
+    return res.status(201).json({
+      id: data?.id ?? null,
+      created_at: data?.created_at ?? new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Failed to persist readiness export history', error);
+    return res.status(500).json({ error: 'Failed to persist readiness export history.' });
+  }
+});
+
+app.get('/api/audit/readiness-exports', verifyAuth, async (req, res) => {
+  const limitRaw = Number.parseInt(String(req.query.limit ?? '20'), 10);
+  const limit = Number.isNaN(limitRaw) ? 20 : Math.max(1, Math.min(100, limitRaw));
+  const offsetRaw = Number.parseInt(String(req.query.offset ?? '0'), 10);
+  const offset = Number.isNaN(offsetRaw) ? 0 : Math.max(0, offsetRaw);
+
+  const signatureMode = String(req.query.signature_mode ?? 'all');
+  const manifestHashFilterRaw = String(req.query.manifest_hash ?? '').trim().toLowerCase();
+  const manifestHashFilter = manifestHashFilterRaw.replace(/[^a-f0-9]/g, '').slice(0, 64);
+
+  try {
+    let query = supabase
+      .from('readiness_export_history')
+      .select('id, signature_mode, cadence, playbook_scope, case_scope, event_count, csv_sha256, manifest_sha256, metadata, created_at', { count: 'exact' })
+      .eq('user_id', req.user.id)
+      .order('created_at', { ascending: false });
+
+    if (signatureMode === 'server_attested' || signatureMode === 'local_checksum') {
+      query = query.eq('signature_mode', signatureMode);
+    }
+    if (manifestHashFilter.length > 0) {
+      query = query.ilike('manifest_sha256', `%${manifestHashFilter}%`);
+    }
+
+    const { data, error, count } = await query.range(offset, offset + limit - 1);
+    if (error) throw error;
+
+    const events = Array.isArray(data)
+      ? data.map((entry) => ({
+        id: entry.id,
+        signature_mode: entry.signature_mode,
+        cadence: entry.cadence,
+        playbook_scope: entry.playbook_scope,
+        case_scope: entry.case_scope,
+        event_count: entry.event_count,
+        csv_sha256: entry.csv_sha256,
+        manifest_sha256: entry.manifest_sha256,
+        artifact_id: typeof entry.metadata?.audit_artifact?.id === 'string'
+          ? entry.metadata.audit_artifact.id
+          : null,
+        artifact_receipt_sha256: typeof entry.metadata?.audit_artifact?.receipt_sha256 === 'string'
+          ? entry.metadata.audit_artifact.receipt_sha256
+          : null,
+        artifact_retention_expires_at: typeof entry.metadata?.audit_artifact?.retention_expires_at === 'string'
+          ? entry.metadata.audit_artifact.retention_expires_at
+          : null,
+        artifact_signature_algorithm: typeof entry.metadata?.audit_artifact?.signature_algorithm === 'string'
+          ? entry.metadata.audit_artifact.signature_algorithm
+          : null,
+        artifact_signature_key_id: typeof entry.metadata?.audit_artifact?.signature_key_id === 'string'
+          ? entry.metadata.audit_artifact.signature_key_id
+          : null,
+        created_at: entry.created_at,
+      }))
+      : [];
+
+    const nextOffset = offset + events.length;
+    return res.json({
+      events,
+      next_offset: nextOffset,
+      has_more: Number.isFinite(Number(count)) ? nextOffset < Number(count) : false,
+      total_count: Number.isFinite(Number(count)) ? Number(count) : events.length,
+    });
+  } catch (error) {
+    console.error('Failed to fetch readiness export history', error);
+    return res.status(500).json({ error: 'Failed to fetch readiness export history.' });
+  }
+});
+
+app.post('/api/audit/export-artifacts', verifyAuth, async (req, res) => {
+  const {
+    artifactType,
+    caseRef,
+    eventCount,
+    csvSha256,
+    manifestSha256,
+    exportScope,
+    retentionDays,
+  } = req.body ?? {};
+
+  if (typeof csvSha256 !== 'string' || !HEX_64_REGEX.test(csvSha256.toLowerCase())) {
+    return res.status(400).json({ error: 'csvSha256 must be a 64-character lowercase hex SHA-256 value.' });
+  }
+  if (typeof manifestSha256 !== 'string' || !HEX_64_REGEX.test(manifestSha256.toLowerCase())) {
+    return res.status(400).json({ error: 'manifestSha256 must be a 64-character lowercase hex SHA-256 value.' });
+  }
+
+  const normalizedArtifactType = artifactType === 'case_audit_timeline' ? artifactType : 'case_audit_timeline';
+  const normalizedCaseRef = typeof caseRef === 'string' && caseRef.trim().length > 0
+    ? caseRef.trim().slice(0, 96)
+    : null;
+  const normalizedEventCount = Number.isFinite(Number(eventCount))
+    ? Math.max(0, Math.min(100000, Number(eventCount)))
+    : 0;
+  const normalizedExportScope = exportScope && typeof exportScope === 'object' && !Array.isArray(exportScope)
+    ? exportScope
+    : {};
+  const normalizedRetentionDays = Number.isFinite(Number(retentionDays))
+    ? Math.max(30, Math.min(AUDIT_EXPORT_ARTIFACT_RETENTION_DAYS_MAX, Number(retentionDays)))
+    : AUDIT_EXPORT_ARTIFACT_RETENTION_DAYS_DEFAULT;
+  const createdAt = new Date();
+  const retentionExpiresAt = new Date(createdAt.getTime() + normalizedRetentionDays * 24 * 60 * 60 * 1000);
+  const receiptPayload = {
+    receipt_version: 1,
+    artifact_type: normalizedArtifactType,
+    actor_user_id: req.user.id,
+    case_ref: normalizedCaseRef,
+    event_count: normalizedEventCount,
+    csv_sha256: csvSha256.toLowerCase(),
+    manifest_sha256: manifestSha256.toLowerCase(),
+    export_scope: normalizedExportScope,
+    generated_at: createdAt.toISOString(),
+    retention_expires_at: retentionExpiresAt.toISOString(),
+  };
+  const canonicalReceiptPayload = toCanonicalJson(receiptPayload);
+  const receiptSha256 = computeSha256Hex(canonicalReceiptPayload);
+  const signatureMetadata = buildAuditExportReceiptSignature(canonicalReceiptPayload);
+
+  try {
+    const { data, error } = await supabase
+      .from('audit_export_artifacts')
+      .insert({
+        user_id: req.user.id,
+        artifact_type: normalizedArtifactType,
+        case_ref: normalizedCaseRef,
+        event_count: normalizedEventCount,
+        csv_sha256: csvSha256.toLowerCase(),
+        manifest_sha256: manifestSha256.toLowerCase(),
+        export_scope: normalizedExportScope,
+        receipt_payload: receiptPayload,
+        receipt_sha256: receiptSha256,
+        signature_algorithm: signatureMetadata.algorithm,
+        signature_key_id: signatureMetadata.keyId,
+        signature_value: signatureMetadata.signature,
+        retention_expires_at: retentionExpiresAt.toISOString(),
+      })
+      .select('id, created_at, retention_expires_at, receipt_sha256')
+      .single();
+    if (error) throw error;
+
+    return res.status(201).json({
+      id: data?.id ?? null,
+      created_at: data?.created_at ?? createdAt.toISOString(),
+      retention_expires_at: data?.retention_expires_at ?? retentionExpiresAt.toISOString(),
+      receipt_sha256: data?.receipt_sha256 ?? receiptSha256,
+      signature_algorithm: signatureMetadata.algorithm,
+      signature_key_id: signatureMetadata.keyId,
+    });
+  } catch (error) {
+    console.error('Failed to persist audit export artifact', error);
+    return res.status(500).json({ error: 'Failed to persist audit export artifact.' });
+  }
+});
+
+app.get('/api/audit/export-artifacts', verifyAuth, async (req, res) => {
+  const limitRaw = Number.parseInt(String(req.query.limit ?? '20'), 10);
+  const limit = Number.isNaN(limitRaw) ? 20 : Math.max(1, Math.min(100, limitRaw));
+  const offsetRaw = Number.parseInt(String(req.query.offset ?? '0'), 10);
+  const offset = Number.isNaN(offsetRaw) ? 0 : Math.max(0, offsetRaw);
+  const caseRefRaw = typeof req.query.case_ref === 'string' ? req.query.case_ref : '';
+  const caseRefFilter = caseRefRaw.trim();
+
+  try {
+    let query = supabase
+      .from('audit_export_artifacts')
+      .select('id, artifact_type, case_ref, event_count, csv_sha256, manifest_sha256, receipt_sha256, signature_algorithm, signature_key_id, retention_expires_at, created_at', { count: 'exact' })
+      .eq('user_id', req.user.id)
+      .order('created_at', { ascending: false });
+
+    if (caseRefFilter.length > 0) {
+      query = query.eq('case_ref', caseRefFilter);
+    }
+
+    const { data, error, count } = await query.range(offset, offset + limit - 1);
+    if (error) throw error;
+
+    const artifacts = Array.isArray(data) ? data : [];
+    const nextOffset = offset + artifacts.length;
+    return res.json({
+      artifacts,
+      next_offset: nextOffset,
+      has_more: Number.isFinite(Number(count)) ? nextOffset < Number(count) : false,
+      total_count: Number.isFinite(Number(count)) ? Number(count) : artifacts.length,
+    });
+  } catch (error) {
+    console.error('Failed to fetch audit export artifacts', error);
+    return res.status(500).json({ error: 'Failed to fetch audit export artifacts.' });
+  }
+});
+
+app.get('/api/audit/export-artifacts/:artifactId/receipt', verifyAuth, async (req, res) => {
+  const artifactId = typeof req.params.artifactId === 'string' ? req.params.artifactId.trim() : '';
+  if (artifactId.length === 0) {
+    return res.status(400).json({ error: 'artifactId is required.' });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('audit_export_artifacts')
+      .select('id, artifact_type, case_ref, event_count, csv_sha256, manifest_sha256, receipt_payload, receipt_sha256, signature_algorithm, signature_key_id, signature_value, retention_expires_at, created_at')
+      .eq('id', artifactId)
+      .eq('user_id', req.user.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      return res.status(404).json({ error: 'Audit export artifact not found.' });
+    }
+
+    const responsePayload = {
+      artifact_id: data.id,
+      artifact_type: data.artifact_type,
+      case_ref: data.case_ref,
+      event_count: data.event_count,
+      csv_sha256: data.csv_sha256,
+      manifest_sha256: data.manifest_sha256,
+      receipt_sha256: data.receipt_sha256,
+      created_at: data.created_at,
+      retention_expires_at: data.retention_expires_at,
+      signature: {
+        algorithm: data.signature_algorithm,
+        key_id: data.signature_key_id,
+        value: data.signature_value,
+      },
+      payload: data.receipt_payload,
+    };
+    return res.json(responsePayload);
+  } catch (error) {
+    console.error('Failed to fetch audit export artifact receipt', error);
+    return res.status(500).json({ error: 'Failed to fetch audit export artifact receipt.' });
+  }
+});
+app.get('/api/night/status', async (req, res) => {
+  if (!NIGHT_STATUS_API_ENABLED) {
+    return res.status(404).json({ error: 'Night status endpoint is disabled.' });
+  }
+
+  try {
+    const [runtimeStatus, sessionEvents] = await Promise.all([
+      readNightRuntimeStatus(),
+      readNightSessionEvents(),
+    ]);
+    const laneCadenceSeconds = await resolveLaneCadenceSeconds(runtimeStatus);
+    const payload = buildNightStatusResponse(runtimeStatus, sessionEvents, laneCadenceSeconds);
+    return res.json(payload);
+  } catch (error) {
+    console.error('Night status endpoint error:', error);
+    return res.status(500).json({ error: 'Failed to read night runtime status.' });
+  }
+});
+
 // AI Chat endpoint (uses new provider stack with automatic fallback)
 app.post('/api/ai/chat', verifyAuth, checkCredits, async (req, res) => {
   try {
@@ -1306,4 +3736,5 @@ app.listen(PORT, () => {
   console.log(`LexiA backend running on port ${PORT}`);
   console.log('Available AI providers:', providerHealth());
 });
+
 

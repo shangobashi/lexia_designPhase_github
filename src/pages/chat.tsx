@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
 import { useLanguage } from '@/contexts/language-context';
 import { generateStreamingChat, KingsleyMode } from '@/lib/ai-service';
+import { buildApiUrl } from '@/lib/api-base-url';
 import { config } from '@/lib/config';
 import {
   ReadinessTelemetry,
@@ -18,6 +19,8 @@ import {
   downloadFile,
   getUserDocumentById,
   getUserReadinessTelemetry,
+  isSupabaseConfigured,
+  supabase,
 } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types/message';
@@ -124,7 +127,23 @@ interface ReadinessExportHistoryEntry {
   eventCount: number;
   csvSha256: string;
   manifestSha256: string;
-  signatureMode: 'local_checksum';
+  signatureMode: 'local_checksum' | 'server_attested';
+}
+
+interface ExportSignatureMetadata {
+  algorithm: string;
+  payloadEncoding: string;
+  keyId: string;
+  publicKeyPem: string;
+  signedAt: string;
+  signature: string;
+  payload: Record<string, unknown>;
+}
+
+interface ReadinessBundleVerificationCheck {
+  id: 'manifest' | 'csvBinding' | 'manifestChecksum' | 'csvChecksum';
+  status: 'pass' | 'warn' | 'fail';
+  detail: string;
 }
 
 const PLAYBOOK_PROMPTS: Record<ChatPlaybookId, string> = {
@@ -481,6 +500,123 @@ async function sha256Hex(content: string): Promise<string> {
     .join('');
 }
 
+async function requestExportManifestSignature(
+  manifestHashSha256: string,
+  exportType: string,
+  generatedAt: string,
+  rowCount: number,
+  context: Record<string, string | number | boolean>
+): Promise<ExportSignatureMetadata | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data: { session } } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
+  if (!accessToken) return null;
+
+  const response = await fetch(buildApiUrl('/api/audit/sign-manifest'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      manifestHashSha256,
+      exportType,
+      generatedAt,
+      rowCount,
+      context,
+    }),
+  });
+  if (!response.ok) return null;
+
+  const payload = await response.json() as Record<string, unknown>;
+  if (
+    typeof payload.signature !== 'string'
+    || typeof payload.key_id !== 'string'
+    || typeof payload.public_key_pem !== 'string'
+    || typeof payload.algorithm !== 'string'
+    || typeof payload.payload_encoding !== 'string'
+    || typeof payload.signed_at !== 'string'
+    || !payload.payload
+    || typeof payload.payload !== 'object'
+  ) {
+    return null;
+  }
+
+  return {
+    algorithm: payload.algorithm,
+    payloadEncoding: payload.payload_encoding,
+    keyId: payload.key_id,
+    publicKeyPem: payload.public_key_pem,
+    signedAt: payload.signed_at,
+    signature: payload.signature,
+    payload: payload.payload as Record<string, unknown>,
+  };
+}
+
+async function persistReadinessExportHistory(payload: {
+  signatureMode: 'local_checksum' | 'server_attested';
+  cadence: 'off' | 'weekly' | 'monthly';
+  playbookScope: string;
+  caseScope: string;
+  eventCount: number;
+  csvSha256: string;
+  manifestSha256: string;
+  metadata?: Record<string, unknown>;
+}) {
+  if (!isSupabaseConfigured) return false;
+  const { data: { session } } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
+  if (!accessToken) return false;
+
+  const response = await fetch(buildApiUrl('/api/audit/readiness-exports'), {
+    method: 'POST',
+    headers: {
+      Authorization: Bearer ,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return response.ok;
+}
+async function verifyAuditManifestBundle(
+  manifest: Record<string, unknown>,
+  csvContent?: string
+): Promise<{ verification_passed?: boolean; checks?: Record<string, unknown> } | null> {
+  const response = await fetch(buildApiUrl('/api/audit/verify-manifest'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      manifest,
+      csvContent: csvContent && csvContent.length > 0 ? csvContent : undefined,
+    }),
+  });
+
+  if (!response.ok) return null;
+  const payload = await response.json() as Record<string, unknown>;
+  if (!payload || typeof payload !== 'object') return null;
+  return payload as { verification_passed?: boolean; checks?: Record<string, unknown> };
+}
+
+function parseChecksumManifest(content: string): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const match = line.match(/^([a-fA-F0-9]{64})\s+\*?(.+)$/);
+    if (!match) continue;
+    const hash = match[1].toLowerCase();
+    const file = match[2].trim();
+    map.set(file, hash);
+    const fileParts = file.split(/[\\/]/);
+    const basename = fileParts[fileParts.length - 1];
+    map.set(basename, hash);
+  }
+  return map;
+}
+
 function buildReadinessInsights(
   entries: ReadinessTelemetryEntry[],
   source: 'backend' | 'local'
@@ -560,6 +696,17 @@ export default function ChatPage() {
   const [readinessEntries, setReadinessEntries] = useState<ReadinessTelemetryEntry[]>([]);
   const [readinessInsightsUnavailable, setReadinessInsightsUnavailable] = useState(false);
   const [isExportingReadiness, setIsExportingReadiness] = useState(false);
+  const [isVerifyingReadinessBundle, setIsVerifyingReadinessBundle] = useState(false);
+  const [readinessVerificationFiles, setReadinessVerificationFiles] = useState<{
+    csv: File | null;
+    manifest: File | null;
+    checksum: File | null;
+  }>({
+    csv: null,
+    manifest: null,
+    checksum: null,
+  });
+  const [readinessVerificationChecks, setReadinessVerificationChecks] = useState<ReadinessBundleVerificationCheck[]>([]);
   const [readinessExportCadence, setReadinessExportCadence] = useState<'off' | 'weekly' | 'monthly'>('off');
   const [readinessExportHistory, setReadinessExportHistory] = useState<ReadinessExportHistoryEntry[]>([]);
   const [readinessFilters, setReadinessFilters] = useState<ReadinessFilterState>({
@@ -1585,11 +1732,27 @@ User message: ${text}`;
 
       const csvContent = buildCsvContent(headers, rows);
       const csvSha256 = await sha256Hex(csvContent);
+      const signature = await requestExportManifestSignature(
+        csvSha256,
+        'readiness_report',
+        exportDate.toISOString(),
+        rows.length,
+        {
+          playbook_scope: readinessFilters.playbook,
+          case_scope: readinessFilters.caseScope,
+          cadence: readinessExportCadence,
+          source: 'chat_readiness',
+        }
+      );
       const manifestPayload = {
         bundle_type: 'kingsley_readiness_handoff',
         export_type: 'readiness_report',
         generated_at: exportDate.toISOString(),
         generated_at_label: formattedDate,
+        algorithm: 'SHA-256',
+        sha256: csvSha256,
+        row_count: rows.length,
+        column_count: headers.length,
         scope: {
           playbook: readinessFilters.playbook,
           case_scope: readinessFilters.caseScope,
@@ -1606,8 +1769,22 @@ User message: ${text}`;
         },
         integrity: {
           csv_sha256: csvSha256,
-          signature_mode: 'local_checksum',
+          signature_mode: signature ? 'server_attested' : 'local_checksum',
         },
+        signer: signature
+          ? {
+            mode: 'server_attested',
+            algorithm: signature.algorithm,
+            payload_encoding: signature.payloadEncoding,
+            key_id: signature.keyId,
+            public_key_pem: signature.publicKeyPem,
+            signed_at: signature.signedAt,
+            signature: signature.signature,
+            payload: signature.payload,
+          }
+          : {
+            mode: 'local_integrity_only',
+          },
       };
       const manifestContent = `${JSON.stringify(manifestPayload, null, 2)}\n`;
       const manifestSha256 = await sha256Hex(manifestContent);
@@ -1630,9 +1807,24 @@ User message: ${text}`;
         eventCount: readinessInsights.eventCount,
         csvSha256,
         manifestSha256,
-        signatureMode: 'local_checksum',
+        signatureMode: signature ? 'server_attested' : 'local_checksum',
       };
       setReadinessExportHistory((previousValue) => [historyEntry, ...previousValue].slice(0, 12));
+
+      void persistReadinessExportHistory({
+        signatureMode: historyEntry.signatureMode,
+        cadence: historyEntry.cadence,
+        playbookScope: readinessFilters.playbook,
+        caseScope: readinessFilters.caseScope,
+        eventCount: historyEntry.eventCount,
+        csvSha256,
+        manifestSha256,
+        metadata: {
+          source: 'chat-readiness',
+          playbook_scope_label: playbookFilterLabel,
+          case_scope_label: caseScopeLabel,
+        },
+      });
 
       toast({
         title: t.chat.commandCenter.readiness.insights.exportBundleSuccessTitle,
@@ -1671,6 +1863,221 @@ User message: ${text}`;
     trend7d.averageLiftDelta,
     trend7d.eventDelta,
     trend7d.medianTimeDeltaMinutes,
+  ]);
+
+  const handleVerifyReadinessBundle = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    if (!readinessVerificationFiles.csv || !readinessVerificationFiles.manifest) {
+      toast({
+        title: t.chat.commandCenter.readiness.insights.verifyBundleMissingTitle,
+        description: t.chat.commandCenter.readiness.insights.verifyBundleMissingDescription,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const checks: ReadinessBundleVerificationCheck[] = [];
+    setIsVerifyingReadinessBundle(true);
+    try {
+      const [csvContent, manifestContent, checksumContent] = await Promise.all([
+        readinessVerificationFiles.csv.text(),
+        readinessVerificationFiles.manifest.text(),
+        readinessVerificationFiles.checksum?.text() ?? Promise.resolve(''),
+      ]);
+      const csvSha256 = await sha256Hex(csvContent);
+      const manifestSha256 = await sha256Hex(manifestContent);
+
+      let manifestJson: {
+        bundle_type?: string;
+        integrity?: { csv_sha256?: string };
+      } | null = null;
+      try {
+        manifestJson = JSON.parse(manifestContent) as { bundle_type?: string; integrity?: { csv_sha256?: string } };
+      } catch {
+        manifestJson = null;
+      }
+
+      if (!manifestJson || typeof manifestJson !== 'object') {
+        checks.push({
+          id: 'manifest',
+          status: 'fail',
+          detail: t.chat.commandCenter.readiness.insights.verifyManifestInvalid,
+        });
+      } else if (manifestJson.bundle_type !== 'kingsley_readiness_handoff') {
+        checks.push({
+          id: 'manifest',
+          status: 'warn',
+          detail: t.chat.commandCenter.readiness.insights.verifyManifestUnexpectedType,
+        });
+      } else {
+        checks.push({
+          id: 'manifest',
+          status: 'pass',
+          detail: t.chat.commandCenter.readiness.insights.verifyManifestValid,
+        });
+      }
+
+      const manifestCsvHash = manifestJson?.integrity?.csv_sha256?.toLowerCase();
+      if (!manifestCsvHash) {
+        checks.push({
+          id: 'csvBinding',
+          status: 'fail',
+          detail: t.chat.commandCenter.readiness.insights.verifyCsvBindingMissing,
+        });
+      } else if (manifestCsvHash !== csvSha256) {
+        checks.push({
+          id: 'csvBinding',
+          status: 'fail',
+          detail: t.chat.commandCenter.readiness.insights.verifyCsvBindingMismatch,
+        });
+      } else {
+        checks.push({
+          id: 'csvBinding',
+          status: 'pass',
+          detail: t.chat.commandCenter.readiness.insights.verifyCsvBindingMatch,
+        });
+      }
+
+      if (readinessVerificationFiles.checksum) {
+        const checksumMap = parseChecksumManifest(checksumContent);
+        const manifestChecksumExpected = checksumMap.get(readinessVerificationFiles.manifest.name);
+        if (!manifestChecksumExpected) {
+          checks.push({
+            id: 'manifestChecksum',
+            status: 'warn',
+            detail: t.chat.commandCenter.readiness.insights.verifyManifestChecksumMissing,
+          });
+        } else if (manifestChecksumExpected !== manifestSha256) {
+          checks.push({
+            id: 'manifestChecksum',
+            status: 'fail',
+            detail: t.chat.commandCenter.readiness.insights.verifyManifestChecksumMismatch,
+          });
+        } else {
+          checks.push({
+            id: 'manifestChecksum',
+            status: 'pass',
+            detail: t.chat.commandCenter.readiness.insights.verifyManifestChecksumMatch,
+          });
+        }
+
+        const csvChecksumExpected = checksumMap.get(readinessVerificationFiles.csv.name);
+        if (!csvChecksumExpected) {
+          checks.push({
+            id: 'csvChecksum',
+            status: 'warn',
+            detail: t.chat.commandCenter.readiness.insights.verifyCsvChecksumMissing,
+          });
+        } else if (csvChecksumExpected !== csvSha256) {
+          checks.push({
+            id: 'csvChecksum',
+            status: 'fail',
+            detail: t.chat.commandCenter.readiness.insights.verifyCsvChecksumMismatch,
+          });
+        } else {
+          checks.push({
+            id: 'csvChecksum',
+            status: 'pass',
+            detail: t.chat.commandCenter.readiness.insights.verifyCsvChecksumMatch,
+          });
+        }
+      } else {
+        checks.push({
+          id: 'manifestChecksum',
+          status: 'warn',
+          detail: t.chat.commandCenter.readiness.insights.verifyChecksumOptionalMissing,
+        });
+      }
+
+      const signerMode = manifestJson
+        && typeof manifestJson === 'object'
+        && 'signer' in manifestJson
+        && manifestJson.signer
+        && typeof manifestJson.signer === 'object'
+        ? (manifestJson.signer as { mode?: string }).mode
+        : null;
+      if (signerMode === 'server_attested') {
+        const verificationReceipt = await verifyAuditManifestBundle(
+          manifestJson as Record<string, unknown>,
+          csvContent
+        );
+        if (!verificationReceipt) {
+          checks.push({
+            id: 'serverReceipt',
+            status: 'warn',
+            detail: t.chat.commandCenter.readiness.insights.verifyServerReceiptUnavailable,
+          });
+        } else if (verificationReceipt.verification_passed) {
+          checks.push({
+            id: 'serverReceipt',
+            status: 'pass',
+            detail: t.chat.commandCenter.readiness.insights.verifyServerReceiptPass,
+          });
+        } else {
+          checks.push({
+            id: 'serverReceipt',
+            status: 'fail',
+            detail: t.chat.commandCenter.readiness.insights.verifyServerReceiptFail,
+          });
+        }
+      }
+
+      setReadinessVerificationChecks(checks);
+      const hasFailures = checks.some((check) => check.status === 'fail');
+      const hasWarnings = checks.some((check) => check.status === 'warn');
+      toast({
+        title: hasFailures
+          ? t.chat.commandCenter.readiness.insights.verifyBundleFailedTitle
+          : hasWarnings
+            ? t.chat.commandCenter.readiness.insights.verifyBundleWarnTitle
+            : t.chat.commandCenter.readiness.insights.verifyBundleSuccessTitle,
+        description: hasFailures
+          ? t.chat.commandCenter.readiness.insights.verifyBundleFailedDescription
+          : hasWarnings
+            ? t.chat.commandCenter.readiness.insights.verifyBundleWarnDescription
+            : t.chat.commandCenter.readiness.insights.verifyBundleSuccessDescription,
+        variant: hasFailures ? 'destructive' : 'default',
+      });
+    } catch {
+      toast({
+        title: t.chat.commandCenter.readiness.insights.verifyBundleErrorTitle,
+        description: t.chat.commandCenter.readiness.insights.verifyBundleErrorDescription,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsVerifyingReadinessBundle(false);
+    }
+  }, [
+    readinessVerificationFiles.checksum,
+    readinessVerificationFiles.csv,
+    readinessVerificationFiles.manifest,
+    t.chat.commandCenter.readiness.insights.verifyBundleErrorDescription,
+    t.chat.commandCenter.readiness.insights.verifyBundleErrorTitle,
+    t.chat.commandCenter.readiness.insights.verifyBundleFailedDescription,
+    t.chat.commandCenter.readiness.insights.verifyBundleFailedTitle,
+    t.chat.commandCenter.readiness.insights.verifyBundleMissingDescription,
+    t.chat.commandCenter.readiness.insights.verifyBundleMissingTitle,
+    t.chat.commandCenter.readiness.insights.verifyBundleSuccessDescription,
+    t.chat.commandCenter.readiness.insights.verifyBundleSuccessTitle,
+    t.chat.commandCenter.readiness.insights.verifyBundleWarnDescription,
+    t.chat.commandCenter.readiness.insights.verifyBundleWarnTitle,
+    t.chat.commandCenter.readiness.insights.verifyChecksumOptionalMissing,
+    t.chat.commandCenter.readiness.insights.verifyCsvBindingMatch,
+    t.chat.commandCenter.readiness.insights.verifyCsvBindingMismatch,
+    t.chat.commandCenter.readiness.insights.verifyCsvBindingMissing,
+    t.chat.commandCenter.readiness.insights.verifyCsvChecksumMatch,
+    t.chat.commandCenter.readiness.insights.verifyCsvChecksumMismatch,
+    t.chat.commandCenter.readiness.insights.verifyCsvChecksumMissing,
+    t.chat.commandCenter.readiness.insights.verifyManifestChecksumMatch,
+    t.chat.commandCenter.readiness.insights.verifyManifestChecksumMismatch,
+    t.chat.commandCenter.readiness.insights.verifyManifestChecksumMissing,
+    t.chat.commandCenter.readiness.insights.verifyManifestInvalid,
+    t.chat.commandCenter.readiness.insights.verifyManifestUnexpectedType,
+    t.chat.commandCenter.readiness.insights.verifyManifestValid,
+    t.chat.commandCenter.readiness.insights.verifyServerReceiptFail,
+    t.chat.commandCenter.readiness.insights.verifyServerReceiptPass,
+    t.chat.commandCenter.readiness.insights.verifyServerReceiptUnavailable,
+    toast,
   ]);
 
   useEffect(() => {
@@ -2091,11 +2498,94 @@ User message: ${text}`;
                             <p className="font-medium">{new Date(entry.createdAt).toLocaleString(language === 'fr' ? 'fr-BE' : 'en-US')}</p>
                             <p>{t.chat.commandCenter.readiness.insights.exportHistoryScope}: {entry.playbookScope} / {entry.caseScope}</p>
                             <p>{t.chat.commandCenter.readiness.insights.exportHistoryEvents}: {entry.eventCount}</p>
+                            <p>{t.chat.commandCenter.readiness.insights.exportHistorySignature}: {entry.signatureMode === 'server_attested'
+                              ? t.chat.commandCenter.readiness.insights.exportHistorySignatureServer
+                              : t.chat.commandCenter.readiness.insights.exportHistorySignatureLocal}
+                            </p>
                             <p className="truncate">{t.chat.commandCenter.readiness.insights.exportHistoryManifestHash}: {entry.manifestSha256}</p>
                           </div>
                         ))}
                       </div>
                     )}
+                  </div>
+                  <div className={`${isDark ? 'border-slate-700/70 bg-slate-900/50' : 'border-slate-200 bg-white/90'} mt-2 rounded-md border p-2`}>
+                    <p className={`text-[10px] uppercase tracking-[0.08em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {t.chat.commandCenter.readiness.insights.verifyBundleTitle}
+                    </p>
+                    <p className={`mt-1 text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {t.chat.commandCenter.readiness.insights.verifyBundleHint}
+                    </p>
+                    <div className="mt-1.5 grid grid-cols-1 gap-1.5 sm:grid-cols-3">
+                      <label className="flex flex-col gap-1">
+                        <span className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {t.chat.commandCenter.readiness.insights.verifyCsvLabel}
+                        </span>
+                        <input
+                          type="file"
+                          accept=".csv,text/csv"
+                          onChange={(event) => setReadinessVerificationFiles((previousValue) => ({
+                            ...previousValue,
+                            csv: event.target.files?.[0] ?? null,
+                          }))}
+                          className={`${isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-700'} rounded-md border px-2 py-1 text-[10px] file:mr-2 file:rounded file:border-0 file:bg-indigo-600 file:px-2 file:py-1 file:text-[10px] file:font-semibold file:text-white`}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {t.chat.commandCenter.readiness.insights.verifyManifestLabel}
+                        </span>
+                        <input
+                          type="file"
+                          accept=".json,application/json"
+                          onChange={(event) => setReadinessVerificationFiles((previousValue) => ({
+                            ...previousValue,
+                            manifest: event.target.files?.[0] ?? null,
+                          }))}
+                          className={`${isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-700'} rounded-md border px-2 py-1 text-[10px] file:mr-2 file:rounded file:border-0 file:bg-indigo-600 file:px-2 file:py-1 file:text-[10px] file:font-semibold file:text-white`}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {t.chat.commandCenter.readiness.insights.verifyChecksumLabel}
+                        </span>
+                        <input
+                          type="file"
+                          accept=".txt,text/plain"
+                          onChange={(event) => setReadinessVerificationFiles((previousValue) => ({
+                            ...previousValue,
+                            checksum: event.target.files?.[0] ?? null,
+                          }))}
+                          className={`${isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-700'} rounded-md border px-2 py-1 text-[10px] file:mr-2 file:rounded file:border-0 file:bg-indigo-600 file:px-2 file:py-1 file:text-[10px] file:font-semibold file:text-white`}
+                        />
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleVerifyReadinessBundle()}
+                      disabled={isVerifyingReadinessBundle}
+                      className={`${isDark ? 'bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30' : 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100'} mt-2 rounded-md px-2 py-1 text-[10px] font-clash font-semibold uppercase tracking-[0.08em] transition-colors disabled:cursor-not-allowed disabled:opacity-50`}
+                    >
+                      {isVerifyingReadinessBundle
+                        ? t.chat.commandCenter.readiness.insights.verifyingBundleLabel
+                        : t.chat.commandCenter.readiness.insights.verifyBundleLabel}
+                    </button>
+                    {readinessVerificationChecks.length > 0 ? (
+                      <div className="mt-2 grid grid-cols-1 gap-1">
+                        {readinessVerificationChecks.map((check) => (
+                          <div
+                            key={check.id}
+                            className={`${check.status === 'pass'
+                              ? (isDark ? 'border-emerald-700/70 bg-emerald-950/20 text-emerald-200' : 'border-emerald-200 bg-emerald-50 text-emerald-700')
+                              : check.status === 'warn'
+                                ? (isDark ? 'border-amber-700/70 bg-amber-950/20 text-amber-200' : 'border-amber-200 bg-amber-50 text-amber-700')
+                                : (isDark ? 'border-rose-700/70 bg-rose-950/20 text-rose-200' : 'border-rose-200 bg-rose-50 text-rose-700')
+                              } rounded-md border px-2 py-1 text-[10px]`}
+                          >
+                            {check.detail}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -2175,4 +2665,6 @@ User message: ${text}`;
     </div>
   );
 }
+
+
 

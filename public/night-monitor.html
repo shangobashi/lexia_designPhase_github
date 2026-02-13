@@ -1,0 +1,999 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kingsley Night // Cyber Ops Grid</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+      :root {
+        --bg-0: #010101;
+        --bg-1: #050507;
+        --bg-2: #0a0a0f;
+        --panel: rgba(14, 14, 14, 0.84);
+        --panel-strong: rgba(20, 20, 20, 0.96);
+        --line: #2b2f33;
+        --line-soft: #1d2024;
+        --cyan: #00f0ff;
+        --blue: #2e3338;
+        --magenta: #ff003c;
+        --ok: #fcee0a;
+        --warn: #ffd84d;
+        --bad: #ff3366;
+        --text: #ece9df;
+        --muted: #8d8a84;
+        --radius: 14px;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(1200px 700px at 8% -10%, rgba(0, 240, 255, 0.11), transparent 56%),
+          radial-gradient(1100px 700px at 92% -15%, rgba(255, 0, 60, 0.11), transparent 58%),
+          radial-gradient(1400px 900px at 50% 120%, rgba(252, 238, 9, 0.025), transparent 62%),
+          linear-gradient(180deg, var(--bg-1), var(--bg-0));
+        color: var(--text);
+        font-family: 'JetBrains Mono', monospace;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          repeating-linear-gradient(to right, rgba(0, 240, 255, 0.05) 0 1px, transparent 1px 80px),
+          repeating-linear-gradient(to bottom, rgba(255, 0, 60, 0.035) 0 1px, transparent 1px 80px);
+        opacity: 0.22;
+        mix-blend-mode: screen;
+        animation: gridShift 14s linear infinite;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          repeating-linear-gradient(to bottom, rgba(255,255,255,.018) 0px, rgba(255,255,255,.018) 1px, transparent 2px, transparent 4px),
+          linear-gradient(180deg, transparent 0%, rgba(0, 240, 255, 0.06) 40%, transparent 52%, transparent 100%);
+        opacity: .2;
+        animation: scanSweep 4.4s ease-in-out infinite;
+      }
+
+      .shell::before {
+        content: "";
+        position: fixed;
+        inset: -30% -10%;
+        pointer-events: none;
+        background:
+          conic-gradient(from 0deg at 50% 50%, rgba(0,240,255,.05), rgba(255,0,60,.04), rgba(252,238,9,.015), rgba(0,240,255,.05));
+        filter: blur(80px);
+        opacity: .4;
+        animation: auraRotate 24s linear infinite;
+        z-index: 0;
+      }
+
+      .bg-stack {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+      }
+
+      #cyber-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.38;
+        mix-blend-mode: screen;
+      }
+
+      .bg-ribbons,
+      .bg-radar,
+      .bg-glitchbars,
+      .bg-noise {
+        position: absolute;
+        inset: -20%;
+      }
+
+      .bg-ribbons {
+        background:
+          linear-gradient(115deg, rgba(252, 238, 9, 0.03) 0%, transparent 18%, transparent 68%, rgba(0, 240, 255, 0.08) 100%),
+          linear-gradient(245deg, rgba(255, 0, 60, 0.1) 0%, transparent 16%, transparent 72%, rgba(252, 238, 9, 0.02) 100%);
+        filter: blur(32px);
+        animation: ribbonsDrift 18s ease-in-out infinite alternate;
+      }
+
+      .bg-radar {
+        background:
+          conic-gradient(from 0deg at 70% 30%, rgba(0, 240, 255, 0.2), transparent 20%, rgba(252, 238, 9, 0.05) 35%, transparent 55%, rgba(255, 0, 60, 0.12) 72%, transparent 100%);
+        opacity: 0.3;
+        filter: blur(48px);
+        animation: radarSpin 26s linear infinite;
+      }
+
+      .bg-glitchbars {
+        inset: 0;
+        background:
+          repeating-linear-gradient(to bottom,
+            transparent 0 7%,
+            rgba(255, 0, 60, 0.08) 7.15% 7.35%,
+            transparent 7.5% 14%,
+            rgba(0, 240, 255, 0.08) 14.1% 14.3%,
+            transparent 14.4% 22%,
+            rgba(252, 238, 9, 0.025) 22.1% 22.25%,
+            transparent 22.3% 32%
+          );
+        opacity: 0.25;
+        mix-blend-mode: screen;
+        animation: barsDrift 2.2s steps(6, end) infinite;
+      }
+
+      .bg-noise {
+        inset: 0;
+        background-image: radial-gradient(rgba(255,255,255,0.12) 0.7px, transparent 0.8px);
+        background-size: 3px 3px;
+        opacity: 0.05;
+        animation: noiseJitter .16s steps(2, end) infinite;
+      }
+
+      @keyframes gridShift {
+        0% { transform: translate3d(0, 0, 0); }
+        100% { transform: translate3d(80px, 80px, 0); }
+      }
+
+      @keyframes scanSweep {
+        0% { transform: translateY(-45%); opacity: .08; }
+        50% { transform: translateY(5%); opacity: .24; }
+        100% { transform: translateY(55%); opacity: .08; }
+      }
+
+      @keyframes auraRotate {
+        0% { transform: rotate(0deg) scale(1); }
+        50% { transform: rotate(180deg) scale(1.05); }
+        100% { transform: rotate(360deg) scale(1); }
+      }
+
+      @keyframes ribbonsDrift {
+        0% { transform: translate3d(-4%, -2%, 0) scale(1); }
+        50% { transform: translate3d(2%, 1%, 0) scale(1.04); }
+        100% { transform: translate3d(5%, -1%, 0) scale(1.08); }
+      }
+
+      @keyframes radarSpin {
+        0% { transform: rotate(0deg) scale(1); }
+        100% { transform: rotate(360deg) scale(1.05); }
+      }
+
+      @keyframes barsDrift {
+        0% { transform: translateY(-3%); opacity: .16; }
+        50% { transform: translateY(2%); opacity: .28; }
+        100% { transform: translateY(6%); opacity: .18; }
+      }
+
+      @keyframes noiseJitter {
+        0% { transform: translate3d(0, 0, 0); }
+        100% { transform: translate3d(1px, -1px, 0); }
+      }
+
+      @keyframes headSweep {
+        0% { transform: translateX(0); opacity: 0; }
+        7% { opacity: .22; }
+        20% { opacity: .08; }
+        100% { transform: translateX(420%); opacity: 0; }
+      }
+
+      @keyframes metricFlicker {
+        0%, 93%, 96%, 100% { opacity: 1; }
+        94% { opacity: .82; }
+        95% { opacity: .96; }
+        97% { opacity: .88; }
+      }
+
+      .shell {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .hud {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: linear-gradient(180deg, rgba(16,16,18,.9), rgba(8,8,10,.86));
+        box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.14), 0 20px 48px rgba(0,0,0,.5);
+        padding: 14px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .brand {
+        min-width: 320px;
+      }
+
+      .title {
+        margin: 0;
+        font-family: 'Orbitron', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: .11em;
+        font-size: 1rem;
+        color: #f2eee2;
+        text-shadow: 0 0 12px rgba(0,240,255,.24);
+        animation: titlePulse 2.6s ease-in-out infinite;
+      }
+
+      @keyframes titlePulse {
+        0%, 100% { text-shadow: 0 0 8px rgba(0,240,255,.18), 0 0 18px rgba(255,0,60,.1); }
+        50% { text-shadow: 0 0 12px rgba(0,240,255,.3), 0 0 24px rgba(255,0,60,.14); }
+      }
+
+      .subtitle {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: .77rem;
+      }
+
+      .chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
+      .chip {
+        border: 1px solid var(--line);
+        background: rgba(8, 14, 31, .86);
+        border-radius: 999px;
+        font-size: .71rem;
+        color: var(--muted);
+        padding: 5px 10px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .kpi { grid-column: span 3; }
+      .half { grid-column: span 6; }
+      .full { grid-column: span 12; }
+      .hud3 { grid-column: span 4; }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--panel);
+        box-shadow: inset 0 0 0 1px rgba(0, 240, 255, .08);
+        overflow: hidden;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line-soft);
+        background: linear-gradient(90deg, rgba(20,20,22,.84), rgba(11,11,12,.84));
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card-head::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -40%;
+        width: 38%;
+        height: 100%;
+        background: linear-gradient(90deg, rgba(252,238,10,0), rgba(252,238,10,.28), rgba(252,238,10,0));
+        animation: headSweep 4.8s linear infinite;
+      }
+
+      .head-label {
+        font-family: 'Orbitron', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: .12em;
+        font-size: .66rem;
+        color: #ddd8c8;
+      }
+
+      .card-body { padding: 12px; }
+
+      .metric {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.5rem;
+        letter-spacing: .03em;
+        color: #f2eddf;
+        animation: metricFlicker 7s steps(1, end) infinite;
+      }
+
+      .metric-sub {
+        margin-top: 6px;
+        font-size: .76rem;
+        color: var(--muted);
+      }
+
+      .hud-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        align-items: center;
+      }
+
+      .ring {
+        --pct: 0;
+        width: 104px;
+        height: 104px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 50% 50%, rgba(7, 8, 10, 0.95) 58%, transparent 59%),
+          conic-gradient(var(--cyan) calc(var(--pct) * 1%), rgba(255, 0, 60, 0.22) 0);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        display: grid;
+        place-items: center;
+        box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.18), 0 0 20px rgba(0, 240, 255, 0.08);
+      }
+
+      .ring span {
+        font-family: 'Orbitron', sans-serif;
+        font-size: .92rem;
+        color: #eaf6ff;
+        letter-spacing: .03em;
+      }
+
+      .hud-meta {
+        display: grid;
+        gap: 6px;
+      }
+
+      .hud-stat {
+        display: flex;
+        justify-content: space-between;
+        font-size: .72rem;
+        color: var(--muted);
+      }
+
+      .matrix {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 4px;
+      }
+
+      .matrix-cell {
+        height: 12px;
+        border: 1px solid rgba(120, 124, 131, 0.24);
+        background: rgba(18, 21, 25, 0.85);
+      }
+
+      .matrix-cell.low {
+        background: rgba(0, 240, 255, 0.22);
+        border-color: rgba(0, 240, 255, 0.42);
+      }
+
+      .matrix-cell.mid {
+        background: rgba(252, 238, 10, 0.2);
+        border-color: rgba(252, 238, 10, 0.36);
+      }
+
+      .matrix-cell.high {
+        background: rgba(255, 0, 60, 0.28);
+        border-color: rgba(255, 0, 60, 0.48);
+      }
+
+      .flux {
+        display: grid;
+        grid-template-columns: repeat(28, 1fr);
+        gap: 3px;
+        align-items: end;
+        height: 88px;
+        padding: 8px 0 2px;
+      }
+
+      .flux-bar {
+        height: 8px;
+        background: linear-gradient(180deg, rgba(0, 240, 255, 0.78), rgba(0, 240, 255, 0.18));
+        border: 1px solid rgba(0, 240, 255, 0.3);
+      }
+
+      .flux-bar.hot {
+        background: linear-gradient(180deg, rgba(255, 0, 60, 0.8), rgba(255, 0, 60, 0.22));
+        border-color: rgba(255, 0, 60, 0.36);
+      }
+
+      .row { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+
+      .badge {
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: .64rem;
+        text-transform: uppercase;
+        letter-spacing: .1em;
+        border: 1px solid transparent;
+      }
+      .badge.ok { color: #d8fff9; background: rgba(0,240,255,.16); border-color: rgba(0,240,255,.44); }
+      .badge.warn { color: #fff0c7; background: rgba(255,209,102,.16); border-color: rgba(255,209,102,.42); }
+      .badge.bad { color: #ffd4df; background: rgba(255,51,102,.18); border-color: rgba(255,51,102,.46); }
+      .badge.info { color: #d8fff9; background: rgba(0,240,255,.12); border-color: rgba(0,240,255,.30); }
+
+      .spark-wrap {
+        margin-top: 10px;
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        background: rgba(6,10,22,.84);
+        padding: 6px;
+      }
+      .spark { width: 100%; height: 72px; display: block; }
+
+      .scroll { max-height: 320px; overflow: auto; }
+      .list { list-style: none; margin: 0; padding: 0; }
+      .list li {
+        padding: 10px 12px;
+        border-top: 1px solid rgba(111, 120, 136, .18);
+        font-size: .78rem;
+        line-height: 1.4;
+      }
+      .list li:first-child { border-top: 0; }
+
+      .terminal {
+        margin: 0;
+        padding: 12px;
+        max-height: 320px;
+        min-height: 320px;
+        overflow: auto;
+        background: linear-gradient(180deg, #0b0b0d, #050506);
+        color: #ece8dc;
+        font-size: .75rem;
+        line-height: 1.45;
+      }
+
+      .muted { color: var(--muted); }
+      .mono { font-family: 'JetBrains Mono', monospace; }
+
+      .foot {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: .72rem;
+      }
+
+      @media (max-width: 1220px) {
+        .kpi { grid-column: span 6; }
+        .half { grid-column: span 12; }
+        .hud3 { grid-column: span 6; }
+      }
+
+      @media (max-width: 760px) {
+        .kpi, .half, .full, .hud3 { grid-column: span 12; }
+        .shell { padding: 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="cyber-canvas" aria-hidden="true"></canvas>
+    <div class="bg-stack" aria-hidden="true">
+      <div class="bg-ribbons"></div>
+      <div class="bg-radar"></div>
+      <div class="bg-glitchbars"></div>
+      <div class="bg-noise"></div>
+    </div>
+    <div class="shell">
+      <header class="hud">
+        <div class="brand">
+          <h1 class="title">Kingsley // Cyber Ops Grid</h1>
+          <div class="subtitle">Developer-grade live telemetry for <span class="mono">kingsleyNightExperiments</span></div>
+        </div>
+        <div class="chips">
+          <div class="chip" id="generated">Generated --</div>
+          <div class="chip">Refresh 5s</div>
+          <div class="chip mono">source: /night-monitor.json</div>
+        </div>
+      </header>
+
+      <section class="grid" style="margin-bottom:12px;">
+        <article class="card kpi">
+          <div class="card-head"><span class="head-label">Heartbeat</span></div>
+          <div class="card-body">
+            <div class="metric" id="heartbeatAge">--</div>
+            <div class="row" id="heartbeatState"></div>
+            <div class="spark-wrap"><svg class="spark" viewBox="0 0 320 72" preserveAspectRatio="none" id="sparkline"></svg></div>
+          </div>
+        </article>
+
+        <article class="card kpi">
+          <div class="card-head"><span class="head-label">Iteration</span></div>
+          <div class="card-body">
+            <div class="metric mono" id="iteration">--</div>
+            <div class="metric-sub">next run: <span class="mono" id="nextRun">--</span></div>
+          </div>
+        </article>
+
+        <article class="card kpi">
+          <div class="card-head"><span class="head-label">Failures</span></div>
+          <div class="card-body">
+            <div class="metric mono"><span id="failLast">--</span> / <span id="failCons">--</span></div>
+            <div class="metric-sub">last / consecutive</div>
+          </div>
+        </article>
+
+        <article class="card kpi">
+          <div class="card-head"><span class="head-label">Repo</span></div>
+          <div class="card-body">
+            <div class="metric mono" style="font-size:1.05rem;" id="branch">--</div>
+            <div class="row"><span class="badge info" id="changed">-- changed files</span></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="grid" style="margin-bottom:12px;">
+        <article class="card hud3">
+          <div class="card-head"><span class="head-label">System Integrity HUD</span></div>
+          <div class="card-body">
+            <div class="hud-grid">
+              <div class="ring" id="integrityRing"><span id="integrityValue">--%</span></div>
+              <div class="hud-meta">
+                <div class="hud-stat"><span>process uptime</span><span class="mono" id="integrityUptime">--</span></div>
+                <div class="hud-stat"><span>event success</span><span class="mono" id="integrityEvents">--</span></div>
+                <div class="hud-stat"><span>codex stability</span><span class="mono" id="integrityCodex">--</span></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card hud3">
+          <div class="card-head"><span class="head-label">Threat Matrix HUD</span></div>
+          <div class="card-body">
+            <div class="row" style="margin-top:0;">
+              <span class="badge bad" id="threatLabel">THREAT --</span>
+              <span class="badge warn mono" id="threatScore">score --</span>
+            </div>
+            <div class="matrix" id="threatMatrix" style="margin-top:10px;"></div>
+            <div class="metric-sub">derived from runtime failures + codex signals</div>
+          </div>
+        </article>
+
+        <article class="card hud3">
+          <div class="card-head"><span class="head-label">Telemetry Flux HUD</span></div>
+          <div class="card-body">
+            <div class="row" style="margin-top:0;">
+              <span class="badge info mono" id="fluxLabel">flux --</span>
+            </div>
+            <div class="flux" id="fluxBars"></div>
+            <div class="metric-sub">heartbeat, failures, and process rhythm synthesis</div>
+          </div>
+        </article>
+      </section>
+
+      <section class="grid" style="margin-bottom:12px;">
+        <article class="card half">
+          <div class="card-head"><span class="head-label">Runtime Processes</span></div>
+          <div class="scroll"><ul class="list" id="processes"></ul></div>
+        </article>
+
+        <article class="card half">
+          <div class="card-head"><span class="head-label">Session Events</span></div>
+          <div class="scroll"><ul class="list" id="events"></ul></div>
+        </article>
+      </section>
+
+      <section class="grid" style="margin-bottom:12px;">
+        <article class="card half">
+          <div class="card-head"><span class="head-label">Codex Signals</span><span class="head-label mono" id="tailMeta">tail --</span></div>
+          <pre class="terminal mono" id="signals"></pre>
+        </article>
+
+        <article class="card half">
+          <div class="card-head"><span class="head-label">Operator Console</span><span class="head-label mono" id="latency">latency --</span></div>
+          <pre class="terminal mono" id="console"></pre>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="card full">
+          <div class="card-head"><span class="head-label">Workspace Memory Tail</span></div>
+          <div class="scroll" style="max-height:260px;"><ul class="list mono" id="memory"></ul></div>
+        </article>
+      </section>
+
+      <div class="foot">External-only monitor. Styled for dev/NOC workflows with dense live telemetry.</div>
+    </div>
+
+    <script>
+      const monitorUrl = "/night-monitor.json";
+      const pollMs = 5000;
+      const historyLen = 96;
+      const hbHistory = [];
+      let lastPayloadAt = null;
+      let consoleLines = ["[boot] cyber ops grid online", "[boot] awaiting telemetry stream"]; 
+
+      const timeFmt = new Intl.DateTimeFormat(undefined, {
+        year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit"
+      });
+
+      const byId = (id) => document.getElementById(id);
+      const safe = (v) => String(v == null ? "" : v)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+      function toLocal(ts) {
+        if (!ts) return "--";
+        const d = new Date(ts);
+        return Number.isNaN(d.getTime()) ? ts : timeFmt.format(d);
+      }
+
+      function badge(label, kind) { return `<span class="badge ${kind}">${safe(label)}</span>`; }
+
+      function heartbeatTone(age, loop) {
+        const base = typeof loop === "number" && loop > 0 ? loop : 300;
+        if (typeof age !== "number") return ["UNKNOWN", "warn"];
+        if (age <= base + 90) return ["FRESH", "ok"];
+        if (age <= base + 240) return ["DELAYED", "warn"];
+        return ["STALE", "bad"];
+      }
+
+      function processTone(state) {
+        const s = String(state || "").toLowerCase();
+        if (s === "running") return "ok";
+        if (s.includes("missing") || s.includes("not_running")) return "bad";
+        return "warn";
+      }
+
+      function setList(id, lines) {
+        const el = byId(id);
+        if (!lines || !lines.length) { el.innerHTML = `<li class="muted">No data</li>`; return; }
+        el.innerHTML = lines.join("");
+      }
+
+      function pushConsole(line) {
+        const stamp = timeFmt.format(new Date());
+        consoleLines.push(`[${stamp}] ${line}`);
+        if (consoleLines.length > 140) consoleLines = consoleLines.slice(-140);
+        byId("console").textContent = consoleLines.slice(-30).join("\n");
+      }
+
+      function drawSparkline(values) {
+        const svg = byId("sparkline");
+        if (!values.length) { svg.innerHTML = ""; return; }
+        const w = 320, h = 72;
+        const max = Math.max(1, ...values), min = Math.min(0, ...values), span = Math.max(1, max - min);
+        const points = values.map((v, i) => {
+          const x = (i / Math.max(1, values.length - 1)) * w;
+          const y = h - ((v - min) / span) * (h - 8) - 4;
+          return `${x.toFixed(2)},${y.toFixed(2)}`;
+        }).join(" ");
+        const area = `${points} ${w},${h} 0,${h}`;
+
+        svg.innerHTML = `
+          <defs>
+            <linearGradient id="pulseFill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.42" />
+              <stop offset="100%" stop-color="#ff003c" stop-opacity="0.04" />
+            </linearGradient>
+          </defs>
+          <polyline fill="url(#pulseFill)" stroke="none" points="${area}" />
+          <polyline fill="none" stroke="#00f0ff" stroke-width="2" points="${points}" />
+        `;
+      }
+
+      function clamp(n, min, max) {
+        return Math.max(min, Math.min(max, n));
+      }
+
+      function ensureThreatMatrix() {
+        const matrix = byId("threatMatrix");
+        if (!matrix) return;
+        if (matrix.children.length === 24) return;
+        matrix.innerHTML = "";
+        for (let i = 0; i < 24; i++) {
+          const cell = document.createElement("span");
+          cell.className = "matrix-cell";
+          matrix.appendChild(cell);
+        }
+      }
+
+      function renderThreatMatrix(score) {
+        const matrix = byId("threatMatrix");
+        if (!matrix) return;
+        ensureThreatMatrix();
+        const cells = Array.from(matrix.children);
+        const active = Math.round((clamp(score, 0, 100) / 100) * cells.length);
+        const flicker = Math.floor((Date.now() / 180) % 3);
+        cells.forEach((cell, idx) => {
+          cell.className = "matrix-cell";
+          if (idx >= active) return;
+          if (idx < active * 0.55) {
+            cell.classList.add("low");
+          } else if (idx < active * 0.82) {
+            cell.classList.add("mid");
+          } else {
+            cell.classList.add("high");
+          }
+          if ((idx + flicker) % 7 === 0) {
+            cell.style.filter = "brightness(1.25)";
+          } else {
+            cell.style.filter = "";
+          }
+        });
+      }
+
+      function ensureFluxBars() {
+        const flux = byId("fluxBars");
+        if (!flux) return;
+        if (flux.children.length === 28) return;
+        flux.innerHTML = "";
+        for (let i = 0; i < 28; i++) {
+          const bar = document.createElement("span");
+          bar.className = "flux-bar";
+          flux.appendChild(bar);
+        }
+      }
+
+      function renderFluxBars({ heartbeatAge, threatScore, failSignal, runningRatio }) {
+        const flux = byId("fluxBars");
+        if (!flux) return;
+        ensureFluxBars();
+        const bars = Array.from(flux.children);
+        const t = Date.now() * 0.001;
+        bars.forEach((bar, idx) => {
+          const wave = Math.abs(Math.sin(t * 1.8 + idx * 0.46));
+          const pulse = Math.abs(Math.cos(t * 1.1 + idx * 0.3));
+          const risk = clamp(threatScore / 100, 0, 1);
+          const stability = clamp(runningRatio, 0, 1);
+          const heartbeatDrag = clamp((heartbeatAge || 0) / 420, 0, 1);
+          const h = clamp(
+            10 + wave * (42 + risk * 28) + pulse * 18 + failSignal * 10 + heartbeatDrag * 12 + (1 - stability) * 16,
+            10,
+            96
+          );
+          bar.style.height = `${h}%`;
+          const hot = risk > 0.62 || failSignal > 0.4;
+          bar.className = `flux-bar${hot && ((idx + Math.floor(t * 6)) % 4 === 0) ? " hot" : ""}`;
+        });
+      }
+
+      function initCanvasFx() {
+        const canvas = byId("cyber-canvas");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        let w = 0;
+        let h = 0;
+        let dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const particles = [];
+        const particleCount = 120;
+        const farPlane = 0.72;
+
+        function resize() {
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          w = window.innerWidth;
+          h = window.innerHeight;
+          canvas.width = Math.floor(w * dpr);
+          canvas.height = Math.floor(h * dpr);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function spawnParticle(resetY = false) {
+          return {
+            x: Math.random() * w,
+            y: resetY ? Math.random() * h : (h * farPlane) + (Math.random() * h * 0.4),
+            z: 0.2 + Math.random() * 0.8,
+            vx: (-0.12 + Math.random() * 0.24),
+            vy: -0.2 - Math.random() * 0.6,
+            t: Math.random() * Math.PI * 2
+          };
+        }
+
+        function resetParticles() {
+          particles.length = 0;
+          for (let i = 0; i < particleCount; i++) {
+            particles.push(spawnParticle(true));
+          }
+        }
+
+        function drawPerspectiveGrid(timeSec) {
+          const horizon = h * farPlane;
+          const centerX = w * 0.5;
+          const sweep = (Math.sin(timeSec * 0.45) * 0.5 + 0.5);
+
+          ctx.save();
+          ctx.lineWidth = 1;
+
+          for (let i = 0; i < 32; i++) {
+            const t = i / 31;
+            const y = horizon + Math.pow(t, 2.2) * (h - horizon);
+            const alpha = 0.035 + t * 0.1;
+            ctx.strokeStyle = `rgba(0, 240, 255, ${Math.max(0.03, alpha * 0.8).toFixed(3)})`;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+          }
+
+          const cols = 30;
+          for (let i = 0; i <= cols; i++) {
+            const t = (i / cols) * 2 - 1;
+            const x = centerX + t * w * 0.95;
+            const topX = centerX + t * w * 0.04;
+            ctx.strokeStyle = "rgba(0, 240, 255, 0.095)";
+            ctx.beginPath();
+            ctx.moveTo(x, h);
+            ctx.lineTo(topX, horizon);
+            ctx.stroke();
+          }
+
+          const beamX = centerX * (0.35 + sweep * 1.3);
+          const beamWidth = 140;
+          const grad = ctx.createLinearGradient(beamX - beamWidth, 0, beamX + beamWidth, 0);
+          grad.addColorStop(0, "rgba(255,0,60,0)");
+          grad.addColorStop(0.5, "rgba(255,0,60,0.18)");
+          grad.addColorStop(1, "rgba(255,0,60,0)");
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, horizon - 30, w, h - horizon + 30);
+
+          ctx.restore();
+        }
+
+        function drawParticles(timeSec) {
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            p.t += 0.025;
+            p.x += p.vx + Math.sin(p.t + timeSec * 0.7) * 0.1;
+            p.y += p.vy * (0.4 + p.z);
+            if (p.y < h * farPlane - 40 || p.x < -30 || p.x > w + 30) {
+              particles[i] = spawnParticle(false);
+              continue;
+            }
+            const size = 0.7 + p.z * 1.4;
+            const alpha = 0.13 + p.z * 0.25;
+            ctx.fillStyle = `rgba(0, 240, 255, ${alpha.toFixed(3)})`;
+            ctx.fillRect(p.x, p.y, size, size);
+          }
+        }
+
+        function draw() {
+          const t = performance.now() * 0.001;
+          ctx.clearRect(0, 0, w, h);
+          drawPerspectiveGrid(t);
+          drawParticles(t);
+          requestAnimationFrame(draw);
+        }
+
+        resize();
+        resetParticles();
+        window.addEventListener("resize", () => {
+          resize();
+          resetParticles();
+        }, { passive: true });
+        draw();
+      }
+
+      async function refresh() {
+        const t0 = performance.now();
+        try {
+          const response = await fetch(`${monitorUrl}?ts=${Date.now()}`, { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const payload = await response.json();
+          const latency = Math.round(performance.now() - t0);
+
+          const hb = payload.heartbeat || {};
+          const status = payload.orchestrator_status || {};
+
+          byId("generated").textContent = `Generated ${toLocal(payload.generated_at)}`;
+          byId("latency").textContent = `latency ${latency}ms`;
+          byId("iteration").textContent = status.iteration ?? "--";
+          byId("failLast").textContent = status.last_iteration_failures ?? "--";
+          byId("failCons").textContent = status.consecutive_failures ?? "--";
+          byId("nextRun").textContent = toLocal(status.next_run_at);
+          byId("branch").textContent = payload.git?.branch || "--";
+          byId("changed").textContent = `${payload.git?.changed_files_count ?? "--"} changed files`;
+
+          const processes = payload.process_health || [];
+          const events = payload.recent_session_events || [];
+          const processTotal = processes.length;
+          const processRunning = processes.filter((p) => String(p.state || "").toLowerCase() === "running").length;
+          const processUptimePct = processTotal ? Math.round((processRunning / processTotal) * 100) : 0;
+          const okEvents = events.filter((e) => Boolean(e.ok)).length;
+          const eventSuccessPct = events.length ? Math.round((okEvents / events.length) * 100) : 100;
+
+          const hbAge = typeof hb.age_seconds === "number" ? `${hb.age_seconds}s` : "--";
+          byId("heartbeatAge").textContent = hbAge;
+          const [stateLabel, stateTone] = heartbeatTone(hb.age_seconds, hb.loop_interval_seconds);
+          byId("heartbeatState").innerHTML = `${badge(stateLabel, stateTone)} ${badge(`loop ${hb.loop_interval_seconds ?? "--"}s`, "info")}`;
+
+          hbHistory.push(typeof hb.age_seconds === "number" ? hb.age_seconds : 0);
+          if (hbHistory.length > historyLen) hbHistory.shift();
+          drawSparkline(hbHistory);
+
+          const processRows = (payload.process_health || []).map((p) => {
+            const tone = processTone(p.state);
+            return `<li><span class="mono">${safe(p.name)}</span> ${badge(String(p.state || "unknown").toUpperCase(), tone)} <span class="muted">pid=${safe(p.pid ?? "-")} proc=${safe(p.process ?? "-")}</span></li>`;
+          });
+          setList("processes", processRows);
+
+          const eventRows = (payload.recent_session_events || []).slice().reverse().map((e) => {
+            const tone = e.ok ? "ok" : "bad";
+            return `<li><span class="muted">${safe(toLocal(e.timestamp))}</span> ${badge(String(e.state || "state"), tone)} <span class="mono">${safe(e.task)}</span> <span class="muted">iter=${safe(e.iteration)}</span></li>`;
+          });
+          setList("events", eventRows);
+
+          const signals = (payload.codex_signals || []).slice(-45);
+          byId("signals").textContent = signals.length ? signals.join("\n") : "no codex signals yet";
+          byId("tailMeta").textContent = `tail ${signals.length} lines`;
+
+          const codexFailures = signals.filter((line) => /exit code 1|failed|timed out|timeout/i.test(String(line))).length;
+          const codexStabilityPct = signals.length ? Math.round((1 - (codexFailures / signals.length)) * 100) : 100;
+          const integrityScore = clamp(
+            Math.round((processUptimePct * 0.45) + (eventSuccessPct * 0.3) + (codexStabilityPct * 0.25)),
+            0,
+            100
+          );
+          const integrityRing = byId("integrityRing");
+          if (integrityRing) integrityRing.style.setProperty("--pct", String(integrityScore));
+          byId("integrityValue").textContent = `${integrityScore}%`;
+          byId("integrityUptime").textContent = `${processRunning}/${processTotal} (${processUptimePct}%)`;
+          byId("integrityEvents").textContent = `${okEvents}/${events.length || 0} (${eventSuccessPct}%)`;
+          byId("integrityCodex").textContent = `${codexStabilityPct}%`;
+
+          const hbAgeRaw = typeof hb.age_seconds === "number" ? hb.age_seconds : 0;
+          const hbPressure = hbAgeRaw > ((hb.loop_interval_seconds || 300) + 90) ? 14 : 0;
+          const threatScore = clamp(
+            ((status.last_iteration_failures || 0) * 22)
+            + ((status.consecutive_failures || 0) * 9)
+            + ((processTotal - processRunning) * 20)
+            + (codexFailures * 6)
+            + hbPressure,
+            0,
+            100
+          );
+          const threatLabel = byId("threatLabel");
+          const threatTone = threatScore >= 70 ? "bad" : threatScore >= 35 ? "warn" : "ok";
+          if (threatLabel) {
+            threatLabel.className = `badge ${threatTone}`;
+            threatLabel.textContent = threatTone === "bad" ? "THREAT CRITICAL" : threatTone === "warn" ? "THREAT ELEVATED" : "THREAT LOW";
+          }
+          byId("threatScore").textContent = `score ${threatScore}`;
+          renderThreatMatrix(threatScore);
+
+          const runningRatio = processTotal ? processRunning / processTotal : 1;
+          const failSignal = clamp((status.last_iteration_failures || 0) / 4 + codexFailures / 10, 0, 1);
+          renderFluxBars({
+            heartbeatAge: hbAgeRaw,
+            threatScore,
+            failSignal,
+            runningRatio
+          });
+          byId("fluxLabel").textContent = `flux ${(100 - threatScore)} | hz ${Math.max(1, Math.round(60 / (hb.loop_interval_seconds || 300)))}x`;
+
+          const memoryRows = (payload.workspace_memory_tail || []).slice(-24).map((line) => `<li>${safe(line || " ")}</li>`);
+          setList("memory", memoryRows);
+
+          if (lastPayloadAt) {
+            const delta = Math.round((Date.now() - lastPayloadAt) / 1000);
+            pushConsole(`payload sync +${delta}s | iter=${status.iteration ?? "--"} | hb=${hb.age_seconds ?? "--"}s`);
+          } else {
+            pushConsole(`first telemetry payload | iter=${status.iteration ?? "--"}`);
+          }
+          lastPayloadAt = Date.now();
+        } catch (error) {
+          byId("generated").textContent = `Monitor error: ${error}`;
+          pushConsole(`monitor fetch error: ${error}`);
+        }
+      }
+
+      initCanvasFx();
+      refresh();
+      setInterval(refresh, pollMs);
+    </script>
+  </body>
+</html>
