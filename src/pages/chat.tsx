@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 import { gsap } from 'gsap';
-import { BrainCircuit, BookOpenText, CheckCircle2, Circle, Clock3, Rocket, ShieldCheck, Sparkles } from 'lucide-react';
+import { BrainCircuit, BookOpenText, CheckCircle2, ChevronDown, ChevronUp, Circle, Clock3, Rocket, ShieldCheck, Sparkles } from 'lucide-react';
 import ChatInterface from '@/components/chat/chat-interface';
 import { AIProviderSwitch } from '@/components/ai-provider-switch';
 import { SaveChatButton } from '@/components/chat/save-chat-button';
@@ -709,6 +709,7 @@ export default function ChatPage() {
   const [readinessVerificationChecks, setReadinessVerificationChecks] = useState<ReadinessBundleVerificationCheck[]>([]);
   const [readinessExportCadence, setReadinessExportCadence] = useState<'off' | 'weekly' | 'monthly'>('off');
   const [readinessExportHistory, setReadinessExportHistory] = useState<ReadinessExportHistoryEntry[]>([]);
+  const [commandCenterExpanded, setCommandCenterExpanded] = useState(false);
   const [readinessFilters, setReadinessFilters] = useState<ReadinessFilterState>({
     playbook: 'all',
     caseScope: 'all',
@@ -2162,28 +2163,44 @@ User message: ${text}`;
         </div>
 
         <div className={`${isDark ? 'dark-executive-card border-slate-700/60' : 'executive-card border-slate-200/70'} mb-3 sm:mb-4 rounded-2xl border px-3 py-3 sm:px-5 sm:py-4`}>
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className={`font-clash text-base sm:text-lg font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
-                  {t.chat.commandCenter.title}
-                </h2>
-                <p className={`text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  {t.chat.commandCenter.subtitle}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setWorkspaceMemoryEnabled((previousValue) => !previousValue)}
-                className={`${workspaceMemoryEnabled
-                  ? (isDark ? 'bg-cyan-500/15 text-cyan-200' : 'bg-cyan-50 text-cyan-700')
-                  : (isDark ? 'bg-slate-700 text-slate-300' : 'bg-gray-100 text-gray-600')
-                  } inline-flex h-8 items-center rounded-full px-3 text-[11px] font-clash font-semibold tracking-[0.08em] uppercase`}
-              >
-                {workspaceMemoryEnabled ? t.chat.commandCenter.memoryEnabled : t.chat.commandCenter.memoryDisabled}
-              </button>
+          <button
+            type="button"
+            onClick={() => setCommandCenterExpanded((prev) => !prev)}
+            className="flex w-full items-center justify-between gap-2 text-left"
+          >
+            <div>
+              <h2 className={`font-clash text-base sm:text-lg font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+                {t.chat.commandCenter.title}
+              </h2>
+              <p className={`text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                {t.chat.commandCenter.subtitle}
+              </p>
             </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {commandCenterExpanded && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); setWorkspaceMemoryEnabled((prev) => !prev); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setWorkspaceMemoryEnabled((prev) => !prev); } }}
+                  className={`${workspaceMemoryEnabled
+                    ? (isDark ? 'bg-cyan-500/15 text-cyan-200' : 'bg-cyan-50 text-cyan-700')
+                    : (isDark ? 'bg-slate-700 text-slate-300' : 'bg-gray-100 text-gray-600')
+                    } inline-flex h-8 items-center rounded-full px-3 text-[11px] font-clash font-semibold tracking-[0.08em] uppercase`}
+                >
+                  {workspaceMemoryEnabled ? t.chat.commandCenter.memoryEnabled : t.chat.commandCenter.memoryDisabled}
+                </span>
+              )}
+              {commandCenterExpanded ? (
+                <ChevronUp className={`h-5 w-5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+              ) : (
+                <ChevronDown className={`h-5 w-5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+              )}
+            </div>
+          </button>
 
+          {commandCenterExpanded && (
+          <div className="flex flex-col gap-3 sm:gap-4 mt-3 sm:mt-4 max-h-[40vh] overflow-y-auto">
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1.25fr_1fr]">
               <div className={`${isDark ? 'bg-slate-900/45 border-slate-700/60' : 'bg-white/85 border-slate-200/80'} rounded-xl border p-3`}>
                 <div className="mb-2 flex items-start justify-between gap-2">
@@ -2645,9 +2662,10 @@ User message: ${text}`;
               </div>
             </div>
           </div>
+          )}
         </div>
 
-        <div className={`${isDark ? 'dark-executive-card' : 'executive-card'} rounded-2xl shadow-lg border border-transparent flex-1 min-h-0`}>
+        <div className={`${isDark ? 'dark-executive-card' : 'executive-card'} rounded-2xl shadow-lg border border-transparent flex-1 min-h-[350px] sm:min-h-[400px]`}>
           <ChatInterface
             messages={messages}
             onSend={handleSend}
